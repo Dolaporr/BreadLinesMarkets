@@ -222,14 +222,16 @@ function MetricCard({
   unit, 
   icon: Icon, 
   trend,
-  color 
+  color,
+  muted = false,
 }: { 
   label: string
-  value: number
+  value: number | string
   unit: string
   icon: React.ElementType
   trend?: 'good' | 'bad' | 'neutral'
   color: string
+  muted?: boolean
 }) {
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border/50">
@@ -246,12 +248,12 @@ function MetricCard({
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-lg font-semibold tabular-nums"
-          style={{ color }}
+          style={{ color: muted ? '#8b8b9a' : color }}
         >
           {value}{unit}
         </motion.p>
       </div>
-      {trend && (
+      {trend && !muted && (
         <Badge 
           variant={trend === 'good' ? 'default' : trend === 'bad' ? 'destructive' : 'secondary'}
           className="text-[10px] px-1.5"
@@ -283,6 +285,7 @@ function ProtocolColumn({
 }) {
   const latencyData = generateLatencyData(metrics, mode)
   const chartDomain = getChartDomain(mode)
+  const showOracleEdge = mode === 'mcp' || metrics.oracleLatencyEdge > 0
   
   const getTrend = (value: number, thresholds: [number, number], inverse: boolean = false): 'good' | 'bad' | 'neutral' => {
     if (inverse) {
@@ -330,7 +333,7 @@ function ProtocolColumn({
         </div>
 
         {/* Metrics Grid */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2">
           <MetricCard 
             label="Wait Time" 
             value={metrics.avgInclusionLatency} 
@@ -349,11 +352,12 @@ function ProtocolColumn({
           />
           <MetricCard 
             label="Oracle Edge" 
-            value={metrics.oracleLatencyEdge} 
-            unit="ms" 
+            value={showOracleEdge ? metrics.oracleLatencyEdge : '—'} 
+            unit={showOracleEdge ? 'ms' : ''} 
             icon={TrendingUp}
-            trend={getTrend(metrics.oracleLatencyEdge, [20, 60], true)}
+            trend={showOracleEdge ? getTrend(Math.max(0, metrics.oracleLatencyEdge), [20, 60], true) : undefined}
             color={color}
+            muted={!showOracleEdge}
           />
           <MetricCard 
             label="Market Cost" 

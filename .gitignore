@@ -18,3 +18,5 @@ node_modules
 dev.log
 dev.err
 tsconfig.tsbuildinfo
+
+.vercel
