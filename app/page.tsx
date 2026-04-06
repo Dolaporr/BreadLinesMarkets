@@ -449,6 +449,18 @@ export default function BreadLinesMarkets() {
   const [isLocked, setIsLocked] = useState(false)
   const [botHover, setBotHover] = useState(false)
   const [insightIndex, setInsightIndex] = useState(0)
+  const [copied, setCopied] = useState(false)
+  const ca = '8cLSy3rjyCuVzzE1PuQ7AwALQNERrTZx9T8R52pRpump'
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(ca)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1500)
+    } catch {
+      setCopied(false)
+    }
+  }, [ca])
 
   const fcfsMetrics = simulateBlock(params, 'fcfs')
   const batchingMetrics = simulateBlock(params, 'batching')
@@ -608,6 +620,7 @@ export default function BreadLinesMarkets() {
                 </div>
               </CardContent>
             </Card>
+
           </aside>
 
           {/* Main Content */}
@@ -691,6 +704,41 @@ export default function BreadLinesMarkets() {
             </Card>
           </main>
         </div>
+
+        <footer className="mt-8">
+          <Card className="border-primary/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold">Support the Project</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-xs text-muted-foreground">
+                Support by buying some $breadlines.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  onClick={handleCopy}
+                  variant="outline"
+                  className="text-xs"
+                >
+                  {copied ? 'Copied' : 'Copy Address'}
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="text-xs"
+                >
+                  <a
+                    href="https://pump.fun/coin/8cLSy3rjyCuVzzE1PuQ7AwALQNERrTZx9T8R52pRpump"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Trade on pump.fun
+                  </a>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </footer>
       </div>
     </div>
   )
