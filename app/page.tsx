@@ -7,13 +7,14 @@ import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { 
   BarChart, 
   Bar, 
   XAxis, 
   YAxis, 
   ResponsiveContainer, 
-  Tooltip 
+  Tooltip as RechartsTooltip
 } from 'recharts'
 import { 
   Zap, 
@@ -380,7 +381,7 @@ function ProtocolColumn({
                 tickLine={false}
               />
               <YAxis hide domain={chartDomain} />
-              <Tooltip 
+              <RechartsTooltip 
                 contentStyle={{ 
                   background: '#0f0f18', 
                   border: `1px solid ${color}40`,
@@ -505,11 +506,26 @@ export default function BreadLinesMarkets() {
                 <span className="text-primary text-glow-green">Lines</span>
                 <span className="text-foreground">Markets</span>
               </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                <span className="text-primary">MCP + FBO == Markets</span>
-                {' | '}
-                <span className="text-destructive">FCFS == Bread Lines</span>
-              </p>
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                <span>
+                  <span className="text-primary">MCP + FBO == Markets</span>
+                  {' | '}
+                  <span className="text-destructive">FCFS == Bread Lines</span>
+                </span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge
+                      variant="outline"
+                      className="border-primary bg-transparent text-primary shadow-[0_0_12px_rgba(34,255,136,0.18)]"
+                    >
+                      MCP &gt; MPC
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" sideOffset={8}>
+                    Multiple Concurrent Proposers — not multi-party computation
+                  </TooltipContent>
+                </Tooltip>
+              </div>
               <p className="text-xs text-muted-foreground/70 mt-0.5">
                 {"Visualizing Toly's vision — Multiple Concurrent Proposers BLVD"}
               </p>
