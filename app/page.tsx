@@ -54,6 +54,10 @@ function getChartDomain(mode: 'fcfs' | 'batching' | 'mcp'): [number, number] {
   return mode === 'fcfs' ? [0, 140] : mode === 'batching' ? [0, 95] : [0, 40]
 }
 
+function formatLamports(value: number) {
+  return value.toFixed(3).replace(/\.?0+$/, '')
+}
+
 // Transaction Animation Canvas Component
 function TransactionRace({ 
   mode, 
@@ -420,6 +424,10 @@ function generateInsights(params: SimulationParams, fcfsMetrics: Metrics, mcpMet
   if (params.enable200ms) {
     insights.push(`200ms slots are on: MCP still keeps wait time to ${Math.round(mcpMetrics.avgInclusionLatency)}ms despite tighter competition windows`)
   }
+
+  if (params.priorityFee < 0.1) {
+    insights.push('At near-zero priority fees, latency + fairness dominate — this is why MCP is critical for the future of finance.')
+  }
   
   if (mcpMetrics.effectiveSpread < fcfsMetrics.effectiveSpread / 3) {
     insights.push(`Market cost drops from ${Math.round(fcfsMetrics.effectiveSpread)}bp in FCFS to ${Math.round(mcpMetrics.effectiveSpread)}bp in MCP`)
@@ -441,6 +449,7 @@ export default function BreadLinesMarkets() {
   const [params, setParams] = useState<SimulationParams>({
     blockTime: 400,
     enable200ms: false,
+    priorityFee: 1,
     replayPriority: 1,
     spamVolume: 30,
     propAMMMode: false,
@@ -599,6 +608,25 @@ export default function BreadLinesMarkets() {
                     className="[&_[data-slot=slider-range]]:bg-primary [&_[data-slot=slider-thumb]]:border-primary"
                   />
                   <p className="text-[10px] text-muted-foreground">1 lamport advantage for oracle updates</p>
+                </div>
+
+                {/* Priority Fee */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Median Priority Fee</label>
+                    <span className="text-xs text-primary font-mono">
+                      {formatLamports(params.priorityFee)} lamports
+                    </span>
+                  </div>
+                  <Slider
+                    value={[params.priorityFee]}
+                    onValueChange={([v]) => setParams(p => ({ ...p, priorityFee: v }))}
+                    min={0.001}
+                    max={10}
+                    step={0.001}
+                    className="[&_[data-slot=slider-range]]:bg-primary [&_[data-slot=slider-thumb]]:border-primary"
+                  />
+                  <p className="text-[10px] text-muted-foreground">Future of Finance Mode</p>
                 </div>
 
                 {/* Spam Volume */}
