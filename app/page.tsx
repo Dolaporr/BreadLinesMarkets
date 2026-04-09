@@ -58,6 +58,38 @@ function formatLamports(value: number) {
   return value.toFixed(3).replace(/\.?0+$/, '')
 }
 
+function HighlightValue({ children }: { children: React.ReactNode }) {
+  return <span className="font-bold text-primary">{children}</span>
+}
+
+function StatusDot({
+  color,
+  label,
+  pulse = false,
+  pulseDuration,
+}: {
+  color: string
+  label: string
+  pulse?: boolean
+  pulseDuration?: number
+}) {
+  return (
+    <div className="mt-2 flex items-center gap-2">
+      <span
+        className={pulse ? 'animate-pulse' : ''}
+        style={{
+          backgroundColor: color,
+          boxShadow: `0 0 10px ${color}`,
+          animationDuration: pulse && pulseDuration ? `${pulseDuration}s` : undefined,
+        }}
+      >
+        <span className="block h-2.5 w-2.5 rounded-full" />
+      </span>
+      <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{label}</span>
+    </div>
+  )
+}
+
 // Transaction Animation Canvas Component
 function TransactionRace({ 
   mode, 
@@ -291,6 +323,7 @@ function ProtocolColumn({
   const latencyData = generateLatencyData(metrics, mode)
   const chartDomain = getChartDomain(mode)
   const showOracleEdge = mode === 'mcp' || metrics.oracleLatencyEdge > 0
+  const fcfsPulseDuration = Math.max(0.45, 1.8 - params.spamVolume / 70)
   
   const getTrend = (value: number, thresholds: [number, number], inverse: boolean = false): 'good' | 'bad' | 'neutral' => {
     if (inverse) {
@@ -321,6 +354,11 @@ function ProtocolColumn({
               {title}
             </CardTitle>
             <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
+            {mode === 'fcfs' ? (
+              <StatusDot color="#ff4444" label="Stale Prices" pulse pulseDuration={fcfsPulseDuration} />
+            ) : mode === 'mcp' ? (
+              <StatusDot color="#22ff88" label="Fresh Prices" />
+            ) : null}
           </div>
           <Badge 
             variant="outline" 
@@ -363,6 +401,14 @@ function ProtocolColumn({
             trend={showOracleEdge ? getTrend(Math.max(0, metrics.oracleLatencyEdge), [20, 60], true) : undefined}
             color={color}
             muted={!showOracleEdge}
+          />
+          <MetricCard 
+            label="Price Staleness" 
+            value={metrics.oracleStaleness}
+            unit="ms" 
+            icon={Clock}
+            trend={getTrend(metrics.oracleStaleness, [40, 100])}
+            color={mode === 'fcfs' && metrics.oracleStaleness > 100 ? '#ff4444' : color}
           />
           <MetricCard 
             label="Market Cost" 
@@ -409,39 +455,102 @@ function ProtocolColumn({
   )
 }
 
+type Insight = {
+  id: string
+  content: React.ReactNode
+}
+
 // Insights Generator - returns array of insights for cycling
-function generateInsights(params: SimulationParams, fcfsMetrics: Metrics, mcpMetrics: Metrics): string[] {
-  const insights: string[] = []
+function generateInsights(params: SimulationParams, fcfsMetrics: Metrics, mcpMetrics: Metrics): Insight[] {
+  const insights: Array<Insight | string> = []
   
   if (params.replayPriority > 0) {
-    insights.push(`MCP gives oracles a ${Math.round(mcpMetrics.oracleLatencyEdge)}ms edge vs FCFS's ${Math.round(fcfsMetrics.avgInclusionLatency)}ms wait - at only ${params.replayPriority} lamport extra`)
+    insights.push({
+      id: 'oracle-edge',
+      content: (
+        <>
+          MCP gives oracles a <HighlightValue>{Math.round(mcpMetrics.oracleLatencyEdge)}ms</HighlightValue> edge vs FCFS&apos;s{' '}
+          <HighlightValue>{Math.round(fcfsMetrics.avgInclusionLatency)}ms</HighlightValue> wait - at only {params.replayPriority} lamport extra
+        </>
+      ),
+    })
   }
   
-  if (params.spamVolume > 60) {
-    insights.push(`At ${params.spamVolume}% spam, FCFS blocks ${Math.round(fcfsMetrics.percentCensored)}% of useful flow while MCP holds it to ${Math.round(mcpMetrics.percentCensored)}%`)
+  if (params.spamVolume > 50) {
+    insights.push({
+      id: 'spam-bread-line',
+      content: (
+        <>
+          FCFS turns into a Soviet bread line under spam - <HighlightValue>{Math.round(fcfsMetrics.percentCensored)}%</HighlightValue> of transactions blocked while MCP holds at{' '}
+          <HighlightValue>{Math.round(mcpMetrics.percentCensored)}%</HighlightValue>
+        </>
+      ),
+    })
   }
   
   if (params.enable200ms) {
-    insights.push(`200ms slots are on: MCP still keeps wait time to ${Math.round(mcpMetrics.avgInclusionLatency)}ms despite tighter competition windows`)
+    insights.push({
+      id: 'future-slots',
+      content: (
+        <>
+          200ms slots are on: MCP still keeps wait time to <HighlightValue>{Math.round(mcpMetrics.avgInclusionLatency)}ms</HighlightValue> despite tighter competition windows
+        </>
+      ),
+    })
   }
 
   if (params.priorityFee < 0.1) {
+    insights.push({
+      id: 'future-of-finance',
+      content: <>When median priority fee &lt; 0.001, latency & fairness dominate → MCP wins hard. This is the future of finance.</>,
+    })
+  }
+
+  if (false && false && params.priorityFee < 0.1) {
     insights.push('At near-zero priority fees, latency + fairness dominate — this is why MCP is critical for the future of finance.')
   }
   
   if (mcpMetrics.effectiveSpread < fcfsMetrics.effectiveSpread / 3) {
-    insights.push(`Market cost drops from ${Math.round(fcfsMetrics.effectiveSpread)}bp in FCFS to ${Math.round(mcpMetrics.effectiveSpread)}bp in MCP`)
+    insights.push({
+      id: 'market-cost',
+      content: <>Market cost drops from {Math.round(fcfsMetrics.effectiveSpread)}bp in FCFS to {Math.round(mcpMetrics.effectiveSpread)}bp in MCP</>,
+    })
   }
 
   if (params.propAMMMode) {
-    insights.push(`PropAMM is active: MCP is pairing a ${Math.round(mcpMetrics.oracleLatencyEdge)}ms oracle edge with ${Math.round(mcpMetrics.effectiveSpread)}bp market cost`)
+    insights.push({
+      id: 'prop-amm',
+      content: (
+        <>
+          PropAMM is active: MCP is pairing a <HighlightValue>{Math.round(mcpMetrics.oracleLatencyEdge)}ms</HighlightValue> oracle edge with {Math.round(mcpMetrics.effectiveSpread)}bp market cost
+        </>
+      ),
+    })
   }
 
-  if (insights.length === 0) {
-    insights.push("Adjust parameters to see how different mechanisms handle transaction ordering")
+  if (params.replayPriority >= 1) {
+    insights.push({
+      id: 'replay-priority',
+      content: <>1 lamport replay priority = oracle lands first in every batch frame. That&apos;s the whole trick.</>,
+    })
   }
 
-  return insights
+  insights.push({
+    id: 'oracle-freshness',
+    content: (
+      <>
+        Under FCFS, takers execute against prices that are <HighlightValue>{fcfsMetrics.oracleStaleness}ms</HighlightValue> stale - that&apos;s basis points leaking from every trade. MCP keeps oracle freshness within{' '}
+        <HighlightValue>{mcpMetrics.oracleStaleness}ms</HighlightValue>.
+      </>
+    ),
+  })
+
+  insights.push({
+    id: 'toly-line',
+    content: <>MCP and fba == markets; fcfs == bread lines - Toly</>,
+  })
+
+  return insights as Insight[]
 }
 
 // Main Dashboard Component
@@ -483,7 +592,7 @@ export default function BreadLinesMarkets() {
   useEffect(() => {
     const interval = setInterval(() => {
       setInsightIndex(i => i + 1)
-    }, 4000)
+    }, 3000)
     return () => clearInterval(interval)
   }, [])
 
@@ -711,13 +820,13 @@ export default function BreadLinesMarkets() {
                     <p className="text-sm font-medium text-primary mb-1">Live Insight</p>
                     <AnimatePresence mode="wait">
                       <motion.p
-                        key={insight}
+                        key={insight.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         className="text-sm text-foreground"
                       >
-                        {insight}
+                        {insight.content}
                       </motion.p>
                     </AnimatePresence>
                   </div>

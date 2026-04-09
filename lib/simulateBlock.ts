@@ -1,6 +1,6 @@
 export type Regime = "fcfs" | "batching" | "mcp"
 export type SimParams = { blockTime: number; enable200ms: boolean; priorityFee: number; replayPriority: number; spamVolume: number; propAMMMode: boolean; liveSolanaData: boolean; txCount?: number; seed?: number }
-export type SimResult = { avgInclusionLatency: number; percentCensored: number; oracleLatencyEdge: number; effectiveSpread: number; percentBestOffer: number }
+export type SimResult = { avgInclusionLatency: number; percentCensored: number; oracleLatencyEdge: number; effectiveSpread: number; percentBestOffer: number; oracleStaleness: number }
 type Tx = { id: number; type: "oracle" | "taker" | "spam"; arrival: number; priority: number; lane: number; frame: number }
 type Scheduled = Tx & { exec: number }
 
@@ -57,15 +57,18 @@ export function simulateBlock(params: SimParams, regime: Regime): SimResult {
     stale += gap; spamAhead += spamRun
   })
   const oracleLatency = avg(oracles.map((tx) => tx.exec - tx.arrival)), takerLatency = avg(takers.map((tx) => tx.exec - tx.arrival)), edge = takerLatency - oracleLatency
+  const avgInclusionLatency = round(avg(scheduled.map((tx) => tx.exec - tx.arrival)))
   const lowPriorityFeeBoost = regime === "mcp" && p.priorityFee < 0.1
   const oracleLatencyEdge = round(edge + (lowPriorityFeeBoost ? 15 : 0))
   const effectiveSpreadBase = Math.max(1, 8 + takerLatency * 0.06 + stale / Math.max(1, takers.length) * 0.05 + spamAhead / Math.max(1, takers.length) * 0.55 - edge * 0.05 - (regime === "mcp" ? 2.2 : regime === "batching" ? 0.7 : 0) - (p.propAMMMode ? 1.4 : 0))
   const effectiveSpread = round(lowPriorityFeeBoost ? effectiveSpreadBase * 0.6 : effectiveSpreadBase)
+  const oracleStaleness = round(regime === "fcfs" ? avgInclusionLatency * 0.6 : regime === "batching" ? avgInclusionLatency * 0.3 : Math.max(5, p.blockTime * 0.05))
   return {
-    avgInclusionLatency: round(avg(scheduled.map((tx) => tx.exec - tx.arrival))),
+    avgInclusionLatency,
     percentCensored: round((useful.filter((tx) => !included.has(tx.id)).length / useful.length) * 100),
     oracleLatencyEdge,
     effectiveSpread,
     percentBestOffer: round((fresh / Math.max(1, takers.length)) * 100),
+    oracleStaleness,
   }
 }
