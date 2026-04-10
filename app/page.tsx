@@ -26,7 +26,7 @@ import {
   Lock
 } from 'lucide-react'
 import { simulateBlock, type SimParams as SimulationParams, type SimResult as Metrics } from '@/lib/simulateBlock'
-import { getLivePriorityFee, getLiveSpamPercent } from '@/lib/helius'
+import { getLiveData } from '@/lib/helius'
 
 // Types
 interface Transaction {
@@ -620,20 +620,17 @@ export default function BreadLinesMarkets() {
       setIsLiveSyncing(true)
 
       try {
-        const [liveSpam, liveFee] = await Promise.all([
-          getLiveSpamPercent(),
-          getLivePriorityFee(),
-        ])
+        const { spamVolume, priorityFee } = await getLiveData()
 
         console.log('[Live Solana Data] Applying live values', {
-          spamVolume: liveSpam,
-          priorityFee: liveFee,
+          spamVolume,
+          priorityFee,
         })
 
         setParams((p) => ({
           ...p,
-          spamVolume: Math.round(Math.max(0, Math.min(100, liveSpam))),
-          priorityFee: Number(Math.max(0.001, Math.min(10, liveFee)).toFixed(3)),
+          spamVolume: Math.round(Math.max(0, Math.min(100, spamVolume))),
+          priorityFee: Number(Math.max(0.001, Math.min(10, priorityFee)).toFixed(3)),
         }))
       } catch (error) {
         console.error('Failed to sync live Solana data from Helius', error)
