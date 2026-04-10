@@ -26,6 +26,7 @@ import {
   Lock
 } from 'lucide-react'
 import { simulateBlock, type SimParams as SimulationParams, type SimResult as Metrics } from '@/lib/simulateBlock'
+import { getLivePriorityFee, getLiveSpamPercent } from '@/lib/helius'
 
 // Types
 interface Transaction {
@@ -569,6 +570,8 @@ export default function BreadLinesMarkets() {
   const [botHover, setBotHover] = useState(false)
   const [insightIndex, setInsightIndex] = useState(0)
   const [copied, setCopied] = useState(false)
+  const [isLiveSyncing, setIsLiveSyncing] = useState(false)
+  const livePollRef = useRef<number | null>(null)
   const ca = '8cLSy3rjyCuVzzE1PuQ7AwALQNERrTZx9T8R52pRpump'
 
   const handleCopy = useCallback(async () => {
@@ -611,6 +614,57 @@ export default function BreadLinesMarkets() {
     }, 6000)
     return () => clearInterval(interval)
   }, [])
+
+  useEffect(() => {
+    const syncLiveSolanaData = async () => {
+      setIsLiveSyncing(true)
+
+      try {
+        const [liveSpam, liveFee] = await Promise.all([
+          getLiveSpamPercent(),
+          getLivePriorityFee(),
+        ])
+
+        console.log('[Live Solana Data] Applying live values', {
+          spamVolume: liveSpam,
+          priorityFee: liveFee,
+        })
+
+        setParams((p) => ({
+          ...p,
+          spamVolume: Math.round(Math.max(0, Math.min(100, liveSpam))),
+          priorityFee: Number(Math.max(0.001, Math.min(10, liveFee)).toFixed(3)),
+        }))
+      } catch (error) {
+        console.error('Failed to sync live Solana data from Helius', error)
+      } finally {
+        setIsLiveSyncing(false)
+      }
+    }
+
+    if (!params.liveSolanaData) {
+      if (livePollRef.current) {
+        window.clearInterval(livePollRef.current)
+        livePollRef.current = null
+      }
+
+      setIsLiveSyncing(false)
+      return
+    }
+
+    syncLiveSolanaData()
+
+    livePollRef.current = window.setInterval(() => {
+      syncLiveSolanaData()
+    }, 10000)
+
+    return () => {
+      if (livePollRef.current) {
+        window.clearInterval(livePollRef.current)
+        livePollRef.current = null
+      }
+    }
+  }, [params.liveSolanaData])
 
   return (
     <div className="min-h-screen bg-background grid-bg">
@@ -676,6 +730,14 @@ export default function BreadLinesMarkets() {
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
                   <Zap className="w-4 h-4 text-primary" />
                   Simulation Controls
+                  {params.liveSolanaData ? (
+                    <Badge
+                      variant="outline"
+                      className={`ml-1 border-primary/60 bg-primary/10 text-primary ${isLiveSyncing ? 'animate-pulse' : 'animate-pulse'}`}
+                    >
+                      Live
+                    </Badge>
+                  ) : null}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -733,6 +795,7 @@ export default function BreadLinesMarkets() {
                     min={0.001}
                     max={10}
                     step={0.001}
+                    disabled={params.liveSolanaData}
                     className="[&_[data-slot=slider-range]]:bg-primary [&_[data-slot=slider-thumb]]:border-primary"
                   />
                   <p className="text-[10px] text-muted-foreground">Future of Finance Mode</p>
@@ -750,6 +813,7 @@ export default function BreadLinesMarkets() {
                     min={0}
                     max={100}
                     step={5}
+                    disabled={params.liveSolanaData}
                     className="[&_[data-slot=slider-range]]:bg-destructive [&_[data-slot=slider-thumb]]:border-destructive"
                   />
                 </div>
