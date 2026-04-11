@@ -91,6 +91,54 @@ function StatusDot({
   )
 }
 
+function OrderingIndicator({ replayPriority }: { replayPriority: number }) {
+  const roundRobinActive = replayPriority === 0
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="rounded-lg border border-primary/40 bg-primary/8 px-3 py-2 text-primary">
+          <div className="flex items-center gap-2">
+            <Badge
+              variant="outline"
+              className="border-primary/60 bg-transparent text-primary shadow-[0_0_12px_rgba(34,255,136,0.18)]"
+            >
+              {roundRobinActive ? 'Round-Robin Active' : 'Priority Auction Active'}
+            </Badge>
+            {roundRobinActive ? (
+              <div className="flex items-center gap-1">
+                {[0, 1, 2].map((dot) => (
+                  <motion.span
+                    key={dot}
+                    className="h-1.5 w-1.5 rounded-full bg-primary"
+                    animate={{ opacity: [0.3, 1, 0.3], x: [0, 4, 0] }}
+                    transition={{
+                      duration: 0.9,
+                      repeat: Number.POSITIVE_INFINITY,
+                      delay: dot * 0.12,
+                      ease: 'easeInOut',
+                    }}
+                  />
+                ))}
+              </div>
+            ) : null}
+          </div>
+          <p className="mt-2 text-[10px] text-muted-foreground">
+            {roundRobinActive
+              ? 'Same priority = FCFS still lives inside MCP'
+              : 'Oracle replay priority dominates ordering'}
+          </p>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" sideOffset={8}>
+        {roundRobinActive
+          ? 'When txs share the same priority, MCP uses round-robin merge — composable FCFS inside MCP'
+          : 'Oracle replay priority takes precedence over same-priority round-robin ordering'}
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
 // Transaction Animation Canvas Component
 function TransactionRace({ 
   mode, 
@@ -310,6 +358,8 @@ function ProtocolColumn({
   mode, 
   metrics, 
   params,
+  postFeeWorld,
+  twoSlotsPerLeader,
   color,
   isActive
 }: { 
@@ -318,6 +368,8 @@ function ProtocolColumn({
   mode: 'fcfs' | 'batching' | 'mcp'
   metrics: Metrics
   params: SimulationParams
+  postFeeWorld: boolean
+  twoSlotsPerLeader: boolean
   color: string
   isActive: boolean
 }) {
@@ -371,6 +423,43 @@ function ProtocolColumn({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {postFeeWorld && mode === 'mcp' ? (
+          <div className="rounded-lg border border-primary/50 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary shadow-[0_0_20px_rgba(34,255,136,0.2)]">
+            Structure Wins - Latency + Fairness Dominate
+          </div>
+        ) : null}
+        {postFeeWorld && mode === 'fcfs' ? (
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive shadow-[0_0_20px_rgba(255,68,68,0.18)]">
+            Fees Can&apos;t Save You Here
+          </div>
+        ) : null}
+        {twoSlotsPerLeader && mode === 'mcp' ? (
+          <div className="rounded-lg border border-primary/40 bg-primary/8 px-3 py-3">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+              Concurrent Proposer Lanes
+            </p>
+            <div className="flex items-end gap-3">
+              <div className="flex-1 rounded-md border border-primary/40 bg-primary/10 p-2 shadow-[0_0_16px_rgba(34,255,136,0.16)]">
+                <div className="mb-1 h-2 w-8 rounded-full bg-primary/70" />
+                <div className="space-y-1">
+                  <div className="h-2 rounded bg-primary/25" />
+                  <div className="h-2 rounded bg-primary/40" />
+                  <div className="h-2 rounded bg-primary/25" />
+                </div>
+              </div>
+              <div className="flex-1 rounded-md border border-primary/40 bg-primary/10 p-2 shadow-[0_0_16px_rgba(34,255,136,0.16)]">
+                <div className="mb-1 h-2 w-8 rounded-full bg-primary/70" />
+                <div className="space-y-1">
+                  <div className="h-2 rounded bg-primary/40" />
+                  <div className="h-2 rounded bg-primary/25" />
+                  <div className="h-2 rounded bg-primary/40" />
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+        {mode === 'mcp' ? <OrderingIndicator replayPriority={params.replayPriority} /> : null}
+
         {/* Transaction Race Visualization */}
         <div className="rounded-lg overflow-hidden border border-border/50">
           <TransactionRace mode={mode} params={params} metrics={metrics} isActive={isActive} />
@@ -462,7 +551,13 @@ type Insight = {
 }
 
 // Insights Generator - returns array of insights for cycling
-function generateInsights(params: SimulationParams, fcfsMetrics: Metrics, mcpMetrics: Metrics): Insight[] {
+function generateInsights(
+  params: SimulationParams,
+  fcfsMetrics: Metrics,
+  mcpMetrics: Metrics,
+  postFeeWorld: boolean,
+  twoSlotsPerLeader: boolean,
+): Insight[] {
   const insights: Array<Insight | string> = []
   
   if (params.replayPriority > 0) {
@@ -536,6 +631,27 @@ function generateInsights(params: SimulationParams, fcfsMetrics: Metrics, mcpMet
     })
   }
 
+  if (postFeeWorld) {
+    insights.push({
+      id: 'post-fee-world',
+      content: <>In a post-fee world, MCP&apos;s structural advantage is the ONLY edge left. FCFS has nothing.</>,
+    })
+  }
+
+  if (twoSlotsPerLeader) {
+    insights.push({
+      id: 'two-slots-per-leader',
+      content: <>2 slots per leader + MCP = concurrent proposers racing to fill blocks. FCFS can&apos;t compete with parallel execution.</>,
+    })
+  }
+
+  if (params.replayPriority === 0) {
+    insights.push({
+      id: 'round-robin-merge',
+      content: <>FCFS still lives inside MCP — same-priority txs use round-robin merge. Composable by design.</>,
+    })
+  }
+
   insights.push({
     id: 'oracle-freshness',
     content: (
@@ -570,6 +686,8 @@ export default function BreadLinesMarkets() {
   const [botHover, setBotHover] = useState(false)
   const [insightIndex, setInsightIndex] = useState(0)
   const [copied, setCopied] = useState(false)
+  const [postFeeWorld, setPostFeeWorld] = useState(false)
+  const [twoSlotsPerLeader, setTwoSlotsPerLeader] = useState(false)
   const [isLiveSyncing, setIsLiveSyncing] = useState(false)
   const livePollRef = useRef<number | null>(null)
   const ca = '8cLSy3rjyCuVzzE1PuQ7AwALQNERrTZx9T8R52pRpump'
@@ -588,7 +706,7 @@ export default function BreadLinesMarkets() {
   const batchingMetrics = simulateBlock(params, 'batching')
   const mcpMetrics = simulateBlock(params, 'mcp')
 
-  const insights = generateInsights(params, fcfsMetrics, mcpMetrics)
+  const insights = generateInsights(params, fcfsMetrics, mcpMetrics, postFeeWorld, twoSlotsPerLeader)
   const insight = insights[insightIndex % insights.length]
   
   // Cycle through insights client-side only
@@ -616,6 +734,25 @@ export default function BreadLinesMarkets() {
   }, [])
 
   useEffect(() => {
+    if (!postFeeWorld) return
+
+    setParams((p) => ({
+      ...p,
+      priorityFee: 0.0001,
+    }))
+  }, [postFeeWorld])
+
+  useEffect(() => {
+    if (!twoSlotsPerLeader) return
+
+    setParams((p) => ({
+      ...p,
+      blockTime: 200,
+      enable200ms: true,
+    }))
+  }, [twoSlotsPerLeader])
+
+  useEffect(() => {
     const syncLiveSolanaData = async () => {
       setIsLiveSyncing(true)
 
@@ -630,7 +767,7 @@ export default function BreadLinesMarkets() {
         setParams((p) => ({
           ...p,
           spamVolume: Math.round(Math.max(0, Math.min(100, spamVolume))),
-          priorityFee: Number(Math.max(0.001, Math.min(10, priorityFee)).toFixed(3)),
+          priorityFee: postFeeWorld ? 0.0001 : Number(Math.max(0.001, Math.min(10, priorityFee)).toFixed(3)),
         }))
       } catch (error) {
         console.error('Failed to sync live Solana data from Helius', error)
@@ -661,7 +798,7 @@ export default function BreadLinesMarkets() {
         livePollRef.current = null
       }
     }
-  }, [params.liveSolanaData])
+  }, [params.liveSolanaData, postFeeWorld])
 
   return (
     <div className="min-h-screen bg-background grid-bg">
@@ -750,6 +887,7 @@ export default function BreadLinesMarkets() {
                     min={200}
                     max={800}
                     step={50}
+                    disabled={twoSlotsPerLeader}
                     className="[&_[data-slot=slider-range]]:bg-primary [&_[data-slot=slider-thumb]]:border-primary"
                   />
                   <div className="flex items-center justify-between pt-1">
@@ -757,6 +895,7 @@ export default function BreadLinesMarkets() {
                     <Switch
                       checked={params.enable200ms}
                       onCheckedChange={(v) => setParams(p => ({ ...p, enable200ms: v }))}
+                      disabled={twoSlotsPerLeader}
                     />
                   </div>
                 </div>
@@ -792,7 +931,7 @@ export default function BreadLinesMarkets() {
                     min={0.001}
                     max={10}
                     step={0.001}
-                    disabled={params.liveSolanaData}
+                    disabled={params.liveSolanaData || postFeeWorld}
                     className="[&_[data-slot=slider-range]]:bg-primary [&_[data-slot=slider-thumb]]:border-primary"
                   />
                   <p className="text-[10px] text-muted-foreground">Future of Finance Mode</p>
@@ -824,6 +963,26 @@ export default function BreadLinesMarkets() {
                       onCheckedChange={(v) => setParams(p => ({ ...p, propAMMMode: v }))}
                     />
                   </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm">Post-Fee World</label>
+                      <Switch
+                        checked={postFeeWorld}
+                        onCheckedChange={setPostFeeWorld}
+                      />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Priority fees → 0. Only structure wins.</p>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm">2 Slots per Leader</label>
+                      <Switch
+                        checked={twoSlotsPerLeader}
+                        onCheckedChange={setTwoSlotsPerLeader}
+                      />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">200ms blocks â€” Toly&apos;s mandate</p>
+                  </div>
                   <div className="flex items-center justify-between">
                     <label className="text-sm">Live Solana Data</label>
                     <Switch
@@ -847,6 +1006,8 @@ export default function BreadLinesMarkets() {
                 mode="fcfs"
                 metrics={fcfsMetrics}
                 params={params}
+                postFeeWorld={postFeeWorld}
+                twoSlotsPerLeader={twoSlotsPerLeader}
                 color="#ff4444"
                 isActive={!isLocked}
               />
@@ -856,6 +1017,8 @@ export default function BreadLinesMarkets() {
                 mode="batching"
                 metrics={batchingMetrics}
                 params={params}
+                postFeeWorld={postFeeWorld}
+                twoSlotsPerLeader={twoSlotsPerLeader}
                 color="#666680"
                 isActive={!isLocked}
               />
@@ -865,6 +1028,8 @@ export default function BreadLinesMarkets() {
                 mode="mcp"
                 metrics={mcpMetrics}
                 params={params}
+                postFeeWorld={postFeeWorld}
+                twoSlotsPerLeader={twoSlotsPerLeader}
                 color="#22ff88"
                 isActive={!isLocked}
               />
