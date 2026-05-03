@@ -855,6 +855,34 @@ export default function BreadLinesMarkets() {
         </div>
       </header>
 
+      {/* Changelog Banner */}
+      <div className="border-b border-primary/20 bg-primary/5">
+        <div className="container mx-auto px-4 py-2.5">
+          <div className="flex flex-wrap items-start gap-x-2 gap-y-1 text-xs">
+            <Badge variant="outline" className="border-primary/60 text-primary shrink-0 text-[10px]">
+              v2 in progress
+            </Badge>
+            <span className="text-muted-foreground">
+              incorporating feedback from{' '}
+              <a
+                href="https://twitter.com/moonshiesty"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                @moonshiesty
+              </a>
+            </span>
+            <span className="hidden sm:inline text-border/60">·</span>
+            <span className="text-muted-foreground">Symmetric spam/cost filter</span>
+            <span className="hidden sm:inline text-border/60">·</span>
+            <span className="text-muted-foreground">MCP latency now measured at end-of-batch + pipeline</span>
+            <span className="hidden sm:inline text-border/60">·</span>
+            <span className="text-muted-foreground">Live Helius data still refreshing every 10s</span>
+          </div>
+        </div>
+      </div>
+
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar Controls */}
@@ -875,6 +903,12 @@ export default function BreadLinesMarkets() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Assumptions note */}
+                <div className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-[10px] text-muted-foreground leading-relaxed">
+                  <p className="font-semibold text-primary mb-1 uppercase tracking-widest">Model Assumptions</p>
+                  Spam filter now identical across FCFS &amp; MCP{' '}
+                  <span className="text-primary/70">(per @moonshiesty feedback)</span>
+                </div>
                 {/* Block Time */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -1092,6 +1126,18 @@ export default function BreadLinesMarkets() {
             <CardContent className="space-y-3">
               <p className="text-xs text-muted-foreground">
                 Support by buying some $breadlines.
+              </p>
+              <p className="text-xs text-muted-foreground/60">
+                Special thanks to{' '}
+                <a
+                  href="https://twitter.com/moonshiesty"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary/70 hover:text-primary transition-colors"
+                >
+                  @moonshiesty
+                </a>{' '}
+                for the model review.
               </p>
               <div className="grid grid-cols-2 gap-2">
                 <Button
