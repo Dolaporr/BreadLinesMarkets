@@ -857,13 +857,12 @@ export default function BreadLinesMarkets() {
 
       {/* Changelog Banner */}
       <div className="border-b border-primary/20 bg-primary/5">
-        <div className="container mx-auto px-4 py-2.5">
-          <div className="flex flex-wrap items-start gap-x-2 gap-y-1 text-xs">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs">
             <Badge variant="outline" className="border-primary/60 text-primary shrink-0 text-[10px]">
-              v2 in progress
+              v2 updates live
             </Badge>
-            <span className="text-muted-foreground">
-              incorporating feedback from{' '}
+            <span className="text-foreground/80 font-medium">
               <a
                 href="https://twitter.com/moonshiesty"
                 target="_blank"
@@ -871,14 +870,29 @@ export default function BreadLinesMarkets() {
                 className="text-primary hover:underline"
               >
                 @moonshiesty
+              </a>{' '}
+              feedback shipped
+            </span>
+            <span className="hidden sm:inline text-border/60">·</span>
+            <span className="text-muted-foreground">FCFS: low/near-zero latency for high-fee txs (ideal streaming)</span>
+            <span className="hidden sm:inline text-border/60">·</span>
+            <span className="text-muted-foreground">MCP: ~150ms latency tax but wins on burst resistance, oracle freshness &amp; tighter spreads</span>
+          </div>
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-xs mt-1">
+            <span className="text-foreground/70 font-medium italic">FCFS is fast but fragile. MCP pays for real market structure.</span>
+            <span className="hidden sm:inline text-border/60">·</span>
+            <span className="text-muted-foreground/70">Still waiting on full pfee/drop/burstiness math from{' '}
+              <a
+                href="https://twitter.com/moonshiesty"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary/70 hover:text-primary"
+              >
+                @moonshiesty
               </a>
             </span>
             <span className="hidden sm:inline text-border/60">·</span>
-            <span className="text-muted-foreground">Symmetric spam/cost filter</span>
-            <span className="hidden sm:inline text-border/60">·</span>
-            <span className="text-muted-foreground">MCP latency now measured at end-of-batch + pipeline</span>
-            <span className="hidden sm:inline text-border/60">·</span>
-            <span className="text-muted-foreground">Live Helius data still refreshing every 10s</span>
+            <span className="text-muted-foreground/70">Live Helius data every 10s</span>
           </div>
         </div>
       </div>
@@ -904,10 +918,21 @@ export default function BreadLinesMarkets() {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Assumptions note */}
-                <div className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-[10px] text-muted-foreground leading-relaxed">
-                  <p className="font-semibold text-primary mb-1 uppercase tracking-widest">Model Assumptions</p>
-                  Spam filter now identical across FCFS &amp; MCP{' '}
-                  <span className="text-primary/70">(per @moonshiesty feedback)</span>
+                <div className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-[10px] text-muted-foreground leading-relaxed space-y-1">
+                  <p className="font-semibold text-primary uppercase tracking-widest">Model Assumptions</p>
+                  <p>Spam filter identical across FCFS &amp; MCP</p>
+                  <p>MCP latency = end-of-batch + ~100ms pipeline</p>
+                  <p className="text-muted-foreground/60 pt-0.5">
+                    Updated May 6 2026 — symmetric spam + end-of-batch MCP latency per{' '}
+                    <a
+                      href="https://twitter.com/moonshiesty"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary/60 hover:text-primary"
+                    >
+                      @moonshiesty
+                    </a>
+                  </p>
                 </div>
                 {/* Block Time */}
                 <div className="space-y-3">
