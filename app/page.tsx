@@ -7,6 +7,7 @@ import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { 
   BarChart, 
@@ -23,7 +24,15 @@ import {
   TrendingUp, 
   Bot, 
   Activity,
-  Lock
+  Lock,
+  Gift,
+  Megaphone,
+  Repeat2,
+  Users,
+  ArrowUpRight,
+  Clipboard,
+  FileText,
+  Share2
 } from 'lucide-react'
 import { simulateBlock, type SimParams as SimulationParams, type SimResult as Metrics } from '@/lib/simulateBlock'
 import { getLiveData } from '@/lib/helius'
@@ -348,6 +357,308 @@ function MetricCard({
         </Badge>
       )}
     </div>
+  )
+}
+
+function BuildSprintPanel() {
+  const txIntent = encodeURIComponent(
+    'Drop a Solana tx for the Breadlines x LMAO public sim. Show me the Soviet queue vs MCP.\n\n$BREADLINES x $LMAO'
+  )
+
+  const sprintItems = [
+    {
+      icon: Users,
+      label: 'LMAO integration',
+      text: 'Open dialogue with Slingoor and Fabricci, built hackathon-style in public.',
+    },
+    {
+      icon: Repeat2,
+      label: '50% creator rewards flywheel',
+      text: 'Market buys feed LMAO holder rewards, weekly bagworking, and simulator campaigns.',
+    },
+    {
+      icon: Gift,
+      label: 'Holder rewards',
+      text: 'Claim-based rewards for LMAO holders who help test, share, and run public sims.',
+    },
+    {
+      icon: Megaphone,
+      label: 'Breadlinesbot upgrade',
+      text: 'Move the bot from content noise to tx roasts, sim receipts, and weekly missions.',
+    },
+  ]
+
+  return (
+    <Card className="overflow-hidden border-primary/35 bg-primary/5">
+      <CardContent className="p-0">
+        <div className="grid gap-0 lg:grid-cols-[1.2fr_1fr]">
+          <div className="border-b border-primary/15 p-5 lg:border-b-0 lg:border-r">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className="border-primary/60 bg-primary/10 text-primary">
+                Breadlines x LMAO
+              </Badge>
+              <Badge variant="outline" className="border-border/70 bg-card/40 text-muted-foreground">
+                Open Build Sprint
+              </Badge>
+            </div>
+            <h2 className="text-xl font-semibold tracking-tight text-foreground">
+              Turn the tweet into a working community flywheel.
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              First move: build in public, reward LMAO participation, and make Breadlines the simulation layer people can point to when the Solana queue debate heats up.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button asChild size="sm" className="gap-2">
+                <a
+                  href={`https://twitter.com/intent/tweet?text=${txIntent}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Drop a tx for sim
+                  <ArrowUpRight className="h-4 w-4" />
+                </a>
+              </Button>
+              <Button asChild size="sm" variant="outline" className="gap-2">
+                <a
+                  href="https://pump.fun/coin/8cLSy3rjyCuVzzE1PuQ7AwALQNERrTZx9T8R52pRpump"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View coin
+                  <ArrowUpRight className="h-4 w-4" />
+                </a>
+              </Button>
+            </div>
+          </div>
+          <div className="grid gap-2 p-4 sm:grid-cols-2 lg:grid-cols-1">
+            {sprintItems.map(({ icon: Icon, label, text }) => (
+              <div key={label} className="rounded-lg border border-border/60 bg-card/45 p-3">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-md bg-primary/10 p-2 text-primary">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+                      {label}
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      {text}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+const SAMPLE_SIGNATURE = '3zYxWvUtSrQpNmLkJhGfEdCbA98765432123456789ABCDEFGHJKLMNPQRSTUVWXYZ'
+const SOLANA_SIGNATURE_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{64,88}$/
+
+type TxReceipt = {
+  signature: string
+  shortSignature: string
+  spamAhead: number
+  fcfsRank: number
+  mcpRank: number
+  fcfsWait: number
+  mcpWait: number
+  savedMs: number
+  marketCostSaved: number
+  heat: 'Clean' | 'Crowded' | 'Breadline'
+}
+
+function hashString(value: string) {
+  let hash = 2166136261
+
+  for (let i = 0; i < value.length; i++) {
+    hash ^= value.charCodeAt(i)
+    hash = Math.imul(hash, 16777619)
+  }
+
+  return hash >>> 0
+}
+
+function makeShortSignature(signature: string) {
+  return `${signature.slice(0, 6)}...${signature.slice(-6)}`
+}
+
+function buildTxReceipt(signature: string, params: SimulationParams, fcfsMetrics: Metrics, mcpMetrics: Metrics): TxReceipt {
+  const hash = hashString(signature)
+  const jitter = (hash % 1000) / 1000
+  const spamAhead = Math.max(1, Math.round(params.spamVolume * 0.82 + (hash % 31) + jitter * 12))
+  const fcfsWait = Math.max(1, Math.round(fcfsMetrics.avgInclusionLatency + spamAhead * 1.65 + (hash % 45)))
+  const mcpWait = Math.max(1, Math.round(mcpMetrics.avgInclusionLatency + (hash % 19) - 6))
+  const savedMs = Math.max(0, fcfsWait - mcpWait)
+  const marketCostSaved = Math.max(0, Math.round((fcfsMetrics.effectiveSpread - mcpMetrics.effectiveSpread) * 100) / 100)
+  const heat: TxReceipt['heat'] = spamAhead > 70 ? 'Breadline' : spamAhead > 35 ? 'Crowded' : 'Clean'
+
+  return {
+    signature,
+    shortSignature: makeShortSignature(signature),
+    spamAhead,
+    fcfsRank: spamAhead + 1 + (hash % 18),
+    mcpRank: Math.max(1, 1 + (hash % 6)),
+    fcfsWait,
+    mcpWait,
+    savedMs,
+    marketCostSaved,
+    heat,
+  }
+}
+
+function TxReceiptPanel({
+  params,
+  fcfsMetrics,
+  mcpMetrics,
+}: {
+  params: SimulationParams
+  fcfsMetrics: Metrics
+  mcpMetrics: Metrics
+}) {
+  const [txInput, setTxInput] = useState('')
+  const [receipt, setReceipt] = useState<TxReceipt | null>(null)
+  const [receiptError, setReceiptError] = useState('')
+  const [copiedReceipt, setCopiedReceipt] = useState(false)
+
+  const receiptText = receipt
+    ? `Breadlines receipt for ${receipt.shortSignature}\n\n${receipt.spamAhead} spam txs were modeled ahead of this tx.\nFCFS rank: #${receipt.fcfsRank} / ${receipt.fcfsWait}ms\nMCP rank: #${receipt.mcpRank} / ${receipt.mcpWait}ms\nMCP saved ~${receipt.savedMs}ms and ${receipt.marketCostSaved}bp market cost.\n\n$BREADLINES x $LMAO`
+    : ''
+  const shareUrl = receipt
+    ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(receiptText)}`
+    : ''
+
+  const runReceipt = useCallback((rawSignature = txInput) => {
+    const signature = rawSignature.trim()
+
+    if (!SOLANA_SIGNATURE_PATTERN.test(signature)) {
+      setReceipt(null)
+      setReceiptError('Paste a valid Solana transaction signature to generate a receipt.')
+      return
+    }
+
+    setReceipt(buildTxReceipt(signature, params, fcfsMetrics, mcpMetrics))
+    setReceiptError('')
+    setCopiedReceipt(false)
+  }, [fcfsMetrics, mcpMetrics, params, txInput])
+
+  const handleCopyReceipt = useCallback(async () => {
+    if (!receiptText) return
+
+    try {
+      await navigator.clipboard.writeText(receiptText)
+      setCopiedReceipt(true)
+      window.setTimeout(() => setCopiedReceipt(false), 1500)
+    } catch {
+      setCopiedReceipt(false)
+    }
+  }, [receiptText])
+
+  return (
+    <Card className="border-primary/30 bg-card/80">
+      <CardHeader className="pb-3">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <FileText className="h-4 w-4 text-primary" />
+              Public Tx Receipt
+            </CardTitle>
+            <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
+              Paste a Solana tx signature and generate a shareable simulator receipt for the current breadline versus the MCP path.
+            </p>
+          </div>
+          <Badge variant="outline" className="w-fit border-primary/60 text-primary">
+            Simulator MVP
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex flex-col gap-2 md:flex-row">
+          <Input
+            value={txInput}
+            onChange={(event) => {
+              setTxInput(event.target.value)
+              setReceiptError('')
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') runReceipt()
+            }}
+            placeholder="Paste Solana tx signature"
+            className="font-mono text-xs"
+          />
+          <div className="flex gap-2">
+            <Button onClick={() => runReceipt()} className="shrink-0 gap-2">
+              Generate
+              <Zap className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setTxInput(SAMPLE_SIGNATURE)
+                runReceipt(SAMPLE_SIGNATURE)
+              }}
+              className="shrink-0"
+            >
+              Sample
+            </Button>
+          </div>
+        </div>
+
+        {receiptError ? (
+          <p className="text-xs text-destructive">{receiptError}</p>
+        ) : null}
+
+        {receipt ? (
+          <div className="space-y-4">
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
+                <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Spam Ahead</p>
+                <p className="mt-1 text-2xl font-semibold text-destructive">{receipt.spamAhead}</p>
+              </div>
+              <div className="rounded-lg border border-border/60 bg-secondary/20 p-3">
+                <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">FCFS Wait</p>
+                <p className="mt-1 text-2xl font-semibold text-foreground">{receipt.fcfsWait}ms</p>
+              </div>
+              <div className="rounded-lg border border-primary/35 bg-primary/10 p-3">
+                <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">MCP Wait</p>
+                <p className="mt-1 text-2xl font-semibold text-primary">{receipt.mcpWait}ms</p>
+              </div>
+              <div className="rounded-lg border border-primary/35 bg-primary/10 p-3">
+                <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Time Saved</p>
+                <p className="mt-1 text-2xl font-semibold text-primary">{receipt.savedMs}ms</p>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-border/60 bg-secondary/20 p-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-primary">{receipt.shortSignature}</p>
+                  <p className="mt-1 text-sm leading-6 text-foreground">
+                    Modeled as <span className="font-semibold text-destructive">{receipt.heat}</span>: FCFS rank #{receipt.fcfsRank}, MCP rank #{receipt.mcpRank}, with ~{receipt.marketCostSaved}bp market cost saved.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={handleCopyReceipt} className="gap-2">
+                    <Clipboard className="h-4 w-4" />
+                    {copiedReceipt ? 'Copied' : 'Copy'}
+                  </Button>
+                  <Button asChild size="sm" className="gap-2">
+                    <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+                      Share
+                      <Share2 className="h-4 w-4" />
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </CardContent>
+    </Card>
   )
 }
 
@@ -1057,6 +1368,9 @@ export default function BreadLinesMarkets() {
 
           {/* Main Content */}
           <main className="flex-1 space-y-6">
+            <BuildSprintPanel />
+            <TxReceiptPanel params={params} fcfsMetrics={fcfsMetrics} mcpMetrics={mcpMetrics} />
+
             {/* Protocol Comparison Columns */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <ProtocolColumn
