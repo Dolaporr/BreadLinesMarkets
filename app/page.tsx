@@ -362,24 +362,24 @@ function MetricCard({
 
 function BuildSprintPanel() {
   const txIntent = encodeURIComponent(
-    'Drop a Solana tx for the Breadlines x LMAO public sim. Show me the Soviet queue vs MCP.\n\n$BREADLINES x $LMAO'
+    'Drop a Solana tx for the Breadlines public sim. Show me the Soviet queue vs MCP.\n\n$BREADLINES'
   )
 
   const sprintItems = [
     {
       icon: Users,
-      label: 'LMAO integration',
-      text: 'Open dialogue with Slingoor and Fabricci, built hackathon-style in public.',
+      label: 'Open community lane',
+      text: 'Build in public first, then plug into aligned communities as the dialogue gets real.',
     },
     {
       icon: Repeat2,
-      label: '50% creator rewards flywheel',
-      text: 'Market buys feed LMAO holder rewards, weekly bagworking, and simulator campaigns.',
+      label: 'Creator rewards flywheel',
+      text: 'Route part of creator rewards into market buys, community rewards, and simulator campaigns.',
     },
     {
       icon: Gift,
-      label: 'Holder rewards',
-      text: 'Claim-based rewards for LMAO holders who help test, share, and run public sims.',
+      label: 'Claim-based rewards',
+      text: 'Reward people who help test receipts, share useful sims, and join weekly bagworking.',
     },
     {
       icon: Megaphone,
@@ -395,17 +395,17 @@ function BuildSprintPanel() {
           <div className="border-b border-primary/15 p-5 lg:border-b-0 lg:border-r">
             <div className="mb-3 flex flex-wrap items-center gap-2">
               <Badge variant="outline" className="border-primary/60 bg-primary/10 text-primary">
-                Breadlines x LMAO
+                Breadlines Open Sprint
               </Badge>
               <Badge variant="outline" className="border-border/70 bg-card/40 text-muted-foreground">
-                Open Build Sprint
+                Community Flywheel
               </Badge>
             </div>
             <h2 className="text-xl font-semibold tracking-tight text-foreground">
               Turn the tweet into a working community flywheel.
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              First move: build in public, reward LMAO participation, and make Breadlines the simulation layer people can point to when the Solana queue debate heats up.
+              First move: build in public, reward real participation, and make Breadlines the simulation layer people can point to when the Solana queue debate heats up.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <Button asChild size="sm" className="gap-2">
@@ -525,7 +525,7 @@ function TxReceiptPanel({
   const [copiedReceipt, setCopiedReceipt] = useState(false)
 
   const receiptText = receipt
-    ? `Breadlines receipt for ${receipt.shortSignature}\n\n${receipt.spamAhead} spam txs were modeled ahead of this tx.\nFCFS rank: #${receipt.fcfsRank} / ${receipt.fcfsWait}ms\nMCP rank: #${receipt.mcpRank} / ${receipt.mcpWait}ms\nMCP saved ~${receipt.savedMs}ms and ${receipt.marketCostSaved}bp market cost.\n\n$BREADLINES x $LMAO`
+    ? `Breadlines receipt for ${receipt.shortSignature}\n\n${receipt.spamAhead} spam txs were modeled ahead of this tx.\nFCFS rank: #${receipt.fcfsRank} / ${receipt.fcfsWait}ms\nMCP rank: #${receipt.mcpRank} / ${receipt.mcpWait}ms\nMCP saved ~${receipt.savedMs}ms and ${receipt.marketCostSaved}bp market cost.\n\n$BREADLINES`
     : ''
   const shareUrl = receipt
     ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(receiptText)}`
