@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { 
   BarChart, 
   Bar, 
@@ -457,6 +458,37 @@ function BuildSprintPanel() {
 
 const SAMPLE_SIGNATURE = '3zYxWvUtSrQpNmLkJhGfEdCbA98765432123456789ABCDEFGHJKLMNPQRSTUVWXYZ'
 const SOLANA_SIGNATURE_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{64,88}$/
+const PERP_EXAMPLES = [
+  {
+    label: 'Drift fill',
+    value: 'drift:5wGkQ7mZp9YvN2rT8xB4sLdHqP6aJcE3fUvK1nMxR92QbCdEfGhJkLmNpRsTuVwX',
+  },
+  {
+    label: 'Jupiter perps',
+    value: 'jupiter-perps:4sBxH7kLmQp9YvN2rT8xB4sLdHqP6aJcE3fUvK1nMxR92QbCdEfGhJkLmNpRs',
+  },
+  {
+    label: 'Phoenix route',
+    value: 'phoenix:2rT8xB4sLdHqP6aJcE3fUvK1nMxR92QbCdEfGhJkLmNpRsTuVwX5wGkQ7mZp9YvN',
+  },
+] as const
+const QUICK_TESTS = [
+  {
+    label: 'Try Normal Swap',
+    mode: 'normal',
+    value: SAMPLE_SIGNATURE,
+  },
+  {
+    label: 'Try Drift Perp',
+    mode: 'perps',
+    value: PERP_EXAMPLES[0].value,
+  },
+  {
+    label: 'Try Jupiter Perps',
+    mode: 'perps',
+    value: PERP_EXAMPLES[1].value,
+  },
+] as const
 
 type TxReceipt = {
   signature: string
@@ -469,6 +501,17 @@ type TxReceipt = {
   savedMs: number
   marketCostSaved: number
   heat: 'Clean' | 'Crowded' | 'Breadline'
+}
+
+type PerpsResult = {
+  venue: string
+  blocksWaited: number
+  spammersCut: number
+  slippagePaid: string
+  liqRisk: string
+  fundingExposure: string
+  fillTime: string
+  mcpMessage: string
 }
 
 function hashString(value: string) {
@@ -510,6 +553,39 @@ function buildTxReceipt(signature: string, params: SimulationParams, fcfsMetrics
   }
 }
 
+function detectPerpVenue(value: string) {
+  const lower = value.toLowerCase()
+
+  if (lower.includes('drift')) return 'Drift'
+  if (lower.includes('jupiter') || lower.includes('jup')) return 'Jupiter Perps'
+  if (lower.includes('phoenix')) return 'Phoenix'
+  if (lower.includes('zeta')) return 'Zeta'
+  if (lower.includes('mango')) return 'Mango'
+  if (SOLANA_SIGNATURE_PATTERN.test(value.trim())) return 'Signature-only tx'
+
+  return 'Perps route'
+}
+
+function buildPerpsResult(input: string, params: SimulationParams, fcfsMetrics: Metrics, mcpMetrics: Metrics): PerpsResult {
+  const hash = hashString(input)
+  const pressure = Math.max(1, Math.round(params.spamVolume * 0.5 + (hash % 24)))
+  const blocksWaited = Math.max(1, Math.round((fcfsMetrics.avgInclusionLatency / params.blockTime) + 1 + (hash % 4)))
+  const slippageBps = Math.max(4, Math.round(fcfsMetrics.effectiveSpread * 0.9 + (hash % 18)))
+  const fundingBps = Math.max(1, Math.round(slippageBps * 0.22 + (hash % 6)))
+  const fillMs = Math.max(18, Math.round(mcpMetrics.avgInclusionLatency + (hash % 21)))
+
+  return {
+    venue: detectPerpVenue(input),
+    blocksWaited,
+    spammersCut: pressure,
+    slippagePaid: `${slippageBps}bp`,
+    liqRisk: `+${Math.max(6, Math.round(slippageBps * 1.4))}%`,
+    fundingExposure: `+${fundingBps}bp`,
+    fillTime: `${fillMs}ms`,
+    mcpMessage: 'No queue. No slippage tax. No surprise liquidations.',
+  }
+}
+
 function TxReceiptPanel({
   params,
   fcfsMetrics,
@@ -519,10 +595,13 @@ function TxReceiptPanel({
   fcfsMetrics: Metrics
   mcpMetrics: Metrics
 }) {
+  const [mode, setMode] = useState<'normal' | 'perps'>('normal')
   const [txInput, setTxInput] = useState('')
   const [receipt, setReceipt] = useState<TxReceipt | null>(null)
+  const [perpsResult, setPerpsResult] = useState<PerpsResult | null>(null)
   const [receiptError, setReceiptError] = useState('')
   const [copiedReceipt, setCopiedReceipt] = useState(false)
+  const [isSimulating, setIsSimulating] = useState(false)
 
   const receiptText = receipt
     ? `Breadlines receipt for ${receipt.shortSignature}\n\n${receipt.spamAhead} spam txs were modeled ahead of this tx.\nFCFS rank: #${receipt.fcfsRank} / ${receipt.fcfsWait}ms\nMCP rank: #${receipt.mcpRank} / ${receipt.mcpWait}ms\nMCP saved ~${receipt.savedMs}ms and ${receipt.marketCostSaved}bp market cost.\n\n$BREADLINES`
@@ -557,26 +636,74 @@ function TxReceiptPanel({
     }
   }, [receiptText])
 
+  const runPerpsSimulation = useCallback((rawInput = txInput) => {
+    const value = rawInput.trim()
+
+    if (!value) {
+      setPerpsResult(null)
+      setReceiptError('Paste a perp tx signature, venue, or use one of the quick examples.')
+      return
+    }
+
+    setReceiptError('')
+    setIsSimulating(true)
+
+    window.setTimeout(() => {
+      setPerpsResult(buildPerpsResult(value, params, fcfsMetrics, mcpMetrics))
+      setIsSimulating(false)
+    }, 450)
+  }, [fcfsMetrics, mcpMetrics, params, txInput])
+
+  const runSimulation = useCallback(() => {
+    if (mode === 'normal') {
+      runReceipt()
+      return
+    }
+
+    runPerpsSimulation()
+  }, [mode, runPerpsSimulation, runReceipt])
+
   return (
     <Card className="border-primary/30 bg-card/80">
       <CardHeader className="pb-3">
-        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <CardTitle className="flex items-center gap-2 text-base">
               <FileText className="h-4 w-4 text-primary" />
-              Public Tx Receipt
+              Breadline Simulator
             </CardTitle>
             <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
-              Paste a Solana tx signature and generate a shareable simulator receipt for the current breadline versus the MCP path.
+              {mode === 'normal'
+                ? 'Paste a Solana tx signature and generate a shareable simulator receipt for the current breadline versus the MCP path.'
+                : 'Paste a perp tx, venue, or route and model how FCFS queue drama turns into MCP market structure.'}
             </p>
           </div>
-          <Badge variant="outline" className="w-fit border-primary/60 text-primary">
-            Simulator MVP
-          </Badge>
+          <div className="inline-flex w-fit rounded-full border border-primary/25 bg-background/70 p-1">
+            {[
+              ['normal', 'Normal Tx Simulator'],
+              ['perps', 'Perps in the Breadline'],
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => {
+                  setMode(value as 'normal' | 'perps')
+                  setReceiptError('')
+                }}
+                className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition-all md:px-4 ${
+                  mode === value
+                    ? 'bg-yellow-400 text-black shadow-[0_0_18px_rgba(250,204,21,0.25)]'
+                    : 'text-muted-foreground hover:text-primary'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex flex-col gap-2 md:flex-row">
+        <div className="flex flex-col gap-2 lg:flex-row">
           <Input
             value={txInput}
             onChange={(event) => {
@@ -584,27 +711,80 @@ function TxReceiptPanel({
               setReceiptError('')
             }}
             onKeyDown={(event) => {
-              if (event.key === 'Enter') runReceipt()
+              if (event.key === 'Enter') runSimulation()
             }}
-            placeholder="Paste Solana tx signature"
+            placeholder={mode === 'normal' ? 'Paste Solana tx signature' : 'Paste perp tx signature, Drift / Jupiter Perps / Phoenix route'}
             className="font-mono text-xs"
           />
           <div className="flex gap-2">
-            <Button onClick={() => runReceipt()} className="shrink-0 gap-2">
-              Generate
-              <Zap className="h-4 w-4" />
+            <Button onClick={runSimulation} className="h-11 shrink-0 gap-2 bg-yellow-400 px-5 text-xs font-bold uppercase tracking-[0.12em] text-black hover:bg-yellow-300">
+              {isSimulating ? 'Simulating' : mode === 'normal' ? 'Run Simulation' : 'Run Perps Simulation'}
+              <Zap className={`h-4 w-4 ${isSimulating ? 'animate-pulse' : ''}`} />
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setTxInput(SAMPLE_SIGNATURE)
-                runReceipt(SAMPLE_SIGNATURE)
-              }}
-              className="shrink-0"
-            >
-              Sample
-            </Button>
+            {mode === 'normal' ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setTxInput(SAMPLE_SIGNATURE)
+                  runReceipt(SAMPLE_SIGNATURE)
+                }}
+                className="h-11 shrink-0"
+              >
+                Sample
+              </Button>
+            ) : null}
+          </div>
+        </div>
+
+        {mode === 'perps' ? (
+          <div className="flex flex-wrap gap-2">
+            {PERP_EXAMPLES.map((example) => (
+              <Button
+                key={example.label}
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setTxInput(example.value)
+                  setReceiptError('')
+                }}
+                className="border-yellow-400/30 text-yellow-200 hover:bg-yellow-400/10 hover:text-yellow-100"
+              >
+                {example.label}
+              </Button>
+            ))}
+          </div>
+        ) : null}
+
+        <div className="rounded-lg border border-yellow-400/20 bg-yellow-400/[0.04] p-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-yellow-200">
+                Quick Test
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Prefill a realistic route and run the sim without hunting for a tx.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {QUICK_TESTS.map((test) => (
+                <Button
+                  key={test.label}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setMode(test.mode)
+                    setTxInput(test.value)
+                    setReceiptError('')
+                  }}
+                  className="border-yellow-400/30 text-yellow-200 hover:bg-yellow-400/10 hover:text-yellow-100"
+                >
+                  {test.label}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -612,7 +792,7 @@ function TxReceiptPanel({
           <p className="text-xs text-destructive">{receiptError}</p>
         ) : null}
 
-        {receipt ? (
+        {mode === 'normal' && receipt ? (
           <div className="space-y-4">
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
@@ -652,6 +832,70 @@ function TxReceiptPanel({
                       <Share2 className="h-4 w-4" />
                     </a>
                   </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {mode === 'perps' && perpsResult ? (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className="border-yellow-400/50 bg-yellow-400/10 text-yellow-200">
+                Detected: {perpsResult.venue}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                Dummy model for now. Real tx parsing comes next.
+              </span>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-destructive/35 bg-destructive/10 p-4">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-destructive">
+                      Soviet Breadline
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">FCFS when the perp trade is already sweating.</p>
+                  </div>
+                  <Badge variant="outline" className="border-destructive/50 text-destructive">
+                    Queue tax
+                  </Badge>
+                </div>
+                <div className="grid gap-2">
+                  {[
+                    ['Blocks waited', perpsResult.blocksWaited],
+                    ['Spammers that cut you', perpsResult.spammersCut],
+                    ['Slippage paid', perpsResult.slippagePaid],
+                    ['Liq risk up', perpsResult.liqRisk],
+                    ['Extra funding exposure', perpsResult.fundingExposure],
+                  ].map(([label, value]) => (
+                    <div key={label} className="flex items-center justify-between rounded-lg border border-destructive/20 bg-background/40 px-3 py-2">
+                      <span className="text-xs text-muted-foreground">{label}</span>
+                      <span className="font-mono text-sm font-semibold text-destructive">{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-primary/40 bg-primary/10 p-4">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                      MCP World
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">Concurrent proposer lanes. Actual market vibes.</p>
+                  </div>
+                  <Badge variant="outline" className="border-primary/60 text-primary">
+                    Clean fill
+                  </Badge>
+                </div>
+                <div className="rounded-lg border border-primary/30 bg-background/40 p-4">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Instant fill time</p>
+                  <p className="mt-2 text-4xl font-bold text-primary">{perpsResult.fillTime}</p>
+                  <p className="mt-3 text-sm font-medium leading-6 text-foreground">
+                    {perpsResult.mcpMessage}
+                  </p>
                 </div>
               </div>
             </div>
@@ -1147,21 +1391,38 @@ export default function BreadLinesMarkets() {
                 {"Visualizing Toly's vision — Multiple Concurrent Proposers BLVD"}
               </p>
             </div>
-            <Button
-              variant={isLocked ? "default" : "outline"}
-              className={`gap-2 transition-all ${isLocked ? 'neon-green-glow' : ''}`}
-              onMouseEnter={() => setBotHover(true)}
-              onMouseLeave={() => setBotHover(false)}
-              onClick={() => setIsLocked(!isLocked)}
-            >
-              <motion.div
-                animate={botHover ? { rotate: [0, -10, 10, -10, 0] } : {}}
-                transition={{ duration: 0.5 }}
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant={isLocked ? "default" : "outline"}
+                className={`gap-2 transition-all ${isLocked ? 'neon-green-glow' : ''}`}
+                onMouseEnter={() => setBotHover(true)}
+                onMouseLeave={() => setBotHover(false)}
+                onClick={() => setIsLocked(!isLocked)}
               >
-                {isLocked ? <Lock className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-              </motion.div>
-              {isLocked ? 'Locked In' : 'Lock In'}
-            </Button>
+                <motion.div
+                  animate={botHover ? { rotate: [0, -10, 10, -10, 0] } : {}}
+                  transition={{ duration: 0.5 }}
+                >
+                  {isLocked ? <Lock className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                </motion.div>
+                {isLocked ? 'Locked In' : 'Lock In'}
+              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="gap-2 border-yellow-400/35 bg-yellow-400/5 text-yellow-200 transition-all hover:-translate-y-0.5 hover:border-yellow-400/70 hover:bg-yellow-400/10 hover:text-yellow-100 hover:shadow-[0_0_18px_rgba(250,204,21,0.16)]"
+                  >
+                    <Megaphone className="h-4 w-4" />
+                    Open Sprint
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-h-[88vh] overflow-y-auto border-primary/35 bg-background/95 p-0 sm:max-w-4xl">
+                  <DialogTitle className="sr-only">Breadlines Open Sprint</DialogTitle>
+                  <BuildSprintPanel />
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </div>
       </header>
@@ -1368,7 +1629,6 @@ export default function BreadLinesMarkets() {
 
           {/* Main Content */}
           <main className="flex-1 space-y-6">
-            <BuildSprintPanel />
             <TxReceiptPanel params={params} fcfsMetrics={fcfsMetrics} mcpMetrics={mcpMetrics} />
 
             {/* Protocol Comparison Columns */}
