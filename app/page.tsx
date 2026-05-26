@@ -36,7 +36,7 @@ import {
   Share2
 } from 'lucide-react'
 import { simulateBlock, type SimParams as SimulationParams, type SimResult as Metrics } from '@/lib/simulateBlock'
-import { getLiveData } from '@/lib/helius'
+import { getLiveData, getTransfersByAddress, type HeliusTransferSummary } from '@/lib/helius'
 
 // Types
 interface Transaction {
@@ -457,7 +457,9 @@ function BuildSprintPanel() {
 }
 
 const SAMPLE_SIGNATURE = '3zYxWvUtSrQpNmLkJhGfEdCbA98765432123456789ABCDEFGHJKLMNPQRSTUVWXYZ'
+const SAMPLE_TRANSFER_ADDRESS = '86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY'
 const SOLANA_SIGNATURE_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{64,88}$/
+const SOLANA_ADDRESS_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
 const PERP_EXAMPLES = [
   {
     label: 'Drift fill',
@@ -602,6 +604,10 @@ function TxReceiptPanel({
   const [receiptError, setReceiptError] = useState('')
   const [copiedReceipt, setCopiedReceipt] = useState(false)
   const [isSimulating, setIsSimulating] = useState(false)
+  const [transferAddress, setTransferAddress] = useState('')
+  const [transferScan, setTransferScan] = useState<HeliusTransferSummary | null>(null)
+  const [transferScanError, setTransferScanError] = useState('')
+  const [isTransferScanning, setIsTransferScanning] = useState(false)
 
   const receiptText = receipt
     ? `Breadlines receipt for ${receipt.shortSignature}\n\n${receipt.spamAhead} spam txs were modeled ahead of this tx.\nFCFS rank: #${receipt.fcfsRank} / ${receipt.fcfsWait}ms\nMCP rank: #${receipt.mcpRank} / ${receipt.mcpWait}ms\nMCP saved ~${receipt.savedMs}ms and ${receipt.marketCostSaved}bp market cost.\n\n$BREADLINES`
@@ -662,6 +668,29 @@ function TxReceiptPanel({
 
     runPerpsSimulation()
   }, [mode, runPerpsSimulation, runReceipt])
+
+  const scanTransferHistory = useCallback(async (rawAddress = transferAddress) => {
+    const address = rawAddress.trim()
+
+    if (!SOLANA_ADDRESS_PATTERN.test(address)) {
+      setTransferScan(null)
+      setTransferScanError('Paste a valid Solana wallet address, not a transaction signature.')
+      return
+    }
+
+    setTransferScanError('')
+    setIsTransferScanning(true)
+
+    try {
+      const scan = await getTransfersByAddress(address)
+      setTransferScan(scan)
+    } catch (error) {
+      setTransferScan(null)
+      setTransferScanError(error instanceof Error ? error.message : 'Unable to scan transfer history.')
+    } finally {
+      setIsTransferScanning(false)
+    }
+  }, [transferAddress])
 
   return (
     <Card className="border-primary/30 bg-card/80">
@@ -785,6 +814,110 @@ function TxReceiptPanel({
                 </Button>
               ))}
             </div>
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-primary/25 bg-primary/[0.04] p-3">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+                  Helius Transfer Intel
+                </p>
+                <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
+                  Uses getTransfersByAddress for parsed wallet transfer rows, Token-2022 fee rows, and p-token batch transfers when Helius returns them.
+                </p>
+              </div>
+              <Badge variant="outline" className="w-fit border-primary/50 text-primary">
+                10 credits / scan
+              </Badge>
+            </div>
+            <div className="flex flex-col gap-2 lg:flex-row">
+              <Input
+                value={transferAddress}
+                onChange={(event) => {
+                  setTransferAddress(event.target.value)
+                  setTransferScanError('')
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') scanTransferHistory()
+                }}
+                placeholder="Paste wallet address for transfer history"
+                className="font-mono text-xs"
+              />
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => scanTransferHistory()}
+                  className="h-11 shrink-0 gap-2 border-primary/40 text-primary hover:bg-primary/10"
+                  disabled={isTransferScanning}
+                >
+                  {isTransferScanning ? 'Scanning' : 'Scan History'}
+                  <Activity className={`h-4 w-4 ${isTransferScanning ? 'animate-pulse' : ''}`} />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setTransferAddress(SAMPLE_TRANSFER_ADDRESS)
+                    setTransferScanError('')
+                  }}
+                  className="h-11 shrink-0"
+                >
+                  Sample
+                </Button>
+              </div>
+            </div>
+
+            {transferScanError ? (
+              <p className="text-xs text-destructive">{transferScanError}</p>
+            ) : null}
+
+            {transferScan ? (
+              <div className="space-y-3">
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                  {[
+                    ['Transfer rows', transferScan.stats.transferRows],
+                    ['Unique txs', transferScan.stats.uniqueTransactions],
+                    ['Token-2022 fees', transferScan.stats.token2022FeeRows],
+                    ['Batched tx rows', transferScan.stats.batchedSignatureRows],
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-lg border border-primary/20 bg-background/40 p-3">
+                      <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+                      <p className="mt-1 text-xl font-semibold text-primary">{value}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-lg border border-border/60 bg-secondary/20 p-3">
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <p className="text-xs font-semibold text-foreground">Latest parsed transfers</p>
+                    {transferScan.paginationToken ? (
+                      <Badge variant="outline" className="border-yellow-400/40 text-yellow-200">
+                        More history available
+                      </Badge>
+                    ) : null}
+                  </div>
+                  <div className="grid gap-2">
+                    {transferScan.transfers.slice(0, 3).map((transfer, index) => (
+                      <div key={`${transfer.signature}-${index}`} className="flex flex-col gap-1 rounded-md border border-border/50 bg-background/35 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-xs font-semibold text-primary">
+                            {transfer.type ?? 'transfer'} {transfer.uiAmount ? `- ${transfer.uiAmount}` : ''}
+                          </p>
+                          <p className="font-mono text-[10px] text-muted-foreground">
+                            {transfer.signature.slice(0, 8)}...{transfer.signature.slice(-8)}
+                          </p>
+                        </div>
+                        <p className="max-w-full truncate font-mono text-[10px] text-muted-foreground sm:max-w-[220px]">
+                          {transfer.mint ?? 'native SOL'}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
 

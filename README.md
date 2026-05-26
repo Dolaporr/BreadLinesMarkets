@@ -8,6 +8,7 @@ The app is built to make one idea obvious: queueing rules shape markets. Under s
 
 - Normal Tx Simulator: paste a Solana transaction signature and generate a shareable breadline versus MCP receipt.
 - Perps in the Breadline: paste or quick-test a perp route and compare FCFS queue pain against an MCP-style fill path.
+- Helius Transfer Intel: paste a wallet address and scan parsed transfer history through `getTransfersByAddress`.
 - Protocol Comparison: compare FCFS, single-proposer batching, and MCP + FBO with replay priority.
 
 ## What It Shows
@@ -20,6 +21,9 @@ The app is built to make one idea obvious: queueing rules shape markets. Under s
 - Perp slippage exposure
 - Liquidation-risk pressure
 - Funding exposure
+- Parsed transfer rows
+- Token-2022 fee rows
+- Batched transfer rows
 
 ## UX
 
@@ -27,6 +31,7 @@ The app is built to make one idea obvious: queueing rules shape markets. Under s
 - Perps examples for Drift, Jupiter Perps, and Phoenix-style fills.
 - Open Sprint popup for community flywheel context without cluttering the simulator.
 - Live Solana context via Helius data when enabled.
+- Wallet transfer scans powered by Helius `getTransfersByAddress`, including parsed rows that can surface p-token batch transfer activity when returned by Helius.
 
 ## Tech
 
