@@ -38,11 +38,15 @@ export async function getLiveData(): Promise<{ spamVolume: number; priorityFee: 
   return res.json()
 }
 
-export async function getTransfersByAddress(address: string, limit = 25): Promise<HeliusTransferSummary> {
+export async function getTransfersByAddress(
+  address: string,
+  limit = 25,
+  paginationToken?: string,
+): Promise<HeliusTransferSummary> {
   const res = await fetch('/api/helius/transfers', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ address, limit }),
+    body: JSON.stringify({ address, limit, paginationToken }),
   })
 
   if (!res.ok) {

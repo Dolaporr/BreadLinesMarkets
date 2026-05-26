@@ -516,6 +516,25 @@ type PerpsResult = {
   mcpMessage: string
 }
 
+function mergeTransferScans(previous: HeliusTransferSummary, next: HeliusTransferSummary): HeliusTransferSummary {
+  const transfers = [...previous.transfers, ...next.transfers]
+
+  return {
+    ...next,
+    transfers,
+    stats: {
+      transferRows: transfers.length,
+      uniqueTransactions: new Set(transfers.map((transfer) => transfer.signature)).size,
+      inboundRows: previous.stats.inboundRows + next.stats.inboundRows,
+      outboundRows: previous.stats.outboundRows + next.stats.outboundRows,
+      mintRows: previous.stats.mintRows + next.stats.mintRows,
+      burnRows: previous.stats.burnRows + next.stats.burnRows,
+      token2022FeeRows: previous.stats.token2022FeeRows + next.stats.token2022FeeRows,
+      batchedSignatureRows: previous.stats.batchedSignatureRows + next.stats.batchedSignatureRows,
+    },
+  }
+}
+
 function hashString(value: string) {
   let hash = 2166136261
 
@@ -608,6 +627,7 @@ function TxReceiptPanel({
   const [transferScan, setTransferScan] = useState<HeliusTransferSummary | null>(null)
   const [transferScanError, setTransferScanError] = useState('')
   const [isTransferScanning, setIsTransferScanning] = useState(false)
+  const [isLoadingMoreTransfers, setIsLoadingMoreTransfers] = useState(false)
 
   const receiptText = receipt
     ? `Breadlines receipt for ${receipt.shortSignature}\n\n${receipt.spamAhead} spam txs were modeled ahead of this tx.\nFCFS rank: #${receipt.fcfsRank} / ${receipt.fcfsWait}ms\nMCP rank: #${receipt.mcpRank} / ${receipt.mcpWait}ms\nMCP saved ~${receipt.savedMs}ms and ${receipt.marketCostSaved}bp market cost.\n\n$BREADLINES`
@@ -691,6 +711,22 @@ function TxReceiptPanel({
       setIsTransferScanning(false)
     }
   }, [transferAddress])
+
+  const loadMoreTransferHistory = useCallback(async () => {
+    if (!transferScan?.paginationToken) return
+
+    setTransferScanError('')
+    setIsLoadingMoreTransfers(true)
+
+    try {
+      const nextScan = await getTransfersByAddress(transferScan.address, 25, transferScan.paginationToken)
+      setTransferScan((current) => current ? mergeTransferScans(current, nextScan) : nextScan)
+    } catch (error) {
+      setTransferScanError(error instanceof Error ? error.message : 'Unable to load more transfer history.')
+    } finally {
+      setIsLoadingMoreTransfers(false)
+    }
+  }, [transferScan])
 
   return (
     <Card className="border-primary/30 bg-card/80">
@@ -893,9 +929,16 @@ function TxReceiptPanel({
                   <div className="mb-2 flex items-center justify-between gap-3">
                     <p className="text-xs font-semibold text-foreground">Latest real wallet flow</p>
                     {transferScan.paginationToken ? (
-                      <Badge variant="outline" className="border-yellow-400/40 text-yellow-200">
-                        More history available
-                      </Badge>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={loadMoreTransferHistory}
+                        disabled={isLoadingMoreTransfers}
+                        className="h-8 border-yellow-400/40 text-yellow-200 hover:bg-yellow-400/10 hover:text-yellow-100"
+                      >
+                        {isLoadingMoreTransfers ? 'Loading more' : 'Load more history'}
+                      </Button>
                     ) : null}
                   </div>
                   <div className="grid gap-2">
