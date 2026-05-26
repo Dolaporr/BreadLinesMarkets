@@ -825,11 +825,11 @@ function TxReceiptPanel({
                   Helius Transfer Intel
                 </p>
                 <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
-                  Uses getTransfersByAddress for parsed wallet transfer rows, Token-2022 fee rows, and p-token batch transfers when Helius returns them.
+                  Bring real wallet flow into the simulator. Scan parsed transfer rows, then see where queue-heavy activity becomes breadline-sensitive.
                 </p>
               </div>
               <Badge variant="outline" className="w-fit border-primary/50 text-primary">
-                10 credits / scan
+                Real flow lens
               </Badge>
             </div>
             <div className="flex flex-col gap-2 lg:flex-row">
@@ -842,7 +842,7 @@ function TxReceiptPanel({
                 onKeyDown={(event) => {
                   if (event.key === 'Enter') scanTransferHistory()
                 }}
-                placeholder="Paste wallet address for transfer history"
+                placeholder="Paste wallet address to scan real flow"
                 className="font-mono text-xs"
               />
               <div className="flex gap-2">
@@ -881,7 +881,7 @@ function TxReceiptPanel({
                     ['Transfer rows', transferScan.stats.transferRows],
                     ['Unique txs', transferScan.stats.uniqueTransactions],
                     ['Token-2022 fees', transferScan.stats.token2022FeeRows],
-                    ['Batched tx rows', transferScan.stats.batchedSignatureRows],
+                    ['Queue-sensitive rows', transferScan.stats.batchedSignatureRows],
                   ].map(([label, value]) => (
                     <div key={label} className="rounded-lg border border-primary/20 bg-background/40 p-3">
                       <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
@@ -891,7 +891,7 @@ function TxReceiptPanel({
                 </div>
                 <div className="rounded-lg border border-border/60 bg-secondary/20 p-3">
                   <div className="mb-2 flex items-center justify-between gap-3">
-                    <p className="text-xs font-semibold text-foreground">Latest parsed transfers</p>
+                    <p className="text-xs font-semibold text-foreground">Latest real wallet flow</p>
                     {transferScan.paginationToken ? (
                       <Badge variant="outline" className="border-yellow-400/40 text-yellow-200">
                         More history available
