@@ -1,0 +1,407 @@
+import { NextResponse } from 'next/server'
+
+const HELIUS_URL = `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`
+const SOLANA_SIGNATURE_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{64,88}$/
+const BASE_FEE_LAMPORTS_PER_SIGNATURE = 5000
+
+type Confidence = 'observed' | 'estimated' | 'conceptual'
+type SensitivityLevel = 'low' | 'medium' | 'high' | 'unknown'
+
+type RpcAccountKey =
+  | string
+  | {
+      pubkey?: string
+      signer?: boolean
+      writable?: boolean
+      source?: string
+    }
+
+type RpcInstruction = {
+  program?: string
+  programId?: string
+  programIdIndex?: number
+  parsed?: unknown
+}
+
+type RpcTransaction = {
+  slot: number
+  blockTime?: number | null
+  meta?: {
+    err?: unknown
+    fee?: number
+    computeUnitsConsumed?: number
+    logMessages?: string[] | null
+    innerInstructions?: Array<{ instructions?: RpcInstruction[] }>
+    preTokenBalances?: unknown[]
+    postTokenBalances?: unknown[]
+  } | null
+  transaction?: {
+    message?: {
+      accountKeys?: RpcAccountKey[]
+      instructions?: RpcInstruction[]
+      recentBlockhash?: string
+    }
+    signatures?: string[]
+  }
+}
+
+type SignatureStatus = {
+  confirmationStatus?: string
+  err?: unknown
+}
+
+type PerformanceSample = {
+  numTransactions?: number
+  numNonVoteTransactions?: number
+  numSlots?: number
+  samplePeriodSecs?: number
+}
+
+const PROGRAM_LABELS: Record<string, string> = {
+  '11111111111111111111111111111111': 'System Program',
+  ComputeBudget111111111111111111111111111111: 'Compute Budget',
+  TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA: 'SPL Token',
+  TokenzQdBNbLqP5VEhUMLAq5Lx4o2sxb9y5KHK2iHf: 'Token-2022',
+  ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL: 'Associated Token Account',
+  MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr: 'Memo Program',
+  Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo: 'Memo Program',
+  AddressLookupTab1e1111111111111111111111111: 'Address Lookup Table',
+  JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4: 'Jupiter Aggregator',
+  whirLbMiicVdio4qvUfM5KAg6CtQonwY6WcAm7A9Xq: 'Orca Whirlpool',
+  dRiftyHA39mYBAzirNc3LfgcHftc83mDtvrVQSaVbb: 'Drift Protocol',
+  PhoeNiXZ8ByJGLkxNfZRnkUfjvmuYqLR89jjFHGqdXY: 'Phoenix',
+}
+
+async function heliusRpc<T>(method: string, params: unknown[]): Promise<T> {
+  const res = await fetch(HELIUS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+  })
+
+  const json = await res.json()
+  if (json.error) throw new Error(json.error.message)
+  return json.result as T
+}
+
+function accountAddress(account: RpcAccountKey | undefined) {
+  if (!account) return undefined
+  return typeof account === 'string' ? account : account.pubkey
+}
+
+function programLabel(programId: string, programName?: string) {
+  if (PROGRAM_LABELS[programId]) return PROGRAM_LABELS[programId]
+  if (programName) return programName
+  return 'Unknown Program'
+}
+
+function getProgramId(instruction: RpcInstruction, accountKeys: RpcAccountKey[]) {
+  if (instruction.programId) return instruction.programId
+  if (typeof instruction.programIdIndex === 'number') {
+    return accountAddress(accountKeys[instruction.programIdIndex])
+  }
+  return undefined
+}
+
+function collectPrograms(tx: RpcTransaction) {
+  const accountKeys = tx.transaction?.message?.accountKeys ?? []
+  const topLevel = tx.transaction?.message?.instructions ?? []
+  const inner = tx.meta?.innerInstructions?.flatMap((group) => group.instructions ?? []) ?? []
+  const counts = new Map<string, { id: string; label: string; instructionCount: number }>()
+
+  for (const instruction of [...topLevel, ...inner]) {
+    const id = getProgramId(instruction, accountKeys)
+    if (!id) continue
+    const existing = counts.get(id)
+
+    if (existing) {
+      existing.instructionCount += 1
+      continue
+    }
+
+    counts.set(id, {
+      id,
+      label: programLabel(id, instruction.program),
+      instructionCount: 1,
+    })
+  }
+
+  return Array.from(counts.values()).sort((a, b) => b.instructionCount - a.instructionCount)
+}
+
+function collectWritableAccounts(tx: RpcTransaction) {
+  return (tx.transaction?.message?.accountKeys ?? [])
+    .map((account) => {
+      if (typeof account === 'string') {
+        return { address: account, signer: false, source: 'unknown', confidence: 'estimated' as Confidence }
+      }
+
+      return {
+        address: account.pubkey ?? '',
+        signer: Boolean(account.signer),
+        source: account.source ?? 'transaction',
+        confidence: 'observed' as Confidence,
+        writable: Boolean(account.writable),
+      }
+    })
+    .filter((account) => account.address && ('writable' in account ? account.writable : false))
+}
+
+function estimatePriorityFeeLamports(tx: RpcTransaction) {
+  const fee = tx.meta?.fee
+  const signatureCount = tx.transaction?.signatures?.length ?? 0
+  if (typeof fee !== 'number' || signatureCount <= 0) return undefined
+
+  return Math.max(0, fee - signatureCount * BASE_FEE_LAMPORTS_PER_SIGNATURE)
+}
+
+function pressureLabel(score: number) {
+  if (score >= 70) return 'high'
+  if (score >= 38) return 'moderate'
+  return 'low'
+}
+
+function buildPressure({
+  tx,
+  slotSignatureCount,
+  samples,
+  programsTouched,
+  writableAccounts,
+}: {
+  tx: RpcTransaction
+  slotSignatureCount?: number
+  samples: PerformanceSample[]
+  programsTouched: number
+  writableAccounts: number
+}) {
+  const sample = samples[0]
+  const txPerSlot =
+    sample?.numTransactions && sample?.numSlots ? sample.numTransactions / Math.max(1, sample.numSlots) : undefined
+  const nonVoteTxPerSlot =
+    sample?.numNonVoteTransactions && sample?.numSlots ? sample.numNonVoteTransactions / Math.max(1, sample.numSlots) : undefined
+  const avgSlotMs =
+    sample?.samplePeriodSecs && sample?.numSlots ? (sample.samplePeriodSecs * 1000) / Math.max(1, sample.numSlots) : undefined
+
+  const basis: string[] = []
+  let score = 12
+
+  if (slotSignatureCount != null && txPerSlot) {
+    const ratio = slotSignatureCount / Math.max(1, txPerSlot)
+    score += Math.min(34, ratio * 18)
+    basis.push(`landed slot carried ${slotSignatureCount} signatures`)
+  } else if (slotSignatureCount != null) {
+    score += Math.min(30, slotSignatureCount / 60)
+    basis.push(`landed slot carried ${slotSignatureCount} signatures`)
+  } else {
+    basis.push('landed slot signature count unavailable')
+  }
+
+  if (tx.meta?.computeUnitsConsumed && tx.meta.computeUnitsConsumed > 750_000) {
+    score += 16
+    basis.push('high compute usage')
+  }
+
+  if (programsTouched >= 4) {
+    score += 10
+    basis.push('multi-program execution path')
+  }
+
+  if (writableAccounts >= 12) {
+    score += 10
+    basis.push('many writable accounts')
+  }
+
+  if (tx.meta?.err) {
+    score += 12
+    basis.push('transaction failed')
+  }
+
+  const boundedScore = Math.round(Math.max(0, Math.min(100, score)))
+
+  return {
+    label: pressureLabel(boundedScore),
+    score: boundedScore,
+    confidence: 'estimated' as Confidence,
+    basis,
+    sample: {
+      txPerSlot: txPerSlot != null ? Math.round(txPerSlot * 100) / 100 : undefined,
+      nonVoteTxPerSlot: nonVoteTxPerSlot != null ? Math.round(nonVoteTxPerSlot * 100) / 100 : undefined,
+      avgSlotMs: avgSlotMs != null ? Math.round(avgSlotMs) : undefined,
+    },
+  }
+}
+
+function sensitivity(
+  level: SensitivityLevel,
+  confidence: Confidence,
+  reasons: string[],
+) {
+  return { level, confidence, reasons }
+}
+
+function buildPercolatorLens({
+  tx,
+  programs,
+  writableAccounts,
+  pressure,
+  priorityFeeLamports,
+}: {
+  tx: RpcTransaction
+  programs: Array<{ id: string; label: string; instructionCount: number }>
+  writableAccounts: Array<{ address: string }>
+  pressure: ReturnType<typeof buildPressure>
+  priorityFeeLamports?: number
+}) {
+  const programText = programs.map((program) => `${program.label} ${program.id}`.toLowerCase()).join(' ')
+  const hasSwapOrPerpHint =
+    /jupiter|drift|phoenix|orca|raydium|openbook|perp|amm|market|swap/.test(programText)
+  const tokenBalanceTouched =
+    (tx.meta?.preTokenBalances?.length ?? 0) > 0 || (tx.meta?.postTokenBalances?.length ?? 0) > 0
+  const highPressure = pressure.label === 'high' || pressure.score >= 70
+  const mediumPressure = pressure.label === 'moderate' || pressure.score >= 38
+  const highWriteSet = writableAccounts.length >= 12
+  const highCompute = Boolean(tx.meta?.computeUnitsConsumed && tx.meta.computeUnitsConsumed > 750_000)
+
+  const queueReasons: string[] = []
+  if (highPressure) queueReasons.push('landed in a high-pressure slot estimate')
+  if (mediumPressure && !highPressure) queueReasons.push('landed in a moderate-pressure slot estimate')
+  if (priorityFeeLamports && priorityFeeLamports > 0) queueReasons.push('paid an estimated priority fee')
+  if (highWriteSet) queueReasons.push('large writable account set can increase scheduling sensitivity')
+
+  const priceReasons: string[] = []
+  if (hasSwapOrPerpHint) priceReasons.push('program path looks trading or market related')
+  if (tokenBalanceTouched) priceReasons.push('token balances changed during execution')
+  if (highPressure || mediumPressure) priceReasons.push('contention can matter more for price-sensitive flow')
+
+  const riskReasons: string[] = []
+  if (/drift|phoenix|perp|oracle|pyth|switchboard/.test(programText)) {
+    riskReasons.push('program path hints at market, perp, or oracle-sensitive logic')
+  }
+  if (highCompute) riskReasons.push('high compute usage can make risk-state refreshes more fragile under pressure')
+  if (tx.meta?.err) riskReasons.push('failed execution is worth inspecting for routing, state, or user-side constraints')
+
+  const queueLevel: SensitivityLevel = queueReasons.length >= 3 || highPressure ? 'high' : queueReasons.length ? 'medium' : 'low'
+  const priceLevel: SensitivityLevel = priceReasons.length >= 2 ? 'high' : priceReasons.length ? 'medium' : 'low'
+  const riskLevel: SensitivityLevel = riskReasons.length >= 2 ? 'high' : riskReasons.length ? 'medium' : 'low'
+
+  return {
+    queueSensitive: sensitivity(queueLevel, 'estimated', queueReasons.length ? queueReasons : ['no strong queue-pressure signal found']),
+    priceSensitive: sensitivity(priceLevel, 'estimated', priceReasons.length ? priceReasons : ['no strong price-sensitivity signal found']),
+    riskOracleSensitive: sensitivity(riskLevel, 'estimated', riskReasons.length ? riskReasons : ['no strong risk/oracle signal found']),
+    whyMarketStructureMayMatter: {
+      confidence: 'conceptual' as Confidence,
+      text:
+        'Percolator-style perps and MCP-style proposer competition are useful to study when execution quality depends on fresh state, bounded risk progress, and fairer ordering under contention. This receipt does not claim what Percolator would have done; it marks where better market structure may matter.',
+    },
+  }
+}
+
+async function getSlotSignatureCount(slot: number) {
+  try {
+    const block = await heliusRpc<{ signatures?: string[] } | null>('getBlock', [
+      slot,
+      {
+        commitment: 'confirmed',
+        transactionDetails: 'signatures',
+        rewards: false,
+        maxSupportedTransactionVersion: 0,
+      },
+    ])
+
+    return block?.signatures?.length
+  } catch {
+    return undefined
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json()
+    const signature = String(body.signature ?? '').trim()
+
+    if (!process.env.HELIUS_API_KEY) {
+      return NextResponse.json({ error: 'HELIUS_API_KEY is not configured.' }, { status: 500 })
+    }
+
+    if (!SOLANA_SIGNATURE_PATTERN.test(signature)) {
+      return NextResponse.json({ error: 'Paste a valid Solana transaction signature.' }, { status: 400 })
+    }
+
+    const [tx, statusResult, samples] = await Promise.all([
+      heliusRpc<RpcTransaction | null>('getTransaction', [
+        signature,
+        {
+          encoding: 'jsonParsed',
+          commitment: 'confirmed',
+          maxSupportedTransactionVersion: 0,
+        },
+      ]),
+      heliusRpc<{ value?: SignatureStatus[] }>('getSignatureStatuses', [
+        [signature],
+        { searchTransactionHistory: true },
+      ]),
+      heliusRpc<PerformanceSample[]>('getRecentPerformanceSamples', [5]),
+    ])
+
+    if (!tx) {
+      return NextResponse.json(
+        { error: 'Transaction was not found by RPC. It may be too new, too old for this node, or invalid.' },
+        { status: 404 },
+      )
+    }
+
+    const programs = collectPrograms(tx)
+    const writableAccounts = collectWritableAccounts(tx)
+    const slotSignatureCount = await getSlotSignatureCount(tx.slot)
+    const priorityFeeLamportsEstimated = estimatePriorityFeeLamports(tx)
+    const pressure = buildPressure({
+      tx,
+      slotSignatureCount,
+      samples,
+      programsTouched: programs.length,
+      writableAccounts: writableAccounts.length,
+    })
+    const lens = buildPercolatorLens({
+      tx,
+      programs,
+      writableAccounts,
+      pressure,
+      priorityFeeLamports: priorityFeeLamportsEstimated,
+    })
+    const status = statusResult.value?.[0]
+    const statusLabel = tx.meta?.err || status?.err ? 'failed' : 'success'
+
+    return NextResponse.json({
+      signature,
+      shortSignature: `${signature.slice(0, 6)}...${signature.slice(-6)}`,
+      slot: tx.slot,
+      blockTime: tx.blockTime ?? null,
+      status: statusLabel,
+      confirmationStatus: status?.confirmationStatus ?? 'unknown',
+      error: tx.meta?.err ?? status?.err ?? null,
+      feePaidLamports: tx.meta?.fee ?? null,
+      feePaidSol: typeof tx.meta?.fee === 'number' ? tx.meta.fee / 1_000_000_000 : null,
+      priorityFeeLamportsEstimated,
+      computeUnitsConsumed: tx.meta?.computeUnitsConsumed ?? null,
+      recentBlockhash: tx.transaction?.message?.recentBlockhash ?? null,
+      signatureCount: tx.transaction?.signatures?.length ?? null,
+      instructionCount: tx.transaction?.message?.instructions?.length ?? 0,
+      innerInstructionGroupCount: tx.meta?.innerInstructions?.length ?? 0,
+      programs,
+      writableAccounts,
+      writableAccountCount: writableAccounts.length,
+      slotPressure: pressure,
+      confidence: {
+        transaction: 'observed' as Confidence,
+        slotPressure: 'estimated' as Confidence,
+        percolatorLens: 'conceptual' as Confidence,
+      },
+      percolatorLens: lens,
+    })
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Unable to build receipt.' },
+      { status: 500 },
+    )
+  }
+}

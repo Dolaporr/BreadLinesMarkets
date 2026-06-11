@@ -13,10 +13,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'BreadLinesMarkets | Solana Protocol Simulator',
-  description: 'Visualizing Toly\'s vision — MCP + FBO == Markets | FCFS == Bread Lines. Interactive dashboard for Solana blockchain protocol simulation.',
+  title: 'Breadlines | Solana Execution Receipts',
+  description: 'Paste a Solana transaction. Understand what happened. Execution receipts with observed facts first, estimated pressure, and conceptual market-structure context.',
   generator: 'v0.app',
-  keywords: ['Solana', 'MCP', 'FBO', 'FCFS', 'blockchain', 'protocol', 'simulator'],
+  keywords: ['Solana', 'execution receipts', 'transaction analysis', 'observability', 'MCP', 'FCFS', 'blockchain'],
   icons: {
     icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
     apple: '/apple-icon.png',

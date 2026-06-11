@@ -36,7 +36,15 @@ import {
   Share2
 } from 'lucide-react'
 import { simulateBlock, type SimParams as SimulationParams, type SimResult as Metrics } from '@/lib/simulateBlock'
-import { getLiveData, getTransfersByAddress, type HeliusTransferSummary } from '@/lib/helius'
+import {
+  getBreadlinesReceipt,
+  getLiveData,
+  getTransfersByAddress,
+  type BreadlinesReceipt,
+  type HeliusTransferSummary,
+  type ReceiptConfidence,
+  type ReceiptSensitivityLevel,
+} from '@/lib/helius'
 
 // Types
 interface Transaction {
@@ -456,10 +464,27 @@ function BuildSprintPanel() {
   )
 }
 
-const SAMPLE_SIGNATURE = '3zYxWvUtSrQpNmLkJhGfEdCbA98765432123456789ABCDEFGHJKLMNPQRSTUVWXYZ'
+const SAMPLE_SIGNATURE = '2GMEDJP6vf4Yw8iKBQVfLs311f5kjAo8WtvaJRo6LMuv5LbQDFBdsZho94ij7YAUcA1T9SxYhDn7jw181x4mpAA2'
 const SAMPLE_TRANSFER_ADDRESS = '86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY'
 const SOLANA_SIGNATURE_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{64,88}$/
 const SOLANA_ADDRESS_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
+const RECEIPT_EXAMPLES = [
+  {
+    label: 'Successful swap',
+    value: '2GMEDJP6vf4Yw8iKBQVfLs311f5kjAo8WtvaJRo6LMuv5LbQDFBdsZho94ij7YAUcA1T9SxYhDn7jw181x4mpAA2',
+    note: 'Observed successful Jupiter route.',
+  },
+  {
+    label: 'Failed route',
+    value: '4NBrMsedNEtTzYBTfQf73Z8m9951WYP68shBLi7PTFSZsQ795i2QLGEEMgP3iX2qq4Ku2H1jQjWTZNizNKrQAa56',
+    note: 'Observed failed Jupiter route.',
+  },
+  {
+    label: 'High-fee attempt',
+    value: '2LsQeiLFT4Wn4Rcv3YswEF5ppALk3dNbF4DW9jCFHakt9E6CL1gozPEasvN2nijaSCsBfxB2rGGCKcBwpXXPQVnv',
+    note: 'Higher fee route attempt in a busy Jupiter slot sample.',
+  },
+] as const
 const PERP_EXAMPLES = [
   {
     label: 'Drift fill',
@@ -474,37 +499,6 @@ const PERP_EXAMPLES = [
     value: 'phoenix:2rT8xB4sLdHqP6aJcE3fUvK1nMxR92QbCdEfGhJkLmNpRsTuVwX5wGkQ7mZp9YvN',
   },
 ] as const
-const QUICK_TESTS = [
-  {
-    label: 'Try Normal Swap',
-    mode: 'normal',
-    value: SAMPLE_SIGNATURE,
-  },
-  {
-    label: 'Try Drift Perp',
-    mode: 'perps',
-    value: PERP_EXAMPLES[0].value,
-  },
-  {
-    label: 'Try Jupiter Perps',
-    mode: 'perps',
-    value: PERP_EXAMPLES[1].value,
-  },
-] as const
-
-type TxReceipt = {
-  signature: string
-  shortSignature: string
-  spamAhead: number
-  fcfsRank: number
-  mcpRank: number
-  fcfsWait: number
-  mcpWait: number
-  savedMs: number
-  marketCostSaved: number
-  heat: 'Clean' | 'Crowded' | 'Breadline'
-}
-
 type PerpsResult = {
   venue: string
   blocksWaited: number
@@ -514,6 +508,111 @@ type PerpsResult = {
   fundingExposure: string
   fillTime: string
   mcpMessage: string
+}
+
+function formatSol(value: number | null | undefined) {
+  if (value == null) return 'Unavailable'
+  return `${value.toLocaleString(undefined, { maximumFractionDigits: 9 })} SOL`
+}
+
+function formatLamportsValue(value: number | null | undefined) {
+  if (value == null) return 'Unavailable'
+  return `${value.toLocaleString()} lamports`
+}
+
+function formatBlockTime(value: number | null) {
+  if (!value) return 'Unavailable'
+  return new Date(value * 1000).toLocaleString()
+}
+
+function confidenceTone(confidence: ReceiptConfidence) {
+  if (confidence === 'observed') return 'border-emerald-400/35 bg-emerald-400/[0.06] text-emerald-200'
+  if (confidence === 'estimated') return 'border-amber-300/35 bg-amber-300/[0.06] text-amber-200'
+  return 'border-sky-300/35 bg-sky-300/[0.06] text-sky-200'
+}
+
+function sensitivityTone(level: ReceiptSensitivityLevel | 'moderate') {
+  if (level === 'high') return 'border-rose-400/40 bg-rose-400/[0.06] text-rose-200'
+  if (level === 'medium' || level === 'moderate') return 'border-amber-300/35 bg-amber-300/[0.06] text-amber-200'
+  return 'border-emerald-400/35 bg-emerald-400/[0.06] text-emerald-200'
+}
+
+function ConfidenceBadge({ confidence }: { confidence: ReceiptConfidence }) {
+  return (
+    <Badge variant="outline" className={`text-[10px] uppercase tracking-[0.14em] ${confidenceTone(confidence)}`}>
+      {confidence}
+    </Badge>
+  )
+}
+
+function SensitivityBadge({ level }: { level: ReceiptSensitivityLevel | 'moderate' }) {
+  return (
+    <Badge variant="outline" className={`text-[10px] uppercase tracking-[0.14em] ${sensitivityTone(level)}`}>
+      {level}
+    </Badge>
+  )
+}
+
+function buildReceiptShareText(receipt: BreadlinesReceipt) {
+  return [
+    `Breadlines receipt for ${receipt.shortSignature}`,
+    '',
+    `Status: ${receipt.status} | Slot: ${receipt.slot}`,
+    `Fee paid: ${formatLamportsValue(receipt.feePaidLamports)}`,
+    `Slot pressure: ${receipt.slotPressure.label} (${receipt.slotPressure.confidence})`,
+    `Queue-sensitive: ${receipt.percolatorLens.queueSensitive.level}`,
+    `Price-sensitive: ${receipt.percolatorLens.priceSensitive.level}`,
+    `Risk/oracle-sensitive: ${receipt.percolatorLens.riskOracleSensitive.level}`,
+    '',
+    'Observed tx data + estimated pressure + conceptual Percolator Lens.',
+    'https://breadlinesmarkets.com',
+  ].join('\n')
+}
+
+function buildWhatThisMeans(receipt: BreadlinesReceipt) {
+  const notes: Array<{ confidence: ReceiptConfidence; text: string }> = [
+    {
+      confidence: 'observed',
+      text:
+        receipt.status === 'success'
+          ? 'This transaction landed successfully; the execution facts above are pulled from the confirmed transaction response.'
+          : 'This transaction failed; the status is observed, but the receipt does not guess the user intent or exact failure cause.',
+    },
+    {
+      confidence: 'estimated',
+      text: `The ${receipt.slotPressure.label} pressure label is a v0 estimate built from landed-slot activity, compute usage, program count, writable accounts, and failure state.`,
+    },
+    {
+      confidence: 'conceptual',
+      text:
+        'The Percolator Lens is a research framing layer: it points to where proposer competition, fresh state, or risk progress may matter, without claiming an alternate outcome.',
+    },
+  ]
+
+  if (receipt.percolatorLens.priceSensitive.level !== 'low') {
+    notes.push({
+      confidence: 'estimated',
+      text: 'The route has price-sensitive signals, so queueing and state freshness are more relevant than they would be for a plain transfer.',
+    })
+  }
+
+  return notes
+}
+
+function buildCasebookSignals(receipt: BreadlinesReceipt) {
+  const tags = [
+    receipt.status === 'success' ? 'successful' : 'failed',
+    `${receipt.slotPressure.label}-pressure-estimate`,
+    `${receipt.programs.length}-programs`,
+    `${receipt.writableAccountCount}-writable-accounts`,
+  ]
+
+  if (receipt.priorityFeeLamportsEstimated && receipt.priorityFeeLamportsEstimated > 0) tags.push('priority-fee-estimated')
+  if (receipt.percolatorLens.queueSensitive.level !== 'low') tags.push('queue-sensitive')
+  if (receipt.percolatorLens.priceSensitive.level !== 'low') tags.push('price-sensitive')
+  if (receipt.percolatorLens.riskOracleSensitive.level !== 'low') tags.push('risk-oracle-sensitive')
+
+  return tags
 }
 
 function mergeTransferScans(previous: HeliusTransferSummary, next: HeliusTransferSummary): HeliusTransferSummary {
@@ -546,34 +645,6 @@ function hashString(value: string) {
   return hash >>> 0
 }
 
-function makeShortSignature(signature: string) {
-  return `${signature.slice(0, 6)}...${signature.slice(-6)}`
-}
-
-function buildTxReceipt(signature: string, params: SimulationParams, fcfsMetrics: Metrics, mcpMetrics: Metrics): TxReceipt {
-  const hash = hashString(signature)
-  const jitter = (hash % 1000) / 1000
-  const spamAhead = Math.max(1, Math.round(params.spamVolume * 0.82 + (hash % 31) + jitter * 12))
-  const fcfsWait = Math.max(1, Math.round(fcfsMetrics.avgInclusionLatency + spamAhead * 1.65 + (hash % 45)))
-  const mcpWait = Math.max(1, Math.round(mcpMetrics.avgInclusionLatency + (hash % 19) - 6))
-  const savedMs = Math.max(0, fcfsWait - mcpWait)
-  const marketCostSaved = Math.max(0, Math.round((fcfsMetrics.effectiveSpread - mcpMetrics.effectiveSpread) * 100) / 100)
-  const heat: TxReceipt['heat'] = spamAhead > 70 ? 'Breadline' : spamAhead > 35 ? 'Crowded' : 'Clean'
-
-  return {
-    signature,
-    shortSignature: makeShortSignature(signature),
-    spamAhead,
-    fcfsRank: spamAhead + 1 + (hash % 18),
-    mcpRank: Math.max(1, 1 + (hash % 6)),
-    fcfsWait,
-    mcpWait,
-    savedMs,
-    marketCostSaved,
-    heat,
-  }
-}
-
 function detectPerpVenue(value: string) {
   const lower = value.toLowerCase()
 
@@ -603,8 +674,289 @@ function buildPerpsResult(input: string, params: SimulationParams, fcfsMetrics: 
     liqRisk: `+${Math.max(6, Math.round(slippageBps * 1.4))}%`,
     fundingExposure: `+${fundingBps}bp`,
     fillTime: `${fillMs}ms`,
-    mcpMessage: 'No queue. No slippage tax. No surprise liquidations.',
+    mcpMessage: 'MCP-style lanes make queue pressure, state freshness, and fill quality easier to reason about.',
   }
+}
+
+function ReceiptResult({
+  receipt,
+  receiptText,
+  shareUrl,
+  copiedReceipt,
+  onCopyReceipt,
+}: {
+  receipt: BreadlinesReceipt
+  receiptText: string
+  shareUrl: string
+  copiedReceipt: boolean
+  onCopyReceipt: () => void
+}) {
+  const whatThisMeans = buildWhatThisMeans(receipt)
+  const casebookSignals = buildCasebookSignals(receipt)
+  const lensItems = [
+    ['Queue-sensitive?', receipt.percolatorLens.queueSensitive],
+    ['Price-sensitive?', receipt.percolatorLens.priceSensitive],
+    ['Risk/oracle-sensitive?', receipt.percolatorLens.riskOracleSensitive],
+  ] as const
+
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-lg border border-border/60 bg-background/45 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Slot</p>
+            <ConfidenceBadge confidence="observed" />
+          </div>
+          <p className="mt-1 text-2xl font-semibold text-foreground">{receipt.slot.toLocaleString()}</p>
+        </div>
+        <div className="rounded-lg border border-border/60 bg-background/45 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Status</p>
+            <ConfidenceBadge confidence="observed" />
+          </div>
+          <p className={`mt-1 text-2xl font-semibold ${receipt.status === 'success' ? 'text-emerald-200' : 'text-rose-200'}`}>
+            {receipt.status}
+          </p>
+        </div>
+        <div className="rounded-lg border border-border/60 bg-background/45 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Fee Paid</p>
+            <ConfidenceBadge confidence="observed" />
+          </div>
+          <p className="mt-1 text-xl font-semibold text-foreground">{formatSol(receipt.feePaidSol)}</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">{formatLamportsValue(receipt.feePaidLamports)}</p>
+        </div>
+        <div className={`rounded-lg border p-3 ${sensitivityTone(receipt.slotPressure.label)}`}>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Slot Pressure</p>
+            <ConfidenceBadge confidence={receipt.slotPressure.confidence} />
+          </div>
+          <p className="mt-1 text-2xl font-semibold capitalize">{receipt.slotPressure.label}</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">score {receipt.slotPressure.score}/100</p>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border/60 bg-background/45 p-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="font-mono text-xs font-semibold text-foreground">{receipt.shortSignature}</p>
+              <Badge variant="outline" className="border-border/70 text-muted-foreground">
+                {receipt.confirmationStatus}
+              </Badge>
+            </div>
+            <p className="mt-2 text-sm leading-6 text-foreground">
+              RPC data is separated from estimates and conceptual framing. This receipt does not infer user intent or claim an alternate Percolator outcome.
+            </p>
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">
+              Observed block time: {formatBlockTime(receipt.blockTime)}
+              {receipt.computeUnitsConsumed != null ? ` | Compute units: ${receipt.computeUnitsConsumed.toLocaleString()}` : ' | Compute units unavailable'}
+            </p>
+            {receipt.priorityFeeLamportsEstimated != null ? (
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <ConfidenceBadge confidence="estimated" />
+                <span>Estimated priority fee: {receipt.priorityFeeLamportsEstimated.toLocaleString()} lamports</span>
+              </div>
+            ) : null}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={onCopyReceipt} className="gap-2">
+              <Clipboard className="h-4 w-4" />
+              {copiedReceipt ? 'Copied' : 'Copy'}
+            </Button>
+            <Button asChild size="sm" className="gap-2">
+              <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+                Share
+                <Share2 className="h-4 w-4" />
+              </a>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="rounded-lg border border-border/60 bg-background/35 p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">Observed facts</p>
+              <p className="mt-1 text-xs text-muted-foreground">Programs and writable accounts from parsed transaction data.</p>
+            </div>
+            <ConfidenceBadge confidence="observed" />
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <div>
+              <p className="mb-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                Programs Touched
+              </p>
+              <div className="space-y-2">
+                {receipt.programs.slice(0, 6).map((program) => (
+                  <div key={program.id} className="rounded-md border border-border/50 bg-secondary/20 px-3 py-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate text-xs font-semibold text-foreground">{program.label}</p>
+                      <span className="shrink-0 font-mono text-[10px] text-muted-foreground">{program.instructionCount} ix</span>
+                    </div>
+                    <p className="mt-1 truncate font-mono text-[10px] text-muted-foreground">{program.id}</p>
+                  </div>
+                ))}
+                {!receipt.programs.length ? (
+                  <p className="text-xs text-muted-foreground">No parsed programs returned by RPC.</p>
+                ) : null}
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                Writable Accounts ({receipt.writableAccountCount})
+              </p>
+              <div className="space-y-2">
+                {receipt.writableAccounts.slice(0, 6).map((account) => (
+                  <div key={account.address} className="rounded-md border border-border/50 bg-secondary/20 px-3 py-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate font-mono text-[10px] text-muted-foreground">{account.address}</p>
+                      {account.signer ? (
+                        <Badge variant="outline" className="shrink-0 border-border/70 text-[10px] text-muted-foreground">
+                          signer
+                        </Badge>
+                      ) : null}
+                    </div>
+                    <p className="mt-1 text-[10px] text-muted-foreground">{account.source ?? 'transaction'}</p>
+                  </div>
+                ))}
+                {!receipt.writableAccounts.length ? (
+                  <p className="text-xs text-muted-foreground">Writable account metadata unavailable from RPC.</p>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-border/60 bg-background/35 p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-200">Estimated pressure</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                A v0 estimate using landed-slot signatures plus receipt-level signals. Not a spam detector or exact historical congestion model.
+              </p>
+            </div>
+            <ConfidenceBadge confidence={receipt.slotPressure.confidence} />
+          </div>
+          <div className="grid gap-2">
+            {receipt.slotPressure.basis.map((basis) => (
+              <div key={basis} className="rounded-md border border-border/55 bg-secondary/20 px-3 py-2 text-xs text-foreground">
+                {basis}
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+            <div className="rounded-md border border-border/50 bg-secondary/20 p-2">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Recent tx / slot</p>
+              <p className="mt-1 font-mono text-sm text-foreground">{receipt.slotPressure.sample.txPerSlot ?? 'n/a'}</p>
+            </div>
+            <div className="rounded-md border border-border/50 bg-secondary/20 p-2">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Recent non-vote / slot</p>
+              <p className="mt-1 font-mono text-sm text-foreground">{receipt.slotPressure.sample.nonVoteTxPerSlot ?? 'n/a'}</p>
+            </div>
+            <div className="rounded-md border border-border/50 bg-secondary/20 p-2">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Recent avg slot ms</p>
+              <p className="mt-1 font-mono text-sm text-foreground">{receipt.slotPressure.sample.avgSlotMs ?? 'n/a'}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border/60 bg-background/35 p-4">
+        <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">Conceptual lens</p>
+            <p className="mt-1 max-w-3xl text-xs leading-5 text-muted-foreground">
+              This section maps execution pain to market-structure questions. It does not claim what Percolator would have done.
+            </p>
+          </div>
+          <ConfidenceBadge confidence={receipt.confidence.percolatorLens} />
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-3">
+          {lensItems.map(([label, item]) => (
+            <div key={label} className="rounded-lg border border-border/55 bg-secondary/20 p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-xs font-semibold text-foreground">{label}</p>
+                <SensitivityBadge level={item.level} />
+              </div>
+              <div className="space-y-1.5">
+                {item.reasons.slice(0, 3).map((reason) => (
+                  <p key={reason} className="text-xs leading-5 text-muted-foreground">
+                    {reason}
+                  </p>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-3 rounded-lg border border-border/60 bg-secondary/20 p-3">
+          <div className="mb-2 flex items-center gap-2">
+            <p className="text-xs font-semibold text-foreground">Why better market structure may matter</p>
+            <ConfidenceBadge confidence={receipt.percolatorLens.whyMarketStructureMayMatter.confidence} />
+          </div>
+          <p className="text-sm leading-6 text-foreground">
+            {receipt.percolatorLens.whyMarketStructureMayMatter.text}
+          </p>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border/60 bg-background/35 p-4">
+        <div className="mb-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">What this means</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Plain-English notes with the same confidence boundary as the receipt.
+          </p>
+        </div>
+        <div className="grid gap-2">
+          {whatThisMeans.map((note) => (
+            <div key={note.text} className="rounded-md border border-border/50 bg-secondary/20 px-3 py-2">
+              <div className="mb-1">
+                <ConfidenceBadge confidence={note.confidence} />
+              </div>
+              <p className="text-xs leading-5 text-foreground">{note.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border/60 bg-background/35 p-4">
+        <div className="mb-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Casebook signals</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Read-only tags for now. They keep the receipt shape ready for future Casebook entries.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {casebookSignals.map((tag) => (
+            <Badge key={tag} variant="outline" className="border-border/70 bg-background/35 text-[10px] text-muted-foreground">
+              {tag}
+            </Badge>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border/60 bg-background/35 p-4">
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Shareable receipt text</p>
+            <p className="mt-1 text-xs text-muted-foreground">Short enough for X, honest enough for builders.</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={onCopyReceipt} className="w-fit gap-2">
+            <Clipboard className="h-4 w-4" />
+            {copiedReceipt ? 'Copied' : 'Copy text'}
+          </Button>
+        </div>
+        <pre className="max-h-52 overflow-auto whitespace-pre-wrap rounded-md border border-border/50 bg-background/45 p-3 text-xs leading-5 text-muted-foreground">
+          {receiptText}
+        </pre>
+      </div>
+    </div>
+  )
 }
 
 function TxReceiptPanel({
@@ -618,7 +970,7 @@ function TxReceiptPanel({
 }) {
   const [mode, setMode] = useState<'normal' | 'perps'>('normal')
   const [txInput, setTxInput] = useState('')
-  const [receipt, setReceipt] = useState<TxReceipt | null>(null)
+  const [receipt, setReceipt] = useState<BreadlinesReceipt | null>(null)
   const [perpsResult, setPerpsResult] = useState<PerpsResult | null>(null)
   const [receiptError, setReceiptError] = useState('')
   const [copiedReceipt, setCopiedReceipt] = useState(false)
@@ -629,14 +981,12 @@ function TxReceiptPanel({
   const [isTransferScanning, setIsTransferScanning] = useState(false)
   const [isLoadingMoreTransfers, setIsLoadingMoreTransfers] = useState(false)
 
-  const receiptText = receipt
-    ? `Breadlines receipt for ${receipt.shortSignature}\n\n${receipt.spamAhead} spam txs were modeled ahead of this tx.\nFCFS rank: #${receipt.fcfsRank} / ${receipt.fcfsWait}ms\nMCP rank: #${receipt.mcpRank} / ${receipt.mcpWait}ms\nMCP saved ~${receipt.savedMs}ms and ${receipt.marketCostSaved}bp market cost.\n\n$BREADLINES`
-    : ''
+  const receiptText = receipt ? buildReceiptShareText(receipt) : ''
   const shareUrl = receipt
     ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(receiptText)}`
     : ''
 
-  const runReceipt = useCallback((rawSignature = txInput) => {
+  const runReceipt = useCallback(async (rawSignature = txInput) => {
     const signature = rawSignature.trim()
 
     if (!SOLANA_SIGNATURE_PATTERN.test(signature)) {
@@ -645,10 +995,20 @@ function TxReceiptPanel({
       return
     }
 
-    setReceipt(buildTxReceipt(signature, params, fcfsMetrics, mcpMetrics))
     setReceiptError('')
+    setIsSimulating(true)
     setCopiedReceipt(false)
-  }, [fcfsMetrics, mcpMetrics, params, txInput])
+
+    try {
+      const nextReceipt = await getBreadlinesReceipt(signature)
+      setReceipt(nextReceipt)
+    } catch (error) {
+      setReceipt(null)
+      setReceiptError(error instanceof Error ? error.message : 'Unable to build receipt.')
+    } finally {
+      setIsSimulating(false)
+    }
+  }, [txInput])
 
   const handleCopyReceipt = useCallback(async () => {
     if (!receiptText) return
@@ -729,24 +1089,27 @@ function TxReceiptPanel({
   }, [transferScan])
 
   return (
-    <Card className="border-primary/30 bg-card/80">
-      <CardHeader className="pb-3">
+    <Card className="border-border/70 bg-card/80 shadow-none">
+      <CardHeader className="border-b border-border/60 pb-4">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <FileText className="h-4 w-4 text-primary" />
-              Breadline Simulator
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Breadlines Receipts
+            </p>
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <FileText className="h-5 w-5 text-foreground" />
+              Execution Receipt
             </CardTitle>
             <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
               {mode === 'normal'
-                ? 'Paste a Solana tx signature and generate a shareable simulator receipt for the current breadline versus the MCP path.'
-                : 'Paste a perp tx, venue, or route and model how FCFS queue drama turns into MCP market structure.'}
+                ? 'Paste a Solana transaction signature. Understand what happened through observed facts, estimated pressure, and conceptual context.'
+                : 'A secondary sketch for perps queue sensitivity. It is not a Percolator trading UI.'}
             </p>
           </div>
-          <div className="inline-flex w-fit rounded-full border border-primary/25 bg-background/70 p-1">
+          <div className="inline-flex w-fit rounded-md border border-border/60 bg-background/55 p-1">
             {[
-              ['normal', 'Normal Tx Simulator'],
-              ['perps', 'Perps in the Breadline'],
+              ['normal', 'Receipt'],
+              ['perps', 'Perps sketch'],
             ].map(([value, label]) => (
               <button
                 key={value}
@@ -755,10 +1118,10 @@ function TxReceiptPanel({
                   setMode(value as 'normal' | 'perps')
                   setReceiptError('')
                 }}
-                className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition-all md:px-4 ${
+                className={`rounded-[4px] px-3 py-1.5 text-[11px] font-semibold transition-all md:px-4 ${
                   mode === value
-                    ? 'bg-yellow-400 text-black shadow-[0_0_18px_rgba(250,204,21,0.25)]'
-                    : 'text-muted-foreground hover:text-primary'
+                    ? 'bg-foreground text-background'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {label}
@@ -767,8 +1130,12 @@ function TxReceiptPanel({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-col gap-2 lg:flex-row">
+      <CardContent className="space-y-4 pt-4">
+        <div className="rounded-lg border border-border/60 bg-background/45 p-3">
+          <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            Transaction signature
+          </label>
+          <div className="mt-2 flex flex-col gap-2 lg:flex-row">
           <Input
             value={txInput}
             onChange={(event) => {
@@ -779,11 +1146,11 @@ function TxReceiptPanel({
               if (event.key === 'Enter') runSimulation()
             }}
             placeholder={mode === 'normal' ? 'Paste Solana tx signature' : 'Paste perp tx signature, Drift / Jupiter Perps / Phoenix route'}
-            className="font-mono text-xs"
+            className="h-11 border-border/70 bg-background/70 font-mono text-xs"
           />
           <div className="flex gap-2">
-            <Button onClick={runSimulation} className="h-11 shrink-0 gap-2 bg-yellow-400 px-5 text-xs font-bold uppercase tracking-[0.12em] text-black hover:bg-yellow-300">
-              {isSimulating ? 'Simulating' : mode === 'normal' ? 'Run Simulation' : 'Run Perps Simulation'}
+            <Button onClick={runSimulation} className="h-11 shrink-0 gap-2 bg-foreground px-5 text-xs font-semibold text-background hover:bg-foreground/90">
+              {isSimulating ? 'Building' : mode === 'normal' ? 'Build Receipt' : 'Run Perps Simulation'}
               <Zap className={`h-4 w-4 ${isSimulating ? 'animate-pulse' : ''}`} />
             </Button>
             {mode === 'normal' ? (
@@ -800,6 +1167,7 @@ function TxReceiptPanel({
               </Button>
             ) : null}
           </div>
+          </div>
         </div>
 
         {mode === 'perps' ? (
@@ -814,7 +1182,7 @@ function TxReceiptPanel({
                   setTxInput(example.value)
                   setReceiptError('')
                 }}
-                className="border-yellow-400/30 text-yellow-200 hover:bg-yellow-400/10 hover:text-yellow-100"
+                className="border-border/70 text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
               >
                 {example.label}
               </Button>
@@ -822,49 +1190,70 @@ function TxReceiptPanel({
           </div>
         ) : null}
 
-        <div className="rounded-lg border border-yellow-400/20 bg-yellow-400/[0.04] p-3">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-yellow-200">
-                Quick Test
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Prefill a realistic route and run the sim without hunting for a tx.
-              </p>
+        {mode === 'normal' ? (
+          <div className="rounded-lg border border-border/60 bg-background/35 p-3">
+            <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+                  Receipt Examples
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Three real mainnet signatures for smoke-testing observed, estimated, and conceptual labels.
+                </p>
+              </div>
+              <Badge variant="outline" className="w-fit border-border/70 text-muted-foreground">
+                Casebook-ready
+              </Badge>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {QUICK_TESTS.map((test) => (
-                <Button
-                  key={test.label}
+            <div className="grid gap-2 md:grid-cols-3">
+              {RECEIPT_EXAMPLES.map((example) => (
+                <button
+                  key={example.value}
                   type="button"
-                  variant="outline"
-                  size="sm"
                   onClick={() => {
-                    setMode(test.mode)
-                    setTxInput(test.value)
+                    setTxInput(example.value)
                     setReceiptError('')
+                    void runReceipt(example.value)
                   }}
-                  className="border-yellow-400/30 text-yellow-200 hover:bg-yellow-400/10 hover:text-yellow-100"
+                  disabled={isSimulating}
+                  className="rounded-md border border-border/60 bg-background/45 px-3 py-2 text-left transition hover:border-border hover:bg-secondary/35 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {test.label}
-                </Button>
+                  <span className="block text-xs font-semibold text-foreground">{example.label}</span>
+                  <span className="mt-1 block text-[10px] leading-4 text-muted-foreground">{example.note}</span>
+                  <span className="mt-2 block truncate font-mono text-[10px] text-muted-foreground">
+                    {example.value.slice(0, 8)}...{example.value.slice(-8)}
+                  </span>
+                </button>
               ))}
             </div>
           </div>
-        </div>
+        ) : null}
 
-        <div className="rounded-lg border border-primary/25 bg-primary/[0.04] p-3">
-          <div className="flex flex-col gap-3">
+        <details className="group rounded-lg border border-border/60 bg-background/25 p-3">
+          <summary className="flex cursor-pointer list-none flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Optional wallet flow scan
+              </p>
+              <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
+                Secondary tool for scanning wallet transfers. The receipt builder above is the primary flow.
+              </p>
+            </div>
+            <Badge variant="outline" className="w-fit border-border/70 text-muted-foreground">
+              Secondary
+            </Badge>
+          </summary>
+          <div className="mt-3 flex flex-col gap-3">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   Helius Transfer Intel
                 </p>
                 <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
                   Bring real wallet flow into the simulator. Scan parsed transfer rows, then see where queue-heavy activity becomes breadline-sensitive.
                 </p>
               </div>
-              <Badge variant="outline" className="w-fit border-primary/50 text-primary">
+              <Badge variant="outline" className="w-fit border-border/70 text-muted-foreground">
                 Real flow lens
               </Badge>
             </div>
@@ -879,14 +1268,14 @@ function TxReceiptPanel({
                   if (event.key === 'Enter') scanTransferHistory()
                 }}
                 placeholder="Paste wallet address to scan real flow"
-                className="font-mono text-xs"
+                className="h-11 border-border/70 bg-background/70 font-mono text-xs"
               />
               <div className="flex gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => scanTransferHistory()}
-                  className="h-11 shrink-0 gap-2 border-primary/40 text-primary hover:bg-primary/10"
+                  className="h-11 shrink-0 gap-2 border-border/70 text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
                   disabled={isTransferScanning}
                 >
                   {isTransferScanning ? 'Scanning' : 'Scan History'}
@@ -919,9 +1308,9 @@ function TxReceiptPanel({
                     ['Token-2022 fees', transferScan.stats.token2022FeeRows],
                     ['Queue-sensitive rows', transferScan.stats.batchedSignatureRows],
                   ].map(([label, value]) => (
-                    <div key={label} className="rounded-lg border border-primary/20 bg-background/40 p-3">
+                    <div key={label} className="rounded-lg border border-border/55 bg-secondary/20 p-3">
                       <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
-                      <p className="mt-1 text-xl font-semibold text-primary">{value}</p>
+                      <p className="mt-1 text-xl font-semibold text-foreground">{value}</p>
                     </div>
                   ))}
                 </div>
@@ -935,7 +1324,7 @@ function TxReceiptPanel({
                         size="sm"
                         onClick={loadMoreTransferHistory}
                         disabled={isLoadingMoreTransfers}
-                        className="h-8 border-yellow-400/40 text-yellow-200 hover:bg-yellow-400/10 hover:text-yellow-100"
+                        className="h-8 border-border/70 text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
                       >
                         {isLoadingMoreTransfers ? 'Loading more' : 'Load more history'}
                       </Button>
@@ -945,7 +1334,7 @@ function TxReceiptPanel({
                     {transferScan.transfers.slice(0, 3).map((transfer, index) => (
                       <div key={`${transfer.signature}-${index}`} className="flex flex-col gap-1 rounded-md border border-border/50 bg-background/35 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                          <p className="text-xs font-semibold text-primary">
+                          <p className="text-xs font-semibold text-foreground">
                             {transfer.type ?? 'transfer'} {transfer.uiAmount ? `- ${transfer.uiAmount}` : ''}
                           </p>
                           <p className="font-mono text-[10px] text-muted-foreground">
@@ -962,119 +1351,84 @@ function TxReceiptPanel({
               </div>
             ) : null}
           </div>
-        </div>
+        </details>
 
         {receiptError ? (
           <p className="text-xs text-destructive">{receiptError}</p>
         ) : null}
 
         {mode === 'normal' && receipt ? (
-          <div className="space-y-4">
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3">
-                <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Spam Ahead</p>
-                <p className="mt-1 text-2xl font-semibold text-destructive">{receipt.spamAhead}</p>
-              </div>
-              <div className="rounded-lg border border-border/60 bg-secondary/20 p-3">
-                <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">FCFS Wait</p>
-                <p className="mt-1 text-2xl font-semibold text-foreground">{receipt.fcfsWait}ms</p>
-              </div>
-              <div className="rounded-lg border border-primary/35 bg-primary/10 p-3">
-                <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">MCP Wait</p>
-                <p className="mt-1 text-2xl font-semibold text-primary">{receipt.mcpWait}ms</p>
-              </div>
-              <div className="rounded-lg border border-primary/35 bg-primary/10 p-3">
-                <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Time Saved</p>
-                <p className="mt-1 text-2xl font-semibold text-primary">{receipt.savedMs}ms</p>
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-border/60 bg-secondary/20 p-4">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <p className="text-xs font-semibold text-primary">{receipt.shortSignature}</p>
-                  <p className="mt-1 text-sm leading-6 text-foreground">
-                    Modeled as <span className="font-semibold text-destructive">{receipt.heat}</span>: FCFS rank #{receipt.fcfsRank}, MCP rank #{receipt.mcpRank}, with ~{receipt.marketCostSaved}bp market cost saved.
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={handleCopyReceipt} className="gap-2">
-                    <Clipboard className="h-4 w-4" />
-                    {copiedReceipt ? 'Copied' : 'Copy'}
-                  </Button>
-                  <Button asChild size="sm" className="gap-2">
-                    <a href={shareUrl} target="_blank" rel="noopener noreferrer">
-                      Share
-                      <Share2 className="h-4 w-4" />
-                    </a>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <ReceiptResult
+            receipt={receipt}
+            receiptText={receiptText}
+            shareUrl={shareUrl}
+            copiedReceipt={copiedReceipt}
+            onCopyReceipt={handleCopyReceipt}
+          />
         ) : null}
 
         {mode === 'perps' && perpsResult ? (
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline" className="border-yellow-400/50 bg-yellow-400/10 text-yellow-200">
+              <Badge variant="outline" className="border-border/70 text-muted-foreground">
                 Detected: {perpsResult.venue}
               </Badge>
               <span className="text-xs text-muted-foreground">
-                Dummy model for now. Real tx parsing comes next.
+                Conceptual sketch. Real tx parsing is not active in this tab.
               </span>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-xl border border-destructive/35 bg-destructive/10 p-4">
+              <div className="rounded-xl border border-border/60 bg-background/35 p-4">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-destructive">
-                      Soviet Breadline
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                      FCFS queue sketch
                     </p>
-                    <p className="mt-1 text-sm text-muted-foreground">FCFS when the perp trade is already sweating.</p>
+                    <p className="mt-1 text-sm text-muted-foreground">A rough model of queue pressure under contention.</p>
                   </div>
-                  <Badge variant="outline" className="border-destructive/50 text-destructive">
-                    Queue tax
+                  <Badge variant="outline" className="border-border/70 text-muted-foreground">
+                    Conceptual
                   </Badge>
                 </div>
                 <div className="grid gap-2">
                   {[
                     ['Blocks waited', perpsResult.blocksWaited],
-                    ['Spammers that cut you', perpsResult.spammersCut],
-                    ['Slippage paid', perpsResult.slippagePaid],
-                    ['Liq risk up', perpsResult.liqRisk],
-                    ['Extra funding exposure', perpsResult.fundingExposure],
+                    ['Contention score', perpsResult.spammersCut],
+                    ['Modeled slippage', perpsResult.slippagePaid],
+                    ['Modeled liq risk', perpsResult.liqRisk],
+                    ['Modeled funding exposure', perpsResult.fundingExposure],
                   ].map(([label, value]) => (
-                    <div key={label} className="flex items-center justify-between rounded-lg border border-destructive/20 bg-background/40 px-3 py-2">
+                    <div key={label} className="flex items-center justify-between rounded-lg border border-border/55 bg-secondary/20 px-3 py-2">
                       <span className="text-xs text-muted-foreground">{label}</span>
-                      <span className="font-mono text-sm font-semibold text-destructive">{value}</span>
+                      <span className="font-mono text-sm font-semibold text-foreground">{value}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="rounded-xl border border-primary/40 bg-primary/10 p-4">
+              <div className="rounded-xl border border-border/60 bg-background/35 p-4">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                      MCP World
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                      MCP-style sketch
                     </p>
-                    <p className="mt-1 text-sm text-muted-foreground">Concurrent proposer lanes. Actual market vibes.</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Concurrent lanes as a market-structure thought model.</p>
                   </div>
-                  <Badge variant="outline" className="border-primary/60 text-primary">
-                    Clean fill
+                  <Badge variant="outline" className="border-border/70 text-muted-foreground">
+                    Conceptual
                   </Badge>
                 </div>
-                <div className="rounded-lg border border-primary/30 bg-background/40 p-4">
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Instant fill time</p>
-                  <p className="mt-2 text-4xl font-bold text-primary">{perpsResult.fillTime}</p>
+                <div className="rounded-lg border border-border/55 bg-secondary/20 p-4">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Modeled fill time</p>
+                  <p className="mt-2 text-4xl font-bold text-foreground">{perpsResult.fillTime}</p>
                   <p className="mt-3 text-sm font-medium leading-6 text-foreground">
                     {perpsResult.mcpMessage}
                   </p>
                 </div>
               </div>
             </div>
+
           </div>
         ) : null}
       </CardContent>
@@ -1402,7 +1756,7 @@ function generateInsights(
 }
 
 // Main Dashboard Component
-export default function BreadLinesMarkets() {
+export default function Breadlines() {
   const [params, setParams] = useState<SimulationParams>({
     blockTime: 400,
     enable200ms: false,
@@ -1534,43 +1888,38 @@ export default function BreadLinesMarkets() {
   return (
     <div className="min-h-screen bg-background grid-bg">
       {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="sticky top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-                <span className="text-destructive text-glow-red">Bread</span>
-                <span className="text-primary text-glow-green">Lines</span>
-                <span className="text-foreground">Markets</span>
+                <span className="text-destructive">Bread</span>
+                <span className="text-primary">lines</span>
               </h1>
               <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                <span>
-                  <span className="text-primary">MCP + FBO == Markets</span>
-                  {' | '}
-                  <span className="text-destructive">FCFS == Bread Lines</span>
-                </span>
+                <span>Paste a Solana transaction. Understand what happened.</span>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Badge
                       variant="outline"
-                      className="border-primary bg-transparent text-primary shadow-[0_0_12px_rgba(34,255,136,0.18)]"
+                      className="border-border/70 bg-transparent text-muted-foreground"
                     >
                       MCP &gt; MPC
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" sideOffset={8}>
-                    Multiple Concurrent Proposers — not multi-party computation
+                    Multiple Concurrent Proposers, not multi-party computation
                   </TooltipContent>
                 </Tooltip>
               </div>
               <p className="text-xs text-muted-foreground/70 mt-0.5">
-                {"Visualizing Toly's vision — Multiple Concurrent Proposers BLVD"}
+                Execution receipts for Solana. Observed facts first.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant={isLocked ? "default" : "outline"}
-                className={`gap-2 transition-all ${isLocked ? 'neon-green-glow' : ''}`}
+                className="gap-2 transition-all"
                 onMouseEnter={() => setBotHover(true)}
                 onMouseLeave={() => setBotHover(false)}
                 onClick={() => setIsLocked(!isLocked)}
@@ -1587,7 +1936,7 @@ export default function BreadLinesMarkets() {
                 <DialogTrigger asChild>
                   <Button
                     variant="outline"
-                    className="gap-2 border-yellow-400/35 bg-yellow-400/5 text-yellow-200 transition-all hover:-translate-y-0.5 hover:border-yellow-400/70 hover:bg-yellow-400/10 hover:text-yellow-100 hover:shadow-[0_0_18px_rgba(250,204,21,0.16)]"
+                    className="gap-2 border-border/70 text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
                   >
                     <Megaphone className="h-4 w-4" />
                     Open Sprint
@@ -1604,56 +1953,47 @@ export default function BreadLinesMarkets() {
       </header>
 
       {/* Changelog Banner */}
-      <div className="border-b border-primary/20 bg-primary/5">
+      <div className="border-b border-border/60 bg-background/35">
         <div className="container mx-auto px-4 py-3">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs">
-            <Badge variant="outline" className="border-primary/60 text-primary shrink-0 text-[10px]">
-              v2 updates live
+            <Badge variant="outline" className="border-border/70 text-muted-foreground shrink-0 text-[10px]">
+              Receipt v0
             </Badge>
             <span className="text-foreground/80 font-medium">
-              <a
-                href="https://twitter.com/moonshiesty"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                @moonshiesty
-              </a>{' '}
-              feedback shipped
+              Paste a Solana transaction. Understand what happened.
             </span>
-            <span className="hidden sm:inline text-border/60">·</span>
-            <span className="text-muted-foreground">FCFS: low/near-zero latency for high-fee txs (ideal streaming)</span>
-            <span className="hidden sm:inline text-border/60">·</span>
-            <span className="text-muted-foreground">MCP: ~150ms latency tax but wins on burst resistance, oracle freshness &amp; tighter spreads</span>
-          </div>
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-xs mt-1">
-            <span className="text-foreground/70 font-medium italic">FCFS is fast but fragile. MCP pays for real market structure.</span>
-            <span className="hidden sm:inline text-border/60">·</span>
-            <span className="text-muted-foreground/70">Still waiting on full pfee/drop/burstiness math from{' '}
-              <a
-                href="https://twitter.com/moonshiesty"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary/70 hover:text-primary"
-              >
-                @moonshiesty
-              </a>
-            </span>
-            <span className="hidden sm:inline text-border/60">·</span>
-            <span className="text-muted-foreground/70">Live Helius data every 10s</span>
+            <span className="hidden sm:inline text-border/60">/</span>
+            <span className="text-muted-foreground">Observed facts first. Estimates clearly labeled.</span>
+            <span className="hidden sm:inline text-border/60">/</span>
+            <span className="hidden text-muted-foreground sm:inline">Casebook-ready shape.</span>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
+      <div className="container mx-auto max-w-7xl px-4 py-6">
+        <TxReceiptPanel params={params} fcfsMetrics={fcfsMetrics} mcpMetrics={mcpMetrics} />
+
+        <section className="mt-6 space-y-4">
+          <div className="flex flex-col gap-1 border-b border-border/60 pb-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Model lab</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Secondary research surface for FCFS, batching, and MCP assumptions.
+              </p>
+            </div>
+            <Badge variant="outline" className="w-fit border-border/70 text-muted-foreground">
+              Optional
+            </Badge>
+          </div>
+
+          <div className="flex flex-col gap-6 lg:flex-row">
           {/* Sidebar Controls */}
           <aside className="w-full lg:w-72 shrink-0">
             <Card className="sticky top-24">
               <CardHeader className="pb-4">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
                   <Zap className="w-4 h-4 text-primary" />
-                  Simulation Controls
+                  Lab controls
                   {params.liveSolanaData ? (
                     <Badge
                       variant="outline"
@@ -1805,8 +2145,6 @@ export default function BreadLinesMarkets() {
 
           {/* Main Content */}
           <main className="flex-1 space-y-6">
-            <TxReceiptPanel params={params} fcfsMetrics={fcfsMetrics} mcpMetrics={mcpMetrics} />
-
             {/* Protocol Comparison Columns */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <ProtocolColumn
@@ -1891,7 +2229,8 @@ export default function BreadLinesMarkets() {
               </CardContent>
             </Card>
           </main>
-        </div>
+          </div>
+        </section>
 
         <footer className="mt-8">
           <Card className="border-primary/20">
