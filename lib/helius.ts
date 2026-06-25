@@ -34,6 +34,7 @@ export type HeliusTransferSummary = {
 
 export type ReceiptConfidence = 'observed' | 'estimated' | 'conceptual'
 export type ReceiptSensitivityLevel = 'low' | 'medium' | 'high' | 'unknown'
+export type CoinReceiptConfidence = ReceiptConfidence | 'unclear'
 
 export type BreadlinesReceipt = {
   signature: string
@@ -137,6 +138,103 @@ export async function getTransfersByAddress(
   if (!res.ok) {
     const body = await res.json().catch(() => null)
     throw new Error(body?.error ?? 'Helius transfer history scan failed')
+  }
+
+  return res.json()
+}
+
+export type CoinActivityReceipt = {
+  mint: string
+  shortMint: string
+  token: {
+    name: string
+    symbol: string
+    image?: string
+    decimals: number | null
+    supply: string | null
+    tokenProgram?: string | null
+    mintAuthority?: string | null
+    freezeAuthority?: string | null
+    confidence: CoinReceiptConfidence
+  }
+  window: {
+    requestedLimit: number
+    observedTransactions: number
+    indexedSignatureSource: 'das' | 'address' | 'none'
+    lastIndexedSlot?: number | null
+    confidence: CoinReceiptConfidence
+  }
+  stats: {
+    failedTransactions: number
+    highFeeTransactions: number
+    highComputeTransactions: number
+    uniqueWalletsObserved: number
+    repeatedWallets: number
+    largestMovementUiAmount: number | null
+    topTokenAccountSupplyPct: number | null
+  }
+  timeline: CoinActivityTransaction[]
+  largestMovements: CoinActivityTransaction[]
+  executionSignals: CoinActivityTransaction[]
+  walletSignals: Array<{
+    owner: string
+    transactionCount: number
+    totalAbsUiAmount: number
+    confidence: CoinReceiptConfidence
+  }>
+  topTokenAccounts: Array<{
+    address: string
+    uiAmountString: string
+    supplyPct: number | null
+    confidence: CoinReceiptConfidence
+  }>
+  whatThisMeans: Array<{
+    confidence: CoinReceiptConfidence
+    text: string
+  }>
+  shareText: string
+  caveats: string[]
+  confidence: {
+    tokenIdentity: CoinReceiptConfidence
+    activity: CoinReceiptConfidence
+    walletSignals: CoinReceiptConfidence
+    executionSignals: CoinReceiptConfidence
+  }
+}
+
+export type CoinActivityTransaction = {
+  signature: string
+  shortSignature: string
+  typeHint: string
+  slot: number | null
+  blockTime: number | null
+  status: 'success' | 'failed' | 'unknown'
+  feePaidLamports: number | null
+  feePaidSol: number | null
+  computeUnitsConsumed: number | null
+  tokenDeltaUiAmount: number | null
+  tokenDeltaDirection: 'in' | 'out' | 'mixed' | 'none' | 'unknown'
+  owners: string[]
+  programs: string[]
+  signals: string[]
+  receiptUrl: string
+  confidence: {
+    transaction: CoinReceiptConfidence
+    tokenMovement: CoinReceiptConfidence
+    signals: CoinReceiptConfidence
+  }
+}
+
+export async function getCoinActivityReceipt(mint: string, limit = 15): Promise<CoinActivityReceipt> {
+  const res = await fetch('/api/coin-receipt', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mint, limit }),
+  })
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null)
+    throw new Error(body?.error ?? 'Coin activity receipt failed')
   }
 
   return res.json()

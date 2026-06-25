@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { 
   BarChart, 
   Bar, 
@@ -23,13 +23,7 @@ import {
   Clock, 
   Ban, 
   TrendingUp, 
-  Bot, 
   Activity,
-  Lock,
-  Gift,
-  Megaphone,
-  Repeat2,
-  Users,
   ArrowUpRight,
   Clipboard,
   FileText,
@@ -38,9 +32,13 @@ import {
 import { simulateBlock, type SimParams as SimulationParams, type SimResult as Metrics } from '@/lib/simulateBlock'
 import {
   getBreadlinesReceipt,
+  getCoinActivityReceipt,
   getLiveData,
   getTransfersByAddress,
   type BreadlinesReceipt,
+  type CoinActivityReceipt,
+  type CoinActivityTransaction,
+  type CoinReceiptConfidence,
   type HeliusTransferSummary,
   type ReceiptConfidence,
   type ReceiptSensitivityLevel,
@@ -369,103 +367,31 @@ function MetricCard({
   )
 }
 
-function BuildSprintPanel() {
-  const txIntent = encodeURIComponent(
-    'Drop a Solana tx for the Breadlines public sim. Show me the Soviet queue vs MCP.\n\n$BREADLINES'
-  )
-
-  const sprintItems = [
-    {
-      icon: Users,
-      label: 'Open community lane',
-      text: 'Build in public first, then plug into aligned communities as the dialogue gets real.',
-    },
-    {
-      icon: Repeat2,
-      label: 'Creator rewards flywheel',
-      text: 'Route part of creator rewards into market buys, community rewards, and simulator campaigns.',
-    },
-    {
-      icon: Gift,
-      label: 'Claim-based rewards',
-      text: 'Reward people who help test receipts, share useful sims, and join weekly bagworking.',
-    },
-    {
-      icon: Megaphone,
-      label: 'Breadlinesbot upgrade',
-      text: 'Move the bot from content noise to tx roasts, sim receipts, and weekly missions.',
-    },
-  ]
-
-  return (
-    <Card className="overflow-hidden border-primary/35 bg-primary/5">
-      <CardContent className="p-0">
-        <div className="grid gap-0 lg:grid-cols-[1.2fr_1fr]">
-          <div className="border-b border-primary/15 p-5 lg:border-b-0 lg:border-r">
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <Badge variant="outline" className="border-primary/60 bg-primary/10 text-primary">
-                Breadlines Open Sprint
-              </Badge>
-              <Badge variant="outline" className="border-border/70 bg-card/40 text-muted-foreground">
-                Community Flywheel
-              </Badge>
-            </div>
-            <h2 className="text-xl font-semibold tracking-tight text-foreground">
-              Turn the tweet into a working community flywheel.
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              First move: build in public, reward real participation, and make Breadlines the simulation layer people can point to when the Solana queue debate heats up.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button asChild size="sm" className="gap-2">
-                <a
-                  href={`https://twitter.com/intent/tweet?text=${txIntent}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Drop a tx for sim
-                  <ArrowUpRight className="h-4 w-4" />
-                </a>
-              </Button>
-              <Button asChild size="sm" variant="outline" className="gap-2">
-                <a
-                  href="https://pump.fun/coin/8cLSy3rjyCuVzzE1PuQ7AwALQNERrTZx9T8R52pRpump"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View coin
-                  <ArrowUpRight className="h-4 w-4" />
-                </a>
-              </Button>
-            </div>
-          </div>
-          <div className="grid gap-2 p-4 sm:grid-cols-2 lg:grid-cols-1">
-            {sprintItems.map(({ icon: Icon, label, text }) => (
-              <div key={label} className="rounded-lg border border-border/60 bg-card/45 p-3">
-                <div className="flex items-start gap-3">
-                  <div className="rounded-md bg-primary/10 p-2 text-primary">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-                      {label}
-                    </p>
-                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                      {text}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
 const SAMPLE_SIGNATURE = '2GMEDJP6vf4Yw8iKBQVfLs311f5kjAo8WtvaJRo6LMuv5LbQDFBdsZho94ij7YAUcA1T9SxYhDn7jw181x4mpAA2'
 const SAMPLE_TRANSFER_ADDRESS = '86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY'
+const SAMPLE_COIN_MINT = '8cLSy3rjyCuVzzE1PuQ7AwALQNERrTZx9T8R52pRpump'
+const COIN_EXAMPLES = [
+  {
+    label: '$BREADLINES',
+    value: SAMPLE_COIN_MINT,
+    note: 'Breadlines market activity receipt sample.',
+  },
+  {
+    label: '$LMAO',
+    value: 'H74CYmXgMkYHYuSRsZt6RJb4NYp2u72Vw8BS5huApump',
+    note: 'Sling-aligned activity case study candidate.',
+  },
+  {
+    label: '$percolator',
+    value: '8PzFWyLpCVEmbZmVJcaRTU5r69XKJx1rd7YGpWvnpump',
+    note: 'Percolator conversation coin activity receipt.',
+  },
+  {
+    label: '$BURNIE',
+    value: 'CGEDT9QZDvvH5GmVkWJH2BXiMJqMJySC9ihWyr7Spump',
+    note: 'High-attention coin activity receipt sample.',
+  },
+] as const
 const SOLANA_SIGNATURE_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{64,88}$/
 const SOLANA_ADDRESS_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
 const RECEIPT_EXAMPLES = [
@@ -531,6 +457,11 @@ function confidenceTone(confidence: ReceiptConfidence) {
   return 'border-sky-300/35 bg-sky-300/[0.06] text-sky-200'
 }
 
+function coinConfidenceTone(confidence: CoinReceiptConfidence) {
+  if (confidence === 'unclear') return 'border-border/70 bg-secondary/20 text-muted-foreground'
+  return confidenceTone(confidence)
+}
+
 function sensitivityTone(level: ReceiptSensitivityLevel | 'moderate') {
   if (level === 'high') return 'border-rose-400/40 bg-rose-400/[0.06] text-rose-200'
   if (level === 'medium' || level === 'moderate') return 'border-amber-300/35 bg-amber-300/[0.06] text-amber-200'
@@ -551,6 +482,19 @@ function SensitivityBadge({ level }: { level: ReceiptSensitivityLevel | 'moderat
       {level}
     </Badge>
   )
+}
+
+function CoinConfidenceBadge({ confidence }: { confidence: CoinReceiptConfidence }) {
+  return (
+    <Badge variant="outline" className={`text-[10px] uppercase tracking-[0.14em] ${coinConfidenceTone(confidence)}`}>
+      {confidence}
+    </Badge>
+  )
+}
+
+function formatTokenValue(value: number | null | undefined) {
+  if (value == null) return 'Unclear'
+  return value.toLocaleString(undefined, { maximumFractionDigits: value >= 1 ? 2 : 6 })
 }
 
 function buildReceiptShareText(receipt: BreadlinesReceipt) {
@@ -676,6 +620,72 @@ function buildPerpsResult(input: string, params: SimulationParams, fcfsMetrics: 
     fillTime: `${fillMs}ms`,
     mcpMessage: 'MCP-style lanes make queue pressure, state freshness, and fill quality easier to reason about.',
   }
+}
+
+function PerpsSketchResult({ result }: { result: PerpsResult }) {
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="outline" className="border-border/70 text-muted-foreground">
+          Detected: {result.venue}
+        </Badge>
+        <span className="text-xs text-muted-foreground">
+          Conceptual sketch. Real tx parsing is not active in this tab.
+        </span>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-xl border border-border/60 bg-background/35 p-4">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                FCFS queue sketch
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">A rough model of queue pressure under contention.</p>
+            </div>
+            <Badge variant="outline" className="border-border/70 text-muted-foreground">
+              Conceptual
+            </Badge>
+          </div>
+          <div className="grid gap-2">
+            {[
+              ['Blocks waited', result.blocksWaited],
+              ['Contention score', result.spammersCut],
+              ['Modeled slippage', result.slippagePaid],
+              ['Modeled liq risk', result.liqRisk],
+              ['Modeled funding exposure', result.fundingExposure],
+            ].map(([label, value]) => (
+              <div key={label} className="flex items-center justify-between rounded-lg border border-border/55 bg-secondary/20 px-3 py-2">
+                <span className="text-xs text-muted-foreground">{label}</span>
+                <span className="font-mono text-sm font-semibold text-foreground">{value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-border/60 bg-background/35 p-4">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                MCP-style sketch
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">Concurrent lanes as a market-structure thought model.</p>
+            </div>
+            <Badge variant="outline" className="border-border/70 text-muted-foreground">
+              Conceptual
+            </Badge>
+          </div>
+          <div className="rounded-lg border border-border/55 bg-secondary/20 p-4">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Modeled fill time</p>
+            <p className="mt-2 text-4xl font-bold text-foreground">{result.fillTime}</p>
+            <p className="mt-3 text-sm font-medium leading-6 text-foreground">
+              {result.mcpMessage}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function ReceiptResult({
@@ -959,6 +969,241 @@ function ReceiptResult({
   )
 }
 
+function CoinTxRow({
+  tx,
+  onOpenReceipt,
+}: {
+  tx: CoinActivityTransaction
+  onOpenReceipt: (signature: string) => void
+}) {
+  return (
+    <div className="rounded-md border border-border/55 bg-background/35 p-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="font-mono text-xs font-semibold text-foreground">{tx.shortSignature}</p>
+            <Badge variant="outline" className="border-border/70 text-[10px] text-muted-foreground">
+              {tx.typeHint}
+            </Badge>
+            <Badge
+              variant="outline"
+              className={`text-[10px] ${tx.status === 'failed' ? 'border-rose-400/35 text-rose-200' : 'border-emerald-400/35 text-emerald-200'}`}
+            >
+              {tx.status}
+            </Badge>
+          </div>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+            {formatBlockTime(tx.blockTime)} | Fee {formatLamportsValue(tx.feePaidLamports)}
+            {tx.computeUnitsConsumed != null ? ` | ${tx.computeUnitsConsumed.toLocaleString()} CUs` : ''}
+          </p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            Movement: {formatTokenValue(tx.tokenDeltaUiAmount)} {tx.tokenDeltaDirection !== 'unknown' ? `(${tx.tokenDeltaDirection})` : ''}
+          </p>
+          {tx.signals.length ? (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {tx.signals.slice(0, 4).map((signal) => (
+                <Badge key={signal} variant="outline" className="border-border/60 bg-secondary/20 text-[10px] text-muted-foreground">
+                  {signal}
+                </Badge>
+              ))}
+            </div>
+          ) : null}
+        </div>
+        <Button type="button" variant="outline" size="sm" onClick={() => onOpenReceipt(tx.signature)} className="w-fit shrink-0 gap-2">
+          Open receipt
+          <ArrowUpRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function CoinActivityResult({
+  receipt,
+  shareUrl,
+  copiedCoinReceipt,
+  onCopyCoinReceipt,
+  onOpenReceipt,
+}: {
+  receipt: CoinActivityReceipt
+  shareUrl: string
+  copiedCoinReceipt: boolean
+  onCopyCoinReceipt: () => void
+  onOpenReceipt: (signature: string) => void
+}) {
+  const metricItems = [
+    ['Observed txs', receipt.window.observedTransactions.toLocaleString(), receipt.window.confidence],
+    ['Failed txs', receipt.stats.failedTransactions.toLocaleString(), 'observed' as CoinReceiptConfidence],
+    ['High-fee signals', receipt.stats.highFeeTransactions.toLocaleString(), 'estimated' as CoinReceiptConfidence],
+    ['Largest movement', formatTokenValue(receipt.stats.largestMovementUiAmount), 'observed' as CoinReceiptConfidence],
+  ] as const
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-lg border border-border/60 bg-background/45 p-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              {receipt.token.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={receipt.token.image} alt="" className="h-8 w-8 rounded-full border border-border/60 bg-secondary/30 object-cover" />
+              ) : null}
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Coin Activity Receipt</p>
+                <h3 className="mt-1 text-xl font-semibold text-foreground">
+                  {receipt.token.name} {receipt.token.symbol ? `(${receipt.token.symbol})` : ''}
+                </h3>
+              </div>
+              <CoinConfidenceBadge confidence={receipt.token.confidence} />
+            </div>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-foreground">
+              Every coin has a chart. This receipt shows the execution story: recent indexed activity, notable movements, failed attempts, fee signals, and links to the transaction receipts behind them.
+            </p>
+            <p className="mt-2 truncate font-mono text-xs text-muted-foreground">
+              CA: {receipt.mint}
+            </p>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <Button variant="outline" size="sm" onClick={onCopyCoinReceipt} className="gap-2">
+              <Clipboard className="h-4 w-4" />
+              {copiedCoinReceipt ? 'Copied' : 'Copy'}
+            </Button>
+            <Button asChild size="sm" className="gap-2">
+              <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+                Share
+                <Share2 className="h-4 w-4" />
+              </a>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        {metricItems.map(([label, value, confidence]) => (
+          <div key={label} className="rounded-lg border border-border/60 bg-background/45 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+              <CoinConfidenceBadge confidence={confidence} />
+            </div>
+            <p className="mt-2 text-xl font-semibold text-foreground">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
+        <div className="rounded-lg border border-border/60 bg-background/35 p-4">
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">Recent activity timeline</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Recent indexed signatures for this mint. Open any tx to inspect the single-transaction receipt.
+              </p>
+            </div>
+            <CoinConfidenceBadge confidence={receipt.confidence.activity} />
+          </div>
+          <div className="space-y-2">
+            {receipt.timeline.slice(0, 6).map((tx) => (
+              <CoinTxRow key={tx.signature} tx={tx} onOpenReceipt={onOpenReceipt} />
+            ))}
+            {!receipt.timeline.length ? (
+              <p className="rounded-md border border-border/55 bg-background/35 p-3 text-xs text-muted-foreground">
+                No indexed transactions were returned for this mint sample.
+              </p>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="rounded-lg border border-border/60 bg-background/35 p-4">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-200">Execution signals</p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  Failed txs, higher fees, compute-heavy paths, and movement hints.
+                </p>
+              </div>
+              <CoinConfidenceBadge confidence={receipt.confidence.executionSignals} />
+            </div>
+            <div className="space-y-2">
+              {receipt.executionSignals.slice(0, 4).map((tx) => (
+                <CoinTxRow key={tx.signature} tx={tx} onOpenReceipt={onOpenReceipt} />
+              ))}
+              {!receipt.executionSignals.length ? (
+                <p className="text-xs text-muted-foreground">No strong execution signals in this sample.</p>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border/60 bg-background/35 p-4">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Wallet and account signals</p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  Repeated owners and top token accounts. This is triage, not full holder analytics.
+                </p>
+              </div>
+              <CoinConfidenceBadge confidence={receipt.confidence.walletSignals} />
+            </div>
+            <div className="space-y-2">
+              {receipt.walletSignals.slice(0, 4).map((wallet) => (
+                <div key={wallet.owner} className="rounded-md border border-border/55 bg-background/35 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate font-mono text-xs text-foreground">{wallet.owner}</p>
+                    <CoinConfidenceBadge confidence={wallet.confidence} />
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {wallet.transactionCount} txs | observed movement {formatTokenValue(wallet.totalAbsUiAmount)}
+                  </p>
+                </div>
+              ))}
+              {!receipt.walletSignals.length ? (
+                <p className="text-xs text-muted-foreground">No repeated owner signal in this sample.</p>
+              ) : null}
+              {receipt.topTokenAccounts.slice(0, 3).map((account) => (
+                <div key={account.address} className="rounded-md border border-border/55 bg-secondary/20 p-3">
+                  <p className="truncate font-mono text-xs text-foreground">{account.address}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Top token account: {account.uiAmountString}
+                    {account.supplyPct != null ? ` | ${account.supplyPct}% of supply` : ''}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-sky-300/25 bg-sky-300/[0.04] p-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">What this means</p>
+        <div className="mt-3 space-y-2">
+          {receipt.whatThisMeans.map((note) => (
+            <div key={note.text} className="rounded-md border border-border/50 bg-background/35 p-3">
+              <CoinConfidenceBadge confidence={note.confidence} />
+              <p className="mt-2 text-xs leading-5 text-foreground">{note.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border/60 bg-background/35 p-4">
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Shareable coin receipt text</p>
+            <p className="mt-1 text-xs text-muted-foreground">A concise activity readout, not a price call.</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={onCopyCoinReceipt} className="w-fit gap-2">
+            <Clipboard className="h-4 w-4" />
+            {copiedCoinReceipt ? 'Copied' : 'Copy text'}
+          </Button>
+        </div>
+        <pre className="max-h-52 overflow-auto whitespace-pre-wrap rounded-md border border-border/50 bg-background/45 p-3 text-xs leading-5 text-muted-foreground">
+          {receipt.shareText}
+        </pre>
+      </div>
+    </div>
+  )
+}
+
 function TxReceiptPanel({
   params,
   fcfsMetrics,
@@ -968,12 +1213,17 @@ function TxReceiptPanel({
   fcfsMetrics: Metrics
   mcpMetrics: Metrics
 }) {
-  const [mode, setMode] = useState<'normal' | 'perps'>('normal')
+  const [mode, setMode] = useState<'normal' | 'coin' | 'perps'>('normal')
   const [txInput, setTxInput] = useState('')
   const [receipt, setReceipt] = useState<BreadlinesReceipt | null>(null)
+  const [coinMintInput, setCoinMintInput] = useState('')
+  const [coinReceipt, setCoinReceipt] = useState<CoinActivityReceipt | null>(null)
   const [perpsResult, setPerpsResult] = useState<PerpsResult | null>(null)
+  const [activeReceiptView, setActiveReceiptView] = useState<'transaction' | 'coin' | 'perps' | null>(null)
+  const [receiptReturnTarget, setReceiptReturnTarget] = useState<'coin' | null>(null)
   const [receiptError, setReceiptError] = useState('')
   const [copiedReceipt, setCopiedReceipt] = useState(false)
+  const [copiedCoinReceipt, setCopiedCoinReceipt] = useState(false)
   const [isSimulating, setIsSimulating] = useState(false)
   const [transferAddress, setTransferAddress] = useState('')
   const [transferScan, setTransferScan] = useState<HeliusTransferSummary | null>(null)
@@ -985,16 +1235,25 @@ function TxReceiptPanel({
   const shareUrl = receipt
     ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(receiptText)}`
     : ''
+  const coinReceiptText = coinReceipt?.shareText ?? ''
+  const coinShareUrl = coinReceipt
+    ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(coinReceiptText)}`
+    : ''
 
-  const runReceipt = useCallback(async (rawSignature = txInput) => {
+  const runReceipt = useCallback(async (rawSignature = txInput, options?: { fromCoin?: boolean }) => {
     const signature = rawSignature.trim()
 
     if (!SOLANA_SIGNATURE_PATTERN.test(signature)) {
       setReceipt(null)
+      setActiveReceiptView(null)
       setReceiptError('Paste a valid Solana transaction signature to generate a receipt.')
       return
     }
 
+    if (!options?.fromCoin) {
+      setReceiptReturnTarget(null)
+    }
+    setReceipt(null)
     setReceiptError('')
     setIsSimulating(true)
     setCopiedReceipt(false)
@@ -1002,13 +1261,44 @@ function TxReceiptPanel({
     try {
       const nextReceipt = await getBreadlinesReceipt(signature)
       setReceipt(nextReceipt)
+      setActiveReceiptView('transaction')
     } catch (error) {
       setReceipt(null)
+      setActiveReceiptView(null)
       setReceiptError(error instanceof Error ? error.message : 'Unable to build receipt.')
     } finally {
       setIsSimulating(false)
     }
   }, [txInput])
+
+  const runCoinReceipt = useCallback(async (rawMint = coinMintInput) => {
+    const mint = rawMint.trim()
+
+    if (!SOLANA_ADDRESS_PATTERN.test(mint)) {
+      setCoinReceipt(null)
+      setActiveReceiptView(null)
+      setReceiptError('Paste a valid Solana coin CA to build a coin activity receipt.')
+      return
+    }
+
+    setCoinReceipt(null)
+    setReceiptReturnTarget(null)
+    setReceiptError('')
+    setIsSimulating(true)
+    setCopiedCoinReceipt(false)
+
+    try {
+      const nextReceipt = await getCoinActivityReceipt(mint)
+      setCoinReceipt(nextReceipt)
+      setActiveReceiptView('coin')
+    } catch (error) {
+      setCoinReceipt(null)
+      setActiveReceiptView(null)
+      setReceiptError(error instanceof Error ? error.message : 'Unable to build coin activity receipt.')
+    } finally {
+      setIsSimulating(false)
+    }
+  }, [coinMintInput])
 
   const handleCopyReceipt = useCallback(async () => {
     if (!receiptText) return
@@ -1022,20 +1312,36 @@ function TxReceiptPanel({
     }
   }, [receiptText])
 
+  const handleCopyCoinReceipt = useCallback(async () => {
+    if (!coinReceiptText) return
+
+    try {
+      await navigator.clipboard.writeText(coinReceiptText)
+      setCopiedCoinReceipt(true)
+      window.setTimeout(() => setCopiedCoinReceipt(false), 1500)
+    } catch {
+      setCopiedCoinReceipt(false)
+    }
+  }, [coinReceiptText])
+
   const runPerpsSimulation = useCallback((rawInput = txInput) => {
     const value = rawInput.trim()
 
     if (!value) {
       setPerpsResult(null)
+      setActiveReceiptView(null)
       setReceiptError('Paste a perp tx signature, venue, or use one of the quick examples.')
       return
     }
 
+    setPerpsResult(null)
+    setReceiptReturnTarget(null)
     setReceiptError('')
     setIsSimulating(true)
 
     window.setTimeout(() => {
       setPerpsResult(buildPerpsResult(value, params, fcfsMetrics, mcpMetrics))
+      setActiveReceiptView('perps')
       setIsSimulating(false)
     }, 450)
   }, [fcfsMetrics, mcpMetrics, params, txInput])
@@ -1046,8 +1352,21 @@ function TxReceiptPanel({
       return
     }
 
+    if (mode === 'coin') {
+      runCoinReceipt()
+      return
+    }
+
     runPerpsSimulation()
-  }, [mode, runPerpsSimulation, runReceipt])
+  }, [mode, runCoinReceipt, runPerpsSimulation, runReceipt])
+
+  const openTxReceiptFromCoin = useCallback((signature: string) => {
+    setTxInput(signature)
+    setReceiptError('')
+    setReceiptReturnTarget('coin')
+    setActiveReceiptView('transaction')
+    void runReceipt(signature, { fromCoin: true })
+  }, [runReceipt])
 
   const scanTransferHistory = useCallback(async (rawAddress = transferAddress) => {
     const address = rawAddress.trim()
@@ -1088,8 +1407,23 @@ function TxReceiptPanel({
     }
   }, [transferScan])
 
+  const inputValue = mode === 'coin' ? coinMintInput : txInput
+  const inputLabel = mode === 'coin' ? 'Coin CA' : 'Transaction signature'
+  const inputPlaceholder =
+    mode === 'coin'
+      ? 'Paste Solana coin CA'
+      : mode === 'normal'
+        ? 'Paste Solana tx signature'
+        : 'Paste perp tx signature, Drift / Jupiter Perps / Phoenix route'
+  const actionLabel =
+    mode === 'coin'
+      ? 'Build Coin Receipt'
+      : mode === 'normal'
+        ? 'Build Receipt'
+        : 'Run Perps Simulation'
+
   return (
-    <Card className="border-border/70 bg-card/80 shadow-none">
+    <Card id="receipt-builder" className="scroll-mt-24 border-border/70 bg-card/80 shadow-none">
       <CardHeader className="border-b border-border/60 pb-4">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
@@ -1098,24 +1432,27 @@ function TxReceiptPanel({
             </p>
             <CardTitle className="flex items-center gap-2 text-xl">
               <FileText className="h-5 w-5 text-foreground" />
-              Execution Receipt
+              {mode === 'coin' ? 'Coin Activity Receipt' : mode === 'normal' ? 'Execution Receipt' : 'Perps Sketch'}
             </CardTitle>
             <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
               {mode === 'normal'
                 ? 'Paste a Solana transaction signature. Understand what happened through observed facts, estimated pressure, and conceptual context.'
+                : mode === 'coin'
+                  ? 'Paste a coin CA. See recent indexed activity, notable movements, failed attempts, and the receipts behind them.'
                 : 'A secondary sketch for perps queue sensitivity. It is not a Percolator trading UI.'}
             </p>
           </div>
           <div className="inline-flex w-fit rounded-md border border-border/60 bg-background/55 p-1">
             {[
               ['normal', 'Receipt'],
+              ['coin', 'Coin'],
               ['perps', 'Perps sketch'],
             ].map(([value, label]) => (
               <button
                 key={value}
                 type="button"
                 onClick={() => {
-                  setMode(value as 'normal' | 'perps')
+                  setMode(value as 'normal' | 'coin' | 'perps')
                   setReceiptError('')
                 }}
                 className={`rounded-[4px] px-3 py-1.5 text-[11px] font-semibold transition-all md:px-4 ${
@@ -1133,24 +1470,28 @@ function TxReceiptPanel({
       <CardContent className="space-y-4 pt-4">
         <div className="rounded-lg border border-border/60 bg-background/45 p-3">
           <label className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Transaction signature
+            {inputLabel}
           </label>
           <div className="mt-2 flex flex-col gap-2 lg:flex-row">
           <Input
-            value={txInput}
+            value={inputValue}
             onChange={(event) => {
-              setTxInput(event.target.value)
+              if (mode === 'coin') {
+                setCoinMintInput(event.target.value)
+              } else {
+                setTxInput(event.target.value)
+              }
               setReceiptError('')
             }}
             onKeyDown={(event) => {
               if (event.key === 'Enter') runSimulation()
             }}
-            placeholder={mode === 'normal' ? 'Paste Solana tx signature' : 'Paste perp tx signature, Drift / Jupiter Perps / Phoenix route'}
+            placeholder={inputPlaceholder}
             className="h-11 border-border/70 bg-background/70 font-mono text-xs"
           />
           <div className="flex gap-2">
             <Button onClick={runSimulation} className="h-11 shrink-0 gap-2 bg-foreground px-5 text-xs font-semibold text-background hover:bg-foreground/90">
-              {isSimulating ? 'Building' : mode === 'normal' ? 'Build Receipt' : 'Run Perps Simulation'}
+              {isSimulating ? 'Building' : actionLabel}
               <Zap className={`h-4 w-4 ${isSimulating ? 'animate-pulse' : ''}`} />
             </Button>
             {mode === 'normal' ? (
@@ -1160,6 +1501,18 @@ function TxReceiptPanel({
                 onClick={() => {
                   setTxInput(SAMPLE_SIGNATURE)
                   runReceipt(SAMPLE_SIGNATURE)
+                }}
+                className="h-11 shrink-0"
+              >
+                Sample
+              </Button>
+            ) : mode === 'coin' ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setCoinMintInput(SAMPLE_COIN_MINT)
+                  void runCoinReceipt(SAMPLE_COIN_MINT)
                 }}
                 className="h-11 shrink-0"
               >
@@ -1225,6 +1578,56 @@ function TxReceiptPanel({
                   </span>
                 </button>
               ))}
+            </div>
+          </div>
+        ) : null}
+
+        {mode === 'coin' ? (
+          <div className="rounded-lg border border-border/60 bg-background/35 p-3">
+            <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+                  Coin Receipt Examples
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Start with a built-in example, or paste any Solana coin CA.
+                </p>
+              </div>
+              <Badge variant="outline" className="w-fit border-border/70 text-muted-foreground">
+                Casebook-ready
+              </Badge>
+            </div>
+            <div className="grid gap-2 md:grid-cols-2">
+              {COIN_EXAMPLES.map((example) => (
+                <button
+                  key={example.value}
+                  type="button"
+                  onClick={() => {
+                    setCoinMintInput(example.value)
+                    setReceiptError('')
+                    void runCoinReceipt(example.value)
+                  }}
+                  disabled={isSimulating}
+                  className="rounded-md border border-border/60 bg-background/45 px-3 py-2 text-left transition hover:border-border hover:bg-secondary/35 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <span className="block text-xs font-semibold text-foreground">{example.label}</span>
+                  <span className="mt-1 block text-[10px] leading-4 text-muted-foreground">
+                    {example.note}
+                  </span>
+                  <span className="mt-2 block truncate font-mono text-[10px] text-muted-foreground">
+                    {example.value.slice(0, 8)}...{example.value.slice(-8)}
+                  </span>
+                </button>
+              ))}
+              <div className="rounded-md border border-border/60 bg-background/25 px-3 py-2">
+                <span className="block text-xs font-semibold text-foreground">Any Solana CA</span>
+                <span className="mt-1 block text-[10px] leading-4 text-muted-foreground">
+                  Paste a CA and Breadlines will build the same observed/estimated/unclear activity receipt.
+                </span>
+                <span className="mt-2 block text-[10px] text-muted-foreground">
+                  No price call. No safety rating. Just the execution story.
+                </span>
+              </div>
             </div>
           </div>
         ) : null}
@@ -1357,80 +1760,114 @@ function TxReceiptPanel({
           <p className="text-xs text-destructive">{receiptError}</p>
         ) : null}
 
-        {mode === 'normal' && receipt ? (
-          <ReceiptResult
-            receipt={receipt}
-            receiptText={receiptText}
-            shareUrl={shareUrl}
-            copiedReceipt={copiedReceipt}
-            onCopyReceipt={handleCopyReceipt}
-          />
-        ) : null}
-
-        {mode === 'perps' && perpsResult ? (
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline" className="border-border/70 text-muted-foreground">
-                Detected: {perpsResult.venue}
-              </Badge>
-              <span className="text-xs text-muted-foreground">
-                Conceptual sketch. Real tx parsing is not active in this tab.
-              </span>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-xl border border-border/60 bg-background/35 p-4">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                      FCFS queue sketch
-                    </p>
-                    <p className="mt-1 text-sm text-muted-foreground">A rough model of queue pressure under contention.</p>
-                  </div>
-                  <Badge variant="outline" className="border-border/70 text-muted-foreground">
-                    Conceptual
-                  </Badge>
-                </div>
-                <div className="grid gap-2">
-                  {[
-                    ['Blocks waited', perpsResult.blocksWaited],
-                    ['Contention score', perpsResult.spammersCut],
-                    ['Modeled slippage', perpsResult.slippagePaid],
-                    ['Modeled liq risk', perpsResult.liqRisk],
-                    ['Modeled funding exposure', perpsResult.fundingExposure],
-                  ].map(([label, value]) => (
-                    <div key={label} className="flex items-center justify-between rounded-lg border border-border/55 bg-secondary/20 px-3 py-2">
-                      <span className="text-xs text-muted-foreground">{label}</span>
-                      <span className="font-mono text-sm font-semibold text-foreground">{value}</span>
-                    </div>
-                  ))}
-                </div>
+        <Dialog
+          open={activeReceiptView !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setActiveReceiptView(null)
+              setReceiptReturnTarget(null)
+            }
+          }}
+        >
+          <DialogContent className="max-h-[90vh] overflow-hidden border-border/70 bg-background/95 p-0 sm:max-w-[min(1120px,94vw)]">
+            <DialogTitle className="sr-only">
+              {activeReceiptView === 'coin'
+                ? 'Coin activity receipt'
+                : activeReceiptView === 'perps'
+                  ? 'Perps sketch'
+                  : 'Execution receipt'}
+            </DialogTitle>
+            <div className="flex flex-col gap-3 border-b border-border/60 bg-card/90 p-4 pr-12 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Breadlines result
+                </p>
+                <p className="mt-1 text-sm font-semibold text-foreground">
+                  {activeReceiptView === 'coin'
+                    ? 'Coin Activity Receipt'
+                    : activeReceiptView === 'perps'
+                      ? 'Perps Sketch'
+                      : 'Execution Receipt'}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {activeReceiptView === 'transaction' && receiptReturnTarget === 'coin'
+                    ? 'Close this view to return to the builder, or go back to the coin activity receipt.'
+                    : 'Close this view to return to the builder.'}
+                </p>
               </div>
-
-              <div className="rounded-xl border border-border/60 bg-background/35 p-4">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                      MCP-style sketch
-                    </p>
-                    <p className="mt-1 text-sm text-muted-foreground">Concurrent lanes as a market-structure thought model.</p>
-                  </div>
-                  <Badge variant="outline" className="border-border/70 text-muted-foreground">
-                    Conceptual
-                  </Badge>
-                </div>
-                <div className="rounded-lg border border-border/55 bg-secondary/20 p-4">
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Modeled fill time</p>
-                  <p className="mt-2 text-4xl font-bold text-foreground">{perpsResult.fillTime}</p>
-                  <p className="mt-3 text-sm font-medium leading-6 text-foreground">
-                    {perpsResult.mcpMessage}
-                  </p>
-                </div>
+              <div className="flex flex-wrap gap-2">
+                {activeReceiptView === 'transaction' && receiptReturnTarget === 'coin' && coinReceipt ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setActiveReceiptView('coin')
+                      setReceiptReturnTarget(null)
+                    }}
+                    className="w-fit border-border/70 text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
+                  >
+                    Back to coin receipt
+                  </Button>
+                ) : null}
+                <DialogClose asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-fit border-border/70 text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
+                  >
+                    Close
+                  </Button>
+                </DialogClose>
               </div>
             </div>
+            <div className="max-h-[calc(90vh-92px)] overflow-y-auto p-4 sm:p-5">
+              {activeReceiptView === 'transaction' ? (
+                receipt ? (
+                  <ReceiptResult
+                    receipt={receipt}
+                    receiptText={receiptText}
+                    shareUrl={shareUrl}
+                    copiedReceipt={copiedReceipt}
+                    onCopyReceipt={handleCopyReceipt}
+                  />
+                ) : (
+                  <div className="rounded-lg border border-border/60 bg-background/45 p-6 text-sm text-muted-foreground">
+                    Building transaction receipt...
+                  </div>
+                )
+              ) : null}
 
-          </div>
-        ) : null}
+              {activeReceiptView === 'coin' ? (
+                coinReceipt ? (
+                  <CoinActivityResult
+                    receipt={coinReceipt}
+                    shareUrl={coinShareUrl}
+                    copiedCoinReceipt={copiedCoinReceipt}
+                    onCopyCoinReceipt={handleCopyCoinReceipt}
+                    onOpenReceipt={openTxReceiptFromCoin}
+                  />
+                ) : (
+                  <div className="rounded-lg border border-border/60 bg-background/45 p-6 text-sm text-muted-foreground">
+                    Building coin activity receipt...
+                  </div>
+                )
+              ) : null}
+
+              {activeReceiptView === 'perps' ? (
+                perpsResult ? (
+                  <PerpsSketchResult result={perpsResult} />
+                ) : (
+                  <div className="rounded-lg border border-border/60 bg-background/45 p-6 text-sm text-muted-foreground">
+                    Building perps sketch...
+                  </div>
+                )
+              ) : null}
+            </div>
+          </DialogContent>
+        </Dialog>
+
       </CardContent>
     </Card>
   )
@@ -1767,8 +2204,6 @@ export default function Breadlines() {
     liveSolanaData: false,
   })
   
-  const [isLocked, setIsLocked] = useState(false)
-  const [botHover, setBotHover] = useState(false)
   const [insightIndex, setInsightIndex] = useState(0)
   const [copied, setCopied] = useState(false)
   const [postFeeWorld, setPostFeeWorld] = useState(false)
@@ -1917,36 +2352,12 @@ export default function Breadlines() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Button
-                variant={isLocked ? "default" : "outline"}
-                className="gap-2 transition-all"
-                onMouseEnter={() => setBotHover(true)}
-                onMouseLeave={() => setBotHover(false)}
-                onClick={() => setIsLocked(!isLocked)}
-              >
-                <motion.div
-                  animate={botHover ? { rotate: [0, -10, 10, -10, 0] } : {}}
-                  transition={{ duration: 0.5 }}
-                >
-                  {isLocked ? <Lock className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-                </motion.div>
-                {isLocked ? 'Locked In' : 'Lock In'}
+              <Button asChild className="gap-2 bg-foreground text-background hover:bg-foreground/90">
+                <a href="#receipt-builder">
+                  <FileText className="h-4 w-4" />
+                  Build Receipt
+                </a>
               </Button>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="gap-2 border-border/70 text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
-                  >
-                    <Megaphone className="h-4 w-4" />
-                    Open Sprint
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-h-[88vh] overflow-y-auto border-primary/35 bg-background/95 p-0 sm:max-w-4xl">
-                  <DialogTitle className="sr-only">Breadlines Open Sprint</DialogTitle>
-                  <BuildSprintPanel />
-                </DialogContent>
-              </Dialog>
             </div>
           </div>
         </div>
@@ -2156,7 +2567,7 @@ export default function Breadlines() {
                 postFeeWorld={postFeeWorld}
                 twoSlotsPerLeader={twoSlotsPerLeader}
                 color="#ff4444"
-                isActive={!isLocked}
+                isActive
               />
               <ProtocolColumn
                 title="Basic Batching"
@@ -2167,7 +2578,7 @@ export default function Breadlines() {
                 postFeeWorld={postFeeWorld}
                 twoSlotsPerLeader={twoSlotsPerLeader}
                 color="#666680"
-                isActive={!isLocked}
+                isActive
               />
               <ProtocolColumn
                 title="MCP + FBO"
@@ -2178,7 +2589,7 @@ export default function Breadlines() {
                 postFeeWorld={postFeeWorld}
                 twoSlotsPerLeader={twoSlotsPerLeader}
                 color="#22ff88"
-                isActive={!isLocked}
+                isActive
               />
             </div>
 
