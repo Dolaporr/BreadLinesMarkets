@@ -1,11 +1,15 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, Geist_Mono } from 'next/font/google'
+import { Montserrat, Raleway, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
-const inter = Inter({ 
+const montserrat = Montserrat({
   subsets: ["latin"],
-  variable: "--font-inter"
+  variable: "--font-montserrat"
+});
+const raleway = Raleway({
+  subsets: ["latin"],
+  variable: "--font-raleway"
 });
 const geistMono = Geist_Mono({ 
   subsets: ["latin"],
@@ -15,7 +19,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Breadlines | Solana Execution Receipts',
   description: 'Paste a Solana transaction. Understand what happened. Execution receipts with observed facts first, estimated pressure, and conceptual market-structure context.',
-  generator: 'v0.app',
+  generator: 'Breadlines',
   keywords: ['Solana', 'execution receipts', 'transaction analysis', 'observability', 'MCP', 'FCFS', 'blockchain'],
   icons: {
     icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
@@ -35,7 +39,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}>
+      <body className={`${montserrat.variable} ${raleway.variable} ${geistMono.variable} font-sans antialiased`}>
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

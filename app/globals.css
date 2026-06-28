@@ -3,75 +3,65 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Cyberpunk Solana Theme - Dark Only */
+/* Breadlines dark product theme */
 :root {
-  /* Deep black/dark navy background */
-  --background: #0a0a0f;
-  --foreground: #e5e5e5;
+  --background: #08090b;
+  --foreground: #e7e9ee;
   
-  /* Card styling */
-  --card: #0f0f18;
-  --card-foreground: #e5e5e5;
+  --card: #101216;
+  --card-foreground: #e7e9ee;
   
-  /* Popover */
-  --popover: #0f0f18;
-  --popover-foreground: #e5e5e5;
+  --popover: #101216;
+  --popover-foreground: #e7e9ee;
   
-  /* Primary - Neon Green for Markets */
-  --primary: #22ff88;
-  --primary-foreground: #0a0a0f;
+  --primary: #72e6a6;
+  --primary-foreground: #07100b;
   
-  /* Secondary - Muted dark */
-  --secondary: #1a1a24;
-  --secondary-foreground: #a0a0a0;
+  --secondary: #171a20;
+  --secondary-foreground: #b5bbc7;
   
-  /* Muted */
-  --muted: #1a1a24;
-  --muted-foreground: #666680;
+  --muted: #171a20;
+  --muted-foreground: #848b9a;
   
-  /* Accent - Neon green glow */
-  --accent: #22ff8820;
-  --accent-foreground: #22ff88;
+  --accent: #1f2a25;
+  --accent-foreground: #9be7b9;
   
-  /* Destructive - Red/Orange for Bread Lines */
-  --destructive: #ff4444;
+  --destructive: #ff6b6b;
   --destructive-foreground: #ffffff;
   
-  /* Borders and inputs */
-  --border: #2a2a3a;
-  --input: #1a1a24;
-  --ring: #22ff88;
+  --border: #2a2e37;
+  --input: #171a20;
+  --ring: #72e6a6;
   
-  /* Charts */
-  --chart-1: #22ff88;
-  --chart-2: #ff4444;
-  --chart-3: #666680;
-  --chart-4: #ff8844;
-  --chart-5: #44aaff;
+  --chart-1: #72e6a6;
+  --chart-2: #ff6b6b;
+  --chart-3: #848b9a;
+  --chart-4: #f2b86d;
+  --chart-5: #7bb7ff;
   
-  --radius: 0.75rem;
+  --radius: 0.5rem;
   
   /* Sidebar */
-  --sidebar: #0c0c14;
-  --sidebar-foreground: #e5e5e5;
-  --sidebar-primary: #22ff88;
-  --sidebar-primary-foreground: #0a0a0f;
-  --sidebar-accent: #1a1a24;
-  --sidebar-accent-foreground: #22ff88;
-  --sidebar-border: #2a2a3a;
-  --sidebar-ring: #22ff88;
+  --sidebar: #0d0f13;
+  --sidebar-foreground: #e7e9ee;
+  --sidebar-primary: #72e6a6;
+  --sidebar-primary-foreground: #07100b;
+  --sidebar-accent: #171a20;
+  --sidebar-accent-foreground: #9be7b9;
+  --sidebar-border: #2a2e37;
+  --sidebar-ring: #72e6a6;
   
-  /* Custom colors for the dashboard */
-  --neon-green: #22ff88;
-  --neon-green-glow: #22ff8840;
-  --bread-red: #ff4444;
-  --bread-red-glow: #ff444440;
-  --neutral-gray: #666680;
+  --neon-green: #72e6a6;
+  --neon-green-glow: #72e6a633;
+  --bread-red: #ff6b6b;
+  --bread-red-glow: #ff6b6b33;
+  --neutral-gray: #848b9a;
 }
 
 @theme inline {
-  --font-sans: 'Inter', 'Geist', sans-serif;
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback', monospace;
+  --font-sans: var(--font-montserrat), 'Montserrat', sans-serif;
+  --font-heading: var(--font-raleway), var(--font-montserrat), sans-serif;
+  --font-mono: var(--font-geist-mono), 'Geist Mono', monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -123,42 +113,15 @@
   }
   body {
     @apply bg-background text-foreground;
+    letter-spacing: 0;
   }
-}
-
-/* Grid background pattern */
-.grid-bg {
-  background-image: 
-    linear-gradient(rgba(34, 255, 136, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 255, 136, 0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
-/* Neon glow effects */
-.neon-green-glow {
-  box-shadow: 0 0 20px rgba(34, 255, 136, 0.3), 0 0 40px rgba(34, 255, 136, 0.1);
-}
-
-.neon-red-glow {
-  box-shadow: 0 0 20px rgba(255, 68, 68, 0.3), 0 0 40px rgba(255, 68, 68, 0.1);
-}
-
-.text-glow-green {
-  text-shadow: 0 0 10px rgba(34, 255, 136, 0.5), 0 0 20px rgba(34, 255, 136, 0.3);
-}
-
-.text-glow-red {
-  text-shadow: 0 0 10px rgba(255, 68, 68, 0.5), 0 0 20px rgba(255, 68, 68, 0.3);
-}
-
-/* Animated gradient border */
-@keyframes gradient-border {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-.gradient-border {
-  background: linear-gradient(90deg, #22ff88, #44aaff, #22ff88);
-  background-size: 200% 200%;
-  animation: gradient-border 3s ease infinite;
+  body * {
+    letter-spacing: 0 !important;
+  }
+  h1,
+  h2,
+  h3,
+  [data-slot='card-title'] {
+    font-family: var(--font-raleway), var(--font-montserrat), sans-serif;
+  }
 }

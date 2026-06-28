@@ -26,7 +26,6 @@ import {
   Activity,
   ArrowUpRight,
   Clipboard,
-  FileText,
   Share2
 } from 'lucide-react'
 import { simulateBlock, type SimParams as SimulationParams, type SimResult as Metrics } from '@/lib/simulateBlock'
@@ -96,7 +95,6 @@ function StatusDot({
         className={pulse ? 'animate-pulse' : ''}
         style={{
           backgroundColor: color,
-          boxShadow: `0 0 10px ${color}`,
           animationDuration: pulse && pulseDuration ? `${pulseDuration}s` : undefined,
         }}
       >
@@ -117,7 +115,7 @@ function OrderingIndicator({ replayPriority }: { replayPriority: number }) {
           <div className="flex items-center gap-2">
             <Badge
               variant="outline"
-              className="border-primary/60 bg-transparent text-primary shadow-[0_0_12px_rgba(34,255,136,0.18)]"
+              className="border-primary/60 bg-transparent text-primary"
             >
               {roundRobinActive ? 'Round-Robin Active' : 'Priority Auction Active'}
             </Badge>
@@ -1009,7 +1007,13 @@ function CoinTxRow({
             </div>
           ) : null}
         </div>
-        <Button type="button" variant="outline" size="sm" onClick={() => onOpenReceipt(tx.signature)} className="w-fit shrink-0 gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onOpenReceipt(tx.signature)}
+          className="w-fit shrink-0 gap-2 border-border/70 bg-secondary/40 text-muted-foreground hover:border-border hover:bg-secondary/70 hover:text-foreground"
+        >
           Open receipt
           <ArrowUpRight className="h-4 w-4" />
         </Button>
@@ -1430,8 +1434,7 @@ function TxReceiptPanel({
             <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               Breadlines Receipts
             </p>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <FileText className="h-5 w-5 text-foreground" />
+            <CardTitle className="text-xl">
               {mode === 'coin' ? 'Coin Activity Receipt' : mode === 'normal' ? 'Execution Receipt' : 'Perps Sketch'}
             </CardTitle>
             <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
@@ -1490,9 +1493,8 @@ function TxReceiptPanel({
             className="h-11 border-border/70 bg-background/70 font-mono text-xs"
           />
           <div className="flex gap-2">
-            <Button onClick={runSimulation} className="h-11 shrink-0 gap-2 bg-foreground px-5 text-xs font-semibold text-background hover:bg-foreground/90">
+            <Button onClick={runSimulation} className="h-11 shrink-0 bg-foreground px-5 text-xs font-semibold text-background hover:bg-foreground/90">
               {isSimulating ? 'Building' : actionLabel}
-              <Zap className={`h-4 w-4 ${isSimulating ? 'animate-pulse' : ''}`} />
             </Button>
             {mode === 'normal' ? (
               <Button
@@ -1642,9 +1644,9 @@ function TxReceiptPanel({
                 Secondary tool for scanning wallet transfers. The receipt builder above is the primary flow.
               </p>
             </div>
-            <Badge variant="outline" className="w-fit border-border/70 text-muted-foreground">
+            <span className="inline-flex h-8 w-fit items-center rounded-md border border-border/70 bg-secondary/40 px-3 text-xs font-medium text-muted-foreground transition-colors hover:border-border hover:bg-secondary/70 hover:text-foreground">
               Secondary
-            </Badge>
+            </span>
           </summary>
           <div className="mt-3 flex flex-col gap-3">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -1769,7 +1771,10 @@ function TxReceiptPanel({
             }
           }}
         >
-          <DialogContent className="max-h-[90vh] overflow-hidden border-border/70 bg-background/95 p-0 sm:max-w-[min(1120px,94vw)]">
+          <DialogContent
+            showCloseButton={false}
+            className="max-h-[90vh] overflow-hidden border-border/70 bg-background/95 p-0 sm:max-w-[min(1120px,94vw)]"
+          >
             <DialogTitle className="sr-only">
               {activeReceiptView === 'coin'
                 ? 'Coin activity receipt'
@@ -1805,7 +1810,7 @@ function TxReceiptPanel({
                       setActiveReceiptView('coin')
                       setReceiptReturnTarget(null)
                     }}
-                    className="w-fit border-border/70 text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
+                    className="w-fit border-border/70 bg-secondary/40 text-muted-foreground hover:border-border hover:bg-secondary/70 hover:text-foreground"
                   >
                     Back to coin receipt
                   </Button>
@@ -1815,7 +1820,7 @@ function TxReceiptPanel({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="w-fit border-border/70 text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
+                    className="w-fit border-border/70 bg-secondary/40 text-muted-foreground hover:border-border hover:bg-secondary/70 hover:text-foreground"
                   >
                     Close
                   </Button>
@@ -1946,12 +1951,12 @@ function ProtocolColumn({
       </CardHeader>
       <CardContent className="space-y-4">
         {postFeeWorld && mode === 'mcp' ? (
-          <div className="rounded-lg border border-primary/50 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary shadow-[0_0_20px_rgba(34,255,136,0.2)]">
+          <div className="rounded-lg border border-primary/50 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary">
             Structure Wins - Latency + Fairness Dominate
           </div>
         ) : null}
         {postFeeWorld && mode === 'fcfs' ? (
-          <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive shadow-[0_0_20px_rgba(255,68,68,0.18)]">
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive">
             Fees Can&apos;t Save You Here
           </div>
         ) : null}
@@ -1961,7 +1966,7 @@ function ProtocolColumn({
               Concurrent Proposer Lanes
             </p>
             <div className="flex items-end gap-3">
-              <div className="flex-1 rounded-md border border-primary/40 bg-primary/10 p-2 shadow-[0_0_16px_rgba(34,255,136,0.16)]">
+              <div className="flex-1 rounded-md border border-primary/40 bg-primary/10 p-2">
                 <div className="mb-1 h-2 w-8 rounded-full bg-primary/70" />
                 <div className="space-y-1">
                   <div className="h-2 rounded bg-primary/25" />
@@ -1969,7 +1974,7 @@ function ProtocolColumn({
                   <div className="h-2 rounded bg-primary/25" />
                 </div>
               </div>
-              <div className="flex-1 rounded-md border border-primary/40 bg-primary/10 p-2 shadow-[0_0_16px_rgba(34,255,136,0.16)]">
+              <div className="flex-1 rounded-md border border-primary/40 bg-primary/10 p-2">
                 <div className="mb-1 h-2 w-8 rounded-full bg-primary/70" />
                 <div className="space-y-1">
                   <div className="h-2 rounded bg-primary/40" />
@@ -2321,7 +2326,7 @@ export default function Breadlines() {
   }, [params.liveSolanaData, postFeeWorld])
 
   return (
-    <div className="min-h-screen bg-background grid-bg">
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
@@ -2352,9 +2357,8 @@ export default function Breadlines() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Button asChild className="gap-2 bg-foreground text-background hover:bg-foreground/90">
+              <Button asChild className="bg-foreground px-4 text-background hover:bg-foreground/90">
                 <a href="#receipt-builder">
-                  <FileText className="h-4 w-4" />
                   Build Receipt
                 </a>
               </Button>
@@ -2363,41 +2367,26 @@ export default function Breadlines() {
         </div>
       </header>
 
-      {/* Changelog Banner */}
-      <div className="border-b border-border/60 bg-background/35">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs">
-            <Badge variant="outline" className="border-border/70 text-muted-foreground shrink-0 text-[10px]">
-              Receipt v0
-            </Badge>
-            <span className="text-foreground/80 font-medium">
-              Paste a Solana transaction. Understand what happened.
-            </span>
-            <span className="hidden sm:inline text-border/60">/</span>
-            <span className="text-muted-foreground">Observed facts first. Estimates clearly labeled.</span>
-            <span className="hidden sm:inline text-border/60">/</span>
-            <span className="hidden text-muted-foreground sm:inline">Casebook-ready shape.</span>
-          </div>
-        </div>
-      </div>
-
       <div className="container mx-auto max-w-7xl px-4 py-6">
         <TxReceiptPanel params={params} fcfsMetrics={fcfsMetrics} mcpMetrics={mcpMetrics} />
 
-        <section className="mt-6 space-y-4">
-          <div className="flex flex-col gap-1 border-b border-border/60 pb-3 sm:flex-row sm:items-end sm:justify-between">
+        <details className="group mt-6 border-t border-border/60 pt-4">
+          <summary className="flex cursor-pointer list-none flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Model lab</p>
+              <p className="text-xs font-semibold text-muted-foreground">Model Lab</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Secondary research surface for FCFS, batching, and MCP assumptions.
+                Optional simulator for FCFS, batching, and MCP assumptions.
               </p>
             </div>
-            <Badge variant="outline" className="w-fit border-border/70 text-muted-foreground">
-              Optional
-            </Badge>
-          </div>
+            <span className="inline-flex h-8 w-fit items-center rounded-md border border-border/70 bg-secondary/40 px-3 text-xs font-medium text-muted-foreground transition-colors hover:border-border hover:bg-secondary/70 hover:text-foreground group-open:hidden">
+              Open
+            </span>
+            <span className="hidden h-8 w-fit items-center rounded-md border border-border/70 bg-secondary/40 px-3 text-xs font-medium text-muted-foreground transition-colors hover:border-border hover:bg-secondary/70 hover:text-foreground group-open:inline-flex">
+              Hide
+            </span>
+          </summary>
 
-          <div className="flex flex-col gap-6 lg:flex-row">
+          <div className="mt-4 flex flex-col gap-6 lg:flex-row">
           {/* Sidebar Controls */}
           <aside className="w-full lg:w-72 shrink-0">
             <Card className="sticky top-24">
@@ -2594,7 +2583,7 @@ export default function Breadlines() {
             </div>
 
             {/* Insights Panel */}
-            <Card className="border-primary/30 bg-gradient-to-r from-primary/5 to-transparent">
+            <Card className="border-border/60 bg-card/60">
               <CardContent className="py-4">
                 <div className="flex items-start gap-3">
                   <div className="p-2 rounded-lg bg-primary/10">
@@ -2619,8 +2608,7 @@ export default function Breadlines() {
             </Card>
 
             {/* Toly Quote */}
-            <Card className="border-border/30 bg-card/50 overflow-hidden relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-destructive/5" />
+            <Card className="border-border/60 bg-card/60 overflow-hidden relative">
               <CardContent className="py-6 relative">
                 <div className="text-center">
                   <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wider">Toly Says</p>
@@ -2641,16 +2629,16 @@ export default function Breadlines() {
             </Card>
           </main>
           </div>
-        </section>
+        </details>
 
         <footer className="mt-8">
-          <Card className="border-primary/20">
+          <Card className="border-border/60 bg-card/60">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold">Support the Project</CardTitle>
+              <CardTitle className="text-sm font-semibold">Project Links</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-xs text-muted-foreground">
-                Support by buying some $breadlines.
+                Breadlines is an independent Solana execution receipts project.
               </p>
               <p className="text-xs text-muted-foreground/60">
                 Special thanks to{' '}
@@ -2670,7 +2658,7 @@ export default function Breadlines() {
                   variant="outline"
                   className="text-xs"
                 >
-                  {copied ? 'Copied' : 'Copy Address'}
+                  {copied ? 'Copied' : 'Copy CA'}
                 </Button>
                 <Button
                   asChild
@@ -2682,7 +2670,7 @@ export default function Breadlines() {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Trade on pump.fun
+                    View on pump.fun
                   </a>
                 </Button>
               </div>
