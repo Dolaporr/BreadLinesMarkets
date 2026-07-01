@@ -36,6 +36,7 @@ import {
   getTransfersByAddress,
   type BreadlinesReceipt,
   type CoinActivityReceipt,
+  type CoinActivityInsight,
   type CoinActivityTransaction,
   type CoinReceiptConfidence,
   type HeliusTransferSummary,
@@ -368,6 +369,7 @@ function MetricCard({
 const SAMPLE_SIGNATURE = '2GMEDJP6vf4Yw8iKBQVfLs311f5kjAo8WtvaJRo6LMuv5LbQDFBdsZho94ij7YAUcA1T9SxYhDn7jw181x4mpAA2'
 const SAMPLE_TRANSFER_ADDRESS = '86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY'
 const SAMPLE_COIN_MINT = '8cLSy3rjyCuVzzE1PuQ7AwALQNERrTZx9T8R52pRpump'
+const COIN_SCAN_WINDOW_OPTIONS = [50, 100, 250] as const
 const COIN_EXAMPLES = [
   {
     label: '$BREADLINES',
@@ -456,8 +458,17 @@ function confidenceTone(confidence: ReceiptConfidence) {
 }
 
 function coinConfidenceTone(confidence: CoinReceiptConfidence) {
+  if (confidence === 'needs inspection') return 'border-sky-300/35 bg-sky-300/[0.06] text-sky-200'
   if (confidence === 'unclear') return 'border-border/70 bg-secondary/20 text-muted-foreground'
   return confidenceTone(confidence)
+}
+
+function coinInsightTone(level: CoinActivityInsight['level']) {
+  if (level === 'high') return 'border-rose-400/35 bg-rose-400/[0.05]'
+  if (level === 'medium') return 'border-amber-300/35 bg-amber-300/[0.05]'
+  if (level === 'low') return 'border-emerald-400/35 bg-emerald-400/[0.04]'
+  if (level === 'needs inspection') return 'border-sky-300/35 bg-sky-300/[0.04]'
+  return 'border-border/60 bg-background/35'
 }
 
 function sensitivityTone(level: ReceiptSensitivityLevel | 'moderate') {
@@ -493,6 +504,11 @@ function CoinConfidenceBadge({ confidence }: { confidence: CoinReceiptConfidence
 function formatTokenValue(value: number | null | undefined) {
   if (value == null) return 'Unclear'
   return value.toLocaleString(undefined, { maximumFractionDigits: value >= 1 ? 2 : 6 })
+}
+
+function formatPercentValue(value: number | null | undefined) {
+  if (value == null) return 'Unclear'
+  return `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}%`
 }
 
 function buildReceiptShareText(receipt: BreadlinesReceipt) {
@@ -1022,6 +1038,24 @@ function CoinTxRow({
   )
 }
 
+function CoinInsightCard({ insight }: { insight: CoinActivityInsight }) {
+  return (
+    <div className={`rounded-lg border p-4 ${coinInsightTone(insight.level)}`}>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{insight.title}</p>
+          <p className="mt-1 text-sm font-semibold text-foreground">{insight.label}</p>
+        </div>
+        <CoinConfidenceBadge confidence={insight.confidence} />
+      </div>
+      <p className="text-xs leading-5 text-foreground">{insight.text}</p>
+      {insight.detail ? (
+        <p className="mt-2 text-xs leading-5 text-muted-foreground">{insight.detail}</p>
+      ) : null}
+    </div>
+  )
+}
+
 function CoinActivityResult({
   receipt,
   shareUrl,
@@ -1036,11 +1070,21 @@ function CoinActivityResult({
   onOpenReceipt: (signature: string) => void
 }) {
   const metricItems = [
-    ['Observed txs', receipt.window.observedTransactions.toLocaleString(), receipt.window.confidence],
-    ['Failed txs', receipt.stats.failedTransactions.toLocaleString(), 'observed' as CoinReceiptConfidence],
-    ['High-fee signals', receipt.stats.highFeeTransactions.toLocaleString(), 'estimated' as CoinReceiptConfidence],
-    ['Largest movement', formatTokenValue(receipt.stats.largestMovementUiAmount), 'observed' as CoinReceiptConfidence],
+    ['Observed window', `${receipt.stats.observedTxCount.toLocaleString()} / ${receipt.window.requestedLimit.toLocaleString()}`, receipt.window.confidence],
+    ['Success / failed', `${receipt.stats.successCount.toLocaleString()} / ${receipt.stats.failedCount.toLocaleString()}`, 'observed' as CoinReceiptConfidence],
+    ['Unique wallets', receipt.stats.uniqueWalletCount.toLocaleString(), 'observed' as CoinReceiptConfidence],
+    ['High-fee signals', `${receipt.stats.highFeeSignalCount.toLocaleString()} (${formatPercentValue(receipt.stats.highFeeRatePercent)})`, 'estimated' as CoinReceiptConfidence],
+    ['Repeat-wallet signals', receipt.stats.repeatedWalletCount.toLocaleString(), 'estimated' as CoinReceiptConfidence],
+    ['Largest movement', formatTokenValue(receipt.stats.largestObservedMovement.uiAmount), receipt.stats.largestObservedMovement.confidence],
   ] as const
+  const insightItems = [
+    receipt.insights.executionHealth,
+    receipt.insights.feePressure,
+    receipt.insights.walletParticipation,
+    receipt.insights.largestMovement,
+    receipt.insights.breadlineSignal,
+  ]
+  const timelinePreview = receipt.timeline.slice(0, Math.min(15, receipt.timeline.length))
 
   return (
     <div className="space-y-5">
@@ -1061,8 +1105,15 @@ function CoinActivityResult({
               <CoinConfidenceBadge confidence={receipt.token.confidence} />
             </div>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-foreground">
-              Every coin has a chart. This receipt shows the execution story: recent indexed activity, notable movements, failed attempts, fee signals, and links to the transaction receipts behind them.
+              Every coin has a chart. This receipt analyzes a wider observed activity window and translates execution health, fee pressure, wallet participation, movement, and retry-like signals into readable context.
             </p>
+            <div className="mt-3 rounded-md border border-border/60 bg-secondary/20 p-3">
+              <div className="mb-2 flex items-center gap-2">
+                <p className="text-xs font-semibold text-foreground">Signal summary</p>
+                <CoinConfidenceBadge confidence="estimated" />
+              </div>
+              <p className="text-sm leading-6 text-foreground">{receipt.signalSummary}</p>
+            </div>
             <p className="mt-2 truncate font-mono text-xs text-muted-foreground">
               CA: {receipt.mint}
             </p>
@@ -1082,7 +1133,7 @@ function CoinActivityResult({
         </div>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {metricItems.map(([label, value, confidence]) => (
           <div key={label} className="rounded-lg border border-border/60 bg-background/45 p-3">
             <div className="flex items-center justify-between gap-2">
@@ -1094,24 +1145,30 @@ function CoinActivityResult({
         ))}
       </div>
 
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        {insightItems.map((insight) => (
+          <CoinInsightCard key={insight.title} insight={insight} />
+        ))}
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
         <div className="rounded-lg border border-border/60 bg-background/35 p-4">
           <div className="mb-3 flex items-start justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">Recent activity timeline</p>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                Recent indexed signatures for this mint. Open any tx to inspect the single-transaction receipt.
+                Recent indexed signatures for this mint. Insights use the full observed window; this preview shows up to 15 rows.
               </p>
             </div>
             <CoinConfidenceBadge confidence={receipt.confidence.activity} />
           </div>
           <div className="space-y-2">
-            {receipt.timeline.slice(0, 6).map((tx) => (
+            {timelinePreview.map((tx) => (
               <CoinTxRow key={tx.signature} tx={tx} onOpenReceipt={onOpenReceipt} />
             ))}
             {!receipt.timeline.length ? (
               <p className="rounded-md border border-border/55 bg-background/35 p-3 text-xs text-muted-foreground">
-                No indexed transactions were returned for this mint sample.
+                No indexed transactions were returned for this mint window.
               </p>
             ) : null}
           </div>
@@ -1123,7 +1180,7 @@ function CoinActivityResult({
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-200">Execution signals</p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  Failed txs, higher fees, compute-heavy paths, and movement hints.
+                  Failed txs, higher fees, compute-heavy paths, and movement hints found across the observed window.
                 </p>
               </div>
               <CoinConfidenceBadge confidence={receipt.confidence.executionSignals} />
@@ -1133,7 +1190,23 @@ function CoinActivityResult({
                 <CoinTxRow key={tx.signature} tx={tx} onOpenReceipt={onOpenReceipt} />
               ))}
               {!receipt.executionSignals.length ? (
-                <p className="text-xs text-muted-foreground">No strong execution signals in this sample.</p>
+                <p className="text-xs text-muted-foreground">No strong execution signals in this observed window.</p>
+              ) : null}
+              {receipt.failedThenLandedRetrySignals.length ? (
+                <div className="rounded-md border border-sky-300/25 bg-sky-300/[0.04] p-3">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <p className="text-xs font-semibold text-foreground">Failed-then-landed patterns</p>
+                    <CoinConfidenceBadge confidence="needs inspection" />
+                  </div>
+                  <div className="space-y-1.5">
+                    {receipt.failedThenLandedRetrySignals.slice(0, 3).map((signal) => (
+                      <p key={`${signal.failedSignature}-${signal.landedSignature}`} className="font-mono text-[10px] leading-4 text-muted-foreground">
+                        {signal.failedSignature.slice(0, 6)}...{signal.failedSignature.slice(-6)}{' -> '}{signal.landedSignature.slice(0, 6)}...{signal.landedSignature.slice(-6)}
+                        {signal.slotDistance != null ? ` | ${signal.slotDistance} slots` : ''}
+                      </p>
+                    ))}
+                  </div>
+                </div>
               ) : null}
             </div>
           </div>
@@ -1141,15 +1214,15 @@ function CoinActivityResult({
           <div className="rounded-lg border border-border/60 bg-background/35 p-4">
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Wallet and account signals</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Wallet participation</p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  Repeated owners and top token accounts. This is triage, not full holder analytics.
+                  Unique owners, repeated-wallet signals, and top token accounts. This is triage, not full holder analytics.
                 </p>
               </div>
               <CoinConfidenceBadge confidence={receipt.confidence.walletSignals} />
             </div>
             <div className="space-y-2">
-              {receipt.walletSignals.slice(0, 4).map((wallet) => (
+              {receipt.repeatedWalletSignals.slice(0, 4).map((wallet) => (
                 <div key={wallet.owner} className="rounded-md border border-border/55 bg-background/35 p-3">
                   <div className="flex items-center justify-between gap-2">
                     <p className="truncate font-mono text-xs text-foreground">{wallet.owner}</p>
@@ -1160,8 +1233,8 @@ function CoinActivityResult({
                   </p>
                 </div>
               ))}
-              {!receipt.walletSignals.length ? (
-                <p className="text-xs text-muted-foreground">No repeated owner signal in this sample.</p>
+              {!receipt.repeatedWalletSignals.length ? (
+                <p className="text-xs text-muted-foreground">No repeated-wallet signal in this observed window.</p>
               ) : null}
               {receipt.topTokenAccounts.slice(0, 3).map((account) => (
                 <div key={account.address} className="rounded-md border border-border/55 bg-secondary/20 p-3">
@@ -1221,6 +1294,7 @@ function TxReceiptPanel({
   const [txInput, setTxInput] = useState('')
   const [receipt, setReceipt] = useState<BreadlinesReceipt | null>(null)
   const [coinMintInput, setCoinMintInput] = useState('')
+  const [coinScanWindow, setCoinScanWindow] = useState<(typeof COIN_SCAN_WINDOW_OPTIONS)[number]>(100)
   const [coinReceipt, setCoinReceipt] = useState<CoinActivityReceipt | null>(null)
   const [perpsResult, setPerpsResult] = useState<PerpsResult | null>(null)
   const [activeReceiptView, setActiveReceiptView] = useState<'transaction' | 'coin' | 'perps' | null>(null)
@@ -1275,7 +1349,7 @@ function TxReceiptPanel({
     }
   }, [txInput])
 
-  const runCoinReceipt = useCallback(async (rawMint = coinMintInput) => {
+  const runCoinReceipt = useCallback(async (rawMint = coinMintInput, scanWindow = coinScanWindow) => {
     const mint = rawMint.trim()
 
     if (!SOLANA_ADDRESS_PATTERN.test(mint)) {
@@ -1292,7 +1366,7 @@ function TxReceiptPanel({
     setCopiedCoinReceipt(false)
 
     try {
-      const nextReceipt = await getCoinActivityReceipt(mint)
+      const nextReceipt = await getCoinActivityReceipt(mint, scanWindow)
       setCoinReceipt(nextReceipt)
       setActiveReceiptView('coin')
     } catch (error) {
@@ -1302,7 +1376,7 @@ function TxReceiptPanel({
     } finally {
       setIsSimulating(false)
     }
-  }, [coinMintInput])
+  }, [coinMintInput, coinScanWindow])
 
   const handleCopyReceipt = useCallback(async () => {
     if (!receiptText) return
@@ -1524,6 +1598,35 @@ function TxReceiptPanel({
           </div>
           </div>
         </div>
+
+        {mode === 'coin' ? (
+          <div className="flex flex-col gap-3 rounded-lg border border-border/60 bg-background/35 p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Scan window
+              </p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Analyze recent indexed txs. Result lists stay readable, but metrics use the selected window.
+              </p>
+            </div>
+            <div className="inline-flex w-fit rounded-md border border-border/60 bg-background/55 p-1">
+              {COIN_SCAN_WINDOW_OPTIONS.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setCoinScanWindow(option)}
+                  className={`rounded-[4px] px-3 py-1.5 text-[11px] font-semibold transition-all ${
+                    coinScanWindow === option
+                      ? 'bg-foreground text-background'
+                      : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         {mode === 'perps' ? (
           <div className="flex flex-wrap gap-2">

@@ -34,7 +34,35 @@ export type HeliusTransferSummary = {
 
 export type ReceiptConfidence = 'observed' | 'estimated' | 'conceptual'
 export type ReceiptSensitivityLevel = 'low' | 'medium' | 'high' | 'unknown'
-export type CoinReceiptConfidence = ReceiptConfidence | 'unclear'
+export type CoinReceiptConfidence = ReceiptConfidence | 'unclear' | 'needs inspection'
+
+export type CoinActivityInsightLevel = 'low' | 'medium' | 'high' | 'none' | 'needs inspection'
+
+export type CoinActivityInsight = {
+  title: string
+  label: string
+  level: CoinActivityInsightLevel
+  confidence: CoinReceiptConfidence
+  text: string
+  detail?: string
+}
+
+export type CoinRepeatedWalletSignal = {
+  owner: string
+  transactionCount: number
+  totalAbsUiAmount: number
+  firstSignature?: string
+  lastSignature?: string
+  confidence: CoinReceiptConfidence
+}
+
+export type CoinRetrySignal = {
+  failedSignature: string
+  landedSignature: string
+  owner?: string
+  slotDistance: number | null
+  confidence: CoinReceiptConfidence
+}
 
 export type BreadlinesReceipt = {
   signature: string
@@ -165,6 +193,21 @@ export type CoinActivityReceipt = {
     confidence: CoinReceiptConfidence
   }
   stats: {
+    observedTxCount: number
+    successCount: number
+    failedCount: number
+    failureRatePercent: number
+    highFeeSignalCount: number
+    highFeeRatePercent: number
+    uniqueWalletCount: number
+    repeatedWalletCount: number
+    largestObservedMovement: {
+      uiAmount: number | null
+      direction: CoinActivityTransaction['tokenDeltaDirection']
+      signature: string | null
+      confidence: CoinReceiptConfidence
+    }
+    failedThenLandedRetryCount: number
     failedTransactions: number
     highFeeTransactions: number
     highComputeTransactions: number
@@ -173,15 +216,20 @@ export type CoinActivityReceipt = {
     largestMovementUiAmount: number | null
     topTokenAccountSupplyPct: number | null
   }
+  insights: {
+    executionHealth: CoinActivityInsight
+    feePressure: CoinActivityInsight
+    walletParticipation: CoinActivityInsight
+    largestMovement: CoinActivityInsight
+    breadlineSignal: CoinActivityInsight
+  }
+  signalSummary: string
   timeline: CoinActivityTransaction[]
   largestMovements: CoinActivityTransaction[]
   executionSignals: CoinActivityTransaction[]
-  walletSignals: Array<{
-    owner: string
-    transactionCount: number
-    totalAbsUiAmount: number
-    confidence: CoinReceiptConfidence
-  }>
+  repeatedWalletSignals: CoinRepeatedWalletSignal[]
+  failedThenLandedRetrySignals: CoinRetrySignal[]
+  walletSignals: CoinRepeatedWalletSignal[]
   topTokenAccounts: Array<{
     address: string
     uiAmountString: string
@@ -211,6 +259,7 @@ export type CoinActivityTransaction = {
   status: 'success' | 'failed' | 'unknown'
   feePaidLamports: number | null
   feePaidSol: number | null
+  priorityFeeLamportsEstimated: number | null
   computeUnitsConsumed: number | null
   tokenDeltaUiAmount: number | null
   tokenDeltaDirection: 'in' | 'out' | 'mixed' | 'none' | 'unknown'
@@ -225,7 +274,7 @@ export type CoinActivityTransaction = {
   }
 }
 
-export async function getCoinActivityReceipt(mint: string, limit = 15): Promise<CoinActivityReceipt> {
+export async function getCoinActivityReceipt(mint: string, limit = 100): Promise<CoinActivityReceipt> {
   const res = await fetch('/api/coin-receipt', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
