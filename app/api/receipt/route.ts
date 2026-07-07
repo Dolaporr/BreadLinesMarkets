@@ -3,9 +3,15 @@ import { NextResponse } from 'next/server'
 const HELIUS_URL = `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`
 const SOLANA_SIGNATURE_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{64,88}$/
 const BASE_FEE_LAMPORTS_PER_SIGNATURE = 5000
+const COMPUTE_BUDGET_PROGRAM_ID = 'ComputeBudget111111111111111111111111111111'
+const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+const HIGH_COMPUTE_UNITS = 750_000
+const ACTIVITY_SCAN_LIMIT = 12
 
 type Confidence = 'observed' | 'estimated' | 'conceptual'
 type SensitivityLevel = 'low' | 'medium' | 'high' | 'unknown'
+type InclusionConfidence = Confidence | 'needs inspection'
+type ComputeUnitPriceStatus = 'zero' | 'omitted' | 'set' | 'unknown'
 
 type RpcAccountKey =
   | string
@@ -20,6 +26,7 @@ type RpcInstruction = {
   program?: string
   programId?: string
   programIdIndex?: number
+  data?: string
   parsed?: unknown
 }
 
@@ -57,9 +64,17 @@ type PerformanceSample = {
   samplePeriodSecs?: number
 }
 
+type RecentSignature = {
+  signature?: string
+  slot?: number
+  blockTime?: number | null
+  err?: unknown
+  confirmationStatus?: string
+}
+
 const PROGRAM_LABELS: Record<string, string> = {
   '11111111111111111111111111111111': 'System Program',
-  ComputeBudget111111111111111111111111111111: 'Compute Budget',
+  [COMPUTE_BUDGET_PROGRAM_ID]: 'Compute Budget',
   TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA: 'SPL Token',
   TokenzQdBNbLqP5VEhUMLAq5Lx4o2sxb9y5KHK2iHf: 'Token-2022',
   ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL: 'Associated Token Account',
@@ -87,6 +102,10 @@ async function heliusRpc<T>(method: string, params: unknown[]): Promise<T> {
 function accountAddress(account: RpcAccountKey | undefined) {
   if (!account) return undefined
   return typeof account === 'string' ? account : account.pubkey
+}
+
+function shortAddress(value: string) {
+  return `${value.slice(0, 4)}...${value.slice(-4)}`
 }
 
 function programLabel(programId: string, programName?: string) {
@@ -147,12 +166,350 @@ function collectWritableAccounts(tx: RpcTransaction) {
     .filter((account) => account.address && ('writable' in account ? account.writable : false))
 }
 
+function collectSignerWallet(tx: RpcTransaction) {
+  const accountKeys = tx.transaction?.message?.accountKeys ?? []
+  const signer = accountKeys.find((account) => typeof account !== 'string' && account.signer)
+  const fallback = accountKeys[0]
+  const signerAccount = signer ?? fallback
+  const address = accountAddress(signerAccount)
+
+  if (!address) return null
+
+  return {
+    address,
+    confidence: typeof signerAccount === 'string' ? 'estimated' as Confidence : 'observed' as Confidence,
+  }
+}
+
+function maybeNumber(value: unknown) {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : undefined
+  }
+  return undefined
+}
+
+function parsedInstructionInfo(instruction: RpcInstruction) {
+  if (!instruction.parsed || typeof instruction.parsed !== 'object') return undefined
+  return instruction.parsed as { type?: string; info?: Record<string, unknown> }
+}
+
+function decodeBase58(value: string) {
+  const bytes = [0]
+
+  for (const char of value) {
+    const alphabetIndex = BASE58_ALPHABET.indexOf(char)
+    if (alphabetIndex < 0) return []
+
+    let carry = alphabetIndex
+    for (let index = 0; index < bytes.length; index += 1) {
+      carry += bytes[index] * 58
+      bytes[index] = carry & 0xff
+      carry >>= 8
+    }
+
+    while (carry > 0) {
+      bytes.push(carry & 0xff)
+      carry >>= 8
+    }
+  }
+
+  for (let index = 0; index < value.length - 1 && value[index] === '1'; index += 1) {
+    bytes.push(0)
+  }
+
+  return bytes.reverse()
+}
+
+function readUInt32LE(bytes: number[], offset: number) {
+  if (bytes.length < offset + 4) return undefined
+  return (
+    bytes[offset] |
+    (bytes[offset + 1] << 8) |
+    (bytes[offset + 2] << 16) |
+    (bytes[offset + 3] << 24)
+  ) >>> 0
+}
+
+function readUInt64LE(bytes: number[], offset: number) {
+  if (bytes.length < offset + 8) return undefined
+
+  let value = 0
+  for (let index = 0; index < 8; index += 1) {
+    value += bytes[offset + index] * 2 ** (8 * index)
+  }
+
+  return Number.isSafeInteger(value) ? value : undefined
+}
+
+function collectComputeBudget(tx: RpcTransaction) {
+  const accountKeys = tx.transaction?.message?.accountKeys ?? []
+  const instructions = tx.transaction?.message?.instructions ?? []
+  let computeUnitPriceMicroLamports: number | null = null
+  let computeUnitLimit: number | null = null
+  let priceInstructionSeen = false
+
+  for (const instruction of instructions) {
+    const programId = getProgramId(instruction, accountKeys)
+    if (programId !== COMPUTE_BUDGET_PROGRAM_ID) continue
+
+    const parsed = parsedInstructionInfo(instruction)
+    const parsedType = parsed?.type?.toLowerCase() ?? ''
+    const parsedInfo = parsed?.info ?? {}
+
+    const parsedPrice = maybeNumber(
+      parsedInfo.microLamports ??
+      parsedInfo.microLamportsPerComputeUnit ??
+      parsedInfo.computeUnitPrice,
+    )
+    const parsedLimit = maybeNumber(
+      parsedInfo.units ??
+      parsedInfo.computeUnitLimit ??
+      parsedInfo.limit,
+    )
+
+    if (parsedType.includes('price') && parsedPrice != null) {
+      priceInstructionSeen = true
+      computeUnitPriceMicroLamports = parsedPrice
+    }
+
+    if (parsedType.includes('limit') && parsedLimit != null) {
+      computeUnitLimit = parsedLimit
+    }
+
+    if (!instruction.data) continue
+
+    const bytes = decodeBase58(instruction.data)
+    const discriminator = bytes[0]
+
+    if (discriminator === 3) {
+      const units = readUInt32LE(bytes, 1)
+      if (units != null) computeUnitLimit = units
+    }
+
+    if (discriminator === 4) {
+      const microLamports = readUInt64LE(bytes, 1)
+      priceInstructionSeen = true
+      if (microLamports != null) computeUnitPriceMicroLamports = microLamports
+    }
+  }
+
+  const computeUnitPriceStatus: ComputeUnitPriceStatus = priceInstructionSeen
+    ? computeUnitPriceMicroLamports === 0
+      ? 'zero'
+      : 'set'
+    : 'omitted'
+
+  return {
+    computeUnitPriceMicroLamports,
+    computeUnitLimit,
+    computeUnitPriceStatus,
+  }
+}
+
 function estimatePriorityFeeLamports(tx: RpcTransaction) {
   const fee = tx.meta?.fee
   const signatureCount = tx.transaction?.signatures?.length ?? 0
   if (typeof fee !== 'number' || signatureCount <= 0) return undefined
 
   return Math.max(0, fee - signatureCount * BASE_FEE_LAMPORTS_PER_SIGNATURE)
+}
+
+async function getRecentSignaturesForAddress(address: string, limit = ACTIVITY_SCAN_LIMIT) {
+  try {
+    return await heliusRpc<RecentSignature[]>('getSignaturesForAddress', [
+      address,
+      { limit },
+    ])
+  } catch {
+    return undefined
+  }
+}
+
+async function summarizeRecentActivity({
+  kind,
+  address,
+  label,
+  currentSignature,
+}: {
+  kind: 'signer' | 'program' | 'account'
+  address: string
+  label: string
+  currentSignature: string
+}) {
+  const signatures = await getRecentSignaturesForAddress(address)
+
+  if (!signatures) {
+    return {
+      kind,
+      address,
+      label,
+      available: false,
+      recentSignatureCount: null,
+      otherRecentSignatureCount: null,
+      sampleSignatures: [],
+      confidence: 'needs inspection' as InclusionConfidence,
+    }
+  }
+
+  const sampleSignatures = signatures
+    .filter((item) => item.signature)
+    .map((item) => ({
+      signature: item.signature ?? '',
+      slot: item.slot ?? null,
+      blockTime: item.blockTime ?? null,
+      status: item.err ? 'failed' as const : 'landed' as const,
+    }))
+
+  const otherRecentSignatureCount = sampleSignatures
+    .filter((item) => item.signature !== currentSignature)
+    .length
+
+  return {
+    kind,
+    address,
+    label,
+    available: true,
+    recentSignatureCount: sampleSignatures.length,
+    otherRecentSignatureCount,
+    sampleSignatures: sampleSignatures.slice(0, 4),
+    confidence: 'estimated' as InclusionConfidence,
+  }
+}
+
+async function buildInclusionSymptoms({
+  signature,
+  tx,
+  statusLabel,
+  programs,
+  writableAccounts,
+  priorityFeeLamportsEstimated,
+}: {
+  signature: string
+  tx: RpcTransaction
+  statusLabel: 'success' | 'failed'
+  programs: Array<{ id: string; label: string; instructionCount: number }>
+  writableAccounts: Array<{ address: string; signer?: boolean; source?: string; confidence: Confidence }>
+  priorityFeeLamportsEstimated?: number
+}) {
+  const computeBudget = collectComputeBudget(tx)
+  const signerWallet = collectSignerWallet(tx)
+  const mainWritableAccounts = writableAccounts.slice(0, 8)
+  const repeatedSignerActivity = signerWallet
+    ? await summarizeRecentActivity({
+        kind: 'signer',
+        address: signerWallet.address,
+        label: 'Signer wallet',
+        currentSignature: signature,
+      })
+    : null
+  const commonProgramIds = new Set([
+    '11111111111111111111111111111111',
+    COMPUTE_BUDGET_PROGRAM_ID,
+    'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
+    'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr',
+    'Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo',
+  ])
+  const activityTargets = [
+    ...programs
+      .filter((program) => !commonProgramIds.has(program.id))
+      .slice(0, 3)
+      .map((program) => ({
+        kind: 'program' as const,
+        address: program.id,
+        label: program.label,
+      })),
+    ...mainWritableAccounts
+      .filter((account) => account.address !== signerWallet?.address)
+      .slice(0, 4)
+      .map((account) => ({
+        kind: 'account' as const,
+        address: account.address,
+        label: shortAddress(account.address),
+      })),
+  ]
+  const repeatedProgramAccountActivity = await Promise.all(
+    activityTargets.map((target) => summarizeRecentActivity({
+      ...target,
+      currentSignature: signature,
+    })),
+  )
+  const hotProgramOrAccount = repeatedProgramAccountActivity.some(
+    (activity) => activity.available && (activity.otherRecentSignatureCount ?? 0) >= 8,
+  )
+  const symptomBadges: Array<{ label: string; confidence: InclusionConfidence; detail: string }> = []
+
+  if (statusLabel === 'success' && priorityFeeLamportsEstimated === 0) {
+    symptomBadges.push({
+      label: 'landed with zero priority fee',
+      confidence: 'estimated',
+      detail: 'Total fee matches the base signature fee estimate.',
+    })
+  }
+
+  if (computeBudget.computeUnitPriceStatus === 'omitted') {
+    symptomBadges.push({
+      label: 'compute price omitted',
+      confidence: 'estimated',
+      detail: 'No Compute Budget setComputeUnitPrice instruction was parsed.',
+    })
+  }
+
+  if ((tx.meta?.computeUnitsConsumed ?? 0) >= HIGH_COMPUTE_UNITS) {
+    symptomBadges.push({
+      label: 'high compute usage',
+      confidence: 'observed',
+      detail: `${tx.meta?.computeUnitsConsumed?.toLocaleString()} compute units consumed.`,
+    })
+  }
+
+  if (repeatedSignerActivity?.available && (repeatedSignerActivity.otherRecentSignatureCount ?? 0) >= 2) {
+    symptomBadges.push({
+      label: 'repeat signer activity',
+      confidence: 'estimated',
+      detail: `${repeatedSignerActivity.otherRecentSignatureCount} other recent signer signatures found.`,
+    })
+  }
+
+  if (hotProgramOrAccount) {
+    symptomBadges.push({
+      label: 'hot program/account touched',
+      confidence: 'estimated',
+      detail: 'A touched program or writable account had many recent signatures in the sampled window.',
+    })
+  }
+
+  if (
+    statusLabel === 'failed' ||
+    computeBudget.computeUnitPriceStatus !== 'set' ||
+    !repeatedSignerActivity?.available ||
+    repeatedProgramAccountActivity.some((activity) => !activity.available)
+  ) {
+    symptomBadges.push({
+      label: 'needs inspection',
+      confidence: 'needs inspection',
+      detail: 'Tx-level signals are incomplete or ambiguous enough to review manually.',
+    })
+  }
+
+  return {
+    status: statusLabel === 'success' ? 'landed' as const : 'failed' as const,
+    totalFeeLamports: tx.meta?.fee ?? null,
+    priorityFeeLamportsEstimated: priorityFeeLamportsEstimated ?? null,
+    computeUnitPriceMicroLamports: computeBudget.computeUnitPriceMicroLamports,
+    computeUnitLimit: computeBudget.computeUnitLimit,
+    computeUnitPriceStatus: computeBudget.computeUnitPriceStatus,
+    computeUnitsConsumed: tx.meta?.computeUnitsConsumed ?? null,
+    programsTouched: programs,
+    signerWallet,
+    mainWritableAccounts,
+    repeatedSignerActivity,
+    repeatedProgramAccountActivity,
+    symptomBadges,
+    disclaimer: 'Tx-level symptoms only. Not proof of private validator routing.',
+    shareText: 'Readable tx receipt for inclusion/MEV inspection.',
+  }
 }
 
 function pressureLabel(score: number) {
@@ -196,7 +553,7 @@ function buildPressure({
     basis.push('landed slot signature count unavailable')
   }
 
-  if (tx.meta?.computeUnitsConsumed && tx.meta.computeUnitsConsumed > 750_000) {
+  if (tx.meta?.computeUnitsConsumed && tx.meta.computeUnitsConsumed > HIGH_COMPUTE_UNITS) {
     score += 16
     basis.push('high compute usage')
   }
@@ -260,7 +617,7 @@ function buildPercolatorLens({
   const highPressure = pressure.label === 'high' || pressure.score >= 70
   const mediumPressure = pressure.label === 'moderate' || pressure.score >= 38
   const highWriteSet = writableAccounts.length >= 12
-  const highCompute = Boolean(tx.meta?.computeUnitsConsumed && tx.meta.computeUnitsConsumed > 750_000)
+  const highCompute = Boolean(tx.meta?.computeUnitsConsumed && tx.meta.computeUnitsConsumed > HIGH_COMPUTE_UNITS)
 
   const queueReasons: string[] = []
   if (highPressure) queueReasons.push('landed in a high-pressure slot estimate')
@@ -370,6 +727,14 @@ export async function POST(request: Request) {
     })
     const status = statusResult.value?.[0]
     const statusLabel = tx.meta?.err || status?.err ? 'failed' : 'success'
+    const inclusionSymptoms = await buildInclusionSymptoms({
+      signature,
+      tx,
+      statusLabel,
+      programs,
+      writableAccounts,
+      priorityFeeLamportsEstimated,
+    })
 
     return NextResponse.json({
       signature,
@@ -397,6 +762,7 @@ export async function POST(request: Request) {
         percolatorLens: 'conceptual' as Confidence,
       },
       percolatorLens: lens,
+      inclusionSymptoms,
     })
   } catch (error) {
     return NextResponse.json(

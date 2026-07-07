@@ -446,6 +446,16 @@ function formatLamportsValue(value: number | null | undefined) {
   return `${value.toLocaleString()} lamports`
 }
 
+function formatComputeUnits(value: number | null | undefined) {
+  if (value == null) return 'Unavailable'
+  return value.toLocaleString()
+}
+
+function formatComputeUnitPrice(value: number | null | undefined) {
+  if (value == null) return 'Unavailable'
+  return `${value.toLocaleString()} micro-lamports`
+}
+
 function formatBlockTime(value: number | null) {
   if (!value) return 'Unavailable'
   return new Date(value * 1000).toLocaleString()
@@ -501,6 +511,23 @@ function CoinConfidenceBadge({ confidence }: { confidence: CoinReceiptConfidence
   )
 }
 
+function InclusionConfidenceBadge({ confidence }: { confidence: ReceiptConfidence | 'needs inspection' }) {
+  return (
+    <Badge variant="outline" className={`text-[10px] uppercase tracking-[0.14em] ${coinConfidenceTone(confidence)}`}>
+      {confidence}
+    </Badge>
+  )
+}
+
+function inclusionSymptomTone(label: string) {
+  if (label === 'needs inspection') return 'border-sky-300/35 bg-sky-300/[0.06] text-sky-200'
+  if (label.includes('high') || label.includes('hot')) return 'border-rose-400/35 bg-rose-400/[0.06] text-rose-200'
+  if (label.includes('zero') || label.includes('omitted') || label.includes('repeat')) {
+    return 'border-amber-300/35 bg-amber-300/[0.06] text-amber-200'
+  }
+  return 'border-border/70 bg-background/35 text-muted-foreground'
+}
+
 function formatTokenValue(value: number | null | undefined) {
   if (value == null) return 'Unclear'
   return value.toLocaleString(undefined, { maximumFractionDigits: value >= 1 ? 2 : 6 })
@@ -514,14 +541,17 @@ function formatPercentValue(value: number | null | undefined) {
 function buildReceiptShareText(receipt: BreadlinesReceipt) {
   return [
     `Breadlines receipt for ${receipt.shortSignature}`,
+    receipt.inclusionSymptoms.shareText,
     '',
     `Status: ${receipt.status} | Slot: ${receipt.slot}`,
     `Fee paid: ${formatLamportsValue(receipt.feePaidLamports)}`,
+    `Inclusion symptoms: ${receipt.inclusionSymptoms.symptomBadges.map((badge) => badge.label).join(', ') || 'none flagged'}`,
     `Slot pressure: ${receipt.slotPressure.label} (${receipt.slotPressure.confidence})`,
     `Queue-sensitive: ${receipt.percolatorLens.queueSensitive.level}`,
     `Price-sensitive: ${receipt.percolatorLens.priceSensitive.level}`,
     `Risk/oracle-sensitive: ${receipt.percolatorLens.riskOracleSensitive.level}`,
     '',
+    receipt.inclusionSymptoms.disclaimer,
     'Observed tx data + estimated pressure + conceptual Percolator Lens.',
     'https://breadlinesmarkets.com',
   ].join('\n')
@@ -722,6 +752,34 @@ function ReceiptResult({
     ['Price-sensitive?', receipt.percolatorLens.priceSensitive],
     ['Risk/oracle-sensitive?', receipt.percolatorLens.riskOracleSensitive],
   ] as const
+  const inclusion = receipt.inclusionSymptoms
+  const repeatedProgramAccountActivity = inclusion.repeatedProgramAccountActivity
+    .filter((activity) => activity.available && (activity.otherRecentSignatureCount ?? 0) > 0)
+  const inclusionMetrics: Array<{ label: string; value: string; confidence: ReceiptConfidence | 'needs inspection' }> = [
+    { label: 'Tx status', value: inclusion.status, confidence: 'observed' },
+    { label: 'Total fee', value: formatLamportsValue(inclusion.totalFeeLamports), confidence: 'observed' },
+    { label: 'Estimated priority fee', value: formatLamportsValue(inclusion.priorityFeeLamportsEstimated), confidence: 'estimated' },
+    {
+      label: 'CU price',
+      value: formatComputeUnitPrice(inclusion.computeUnitPriceMicroLamports),
+      confidence: inclusion.computeUnitPriceStatus === 'omitted' ? 'estimated' : 'observed',
+    },
+    {
+      label: 'CU price status',
+      value: inclusion.computeUnitPriceStatus,
+      confidence: inclusion.computeUnitPriceStatus === 'unknown' ? 'needs inspection' : 'estimated',
+    },
+    {
+      label: 'CU limit',
+      value: formatComputeUnits(inclusion.computeUnitLimit),
+      confidence: inclusion.computeUnitLimit == null ? 'needs inspection' : 'observed',
+    },
+    {
+      label: 'CUs consumed',
+      value: formatComputeUnits(inclusion.computeUnitsConsumed),
+      confidence: inclusion.computeUnitsConsumed == null ? 'needs inspection' : 'observed',
+    },
+  ]
 
   return (
     <div className="space-y-5">
@@ -796,6 +854,157 @@ function ReceiptResult({
             </Button>
           </div>
         </div>
+      </div>
+
+      <div className="rounded-lg border border-border/60 bg-background/35 p-4">
+        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">Inclusion / MEV Symptoms</p>
+            <p className="mt-1 max-w-3xl text-xs leading-5 text-muted-foreground">
+              Readable tx receipt for inclusion/MEV inspection. These are tx-level symptoms for manual review, not claims about private lanes, MEV capture, or validator favoritism.
+            </p>
+          </div>
+          <InclusionConfidenceBadge confidence="needs inspection" />
+        </div>
+
+        <div className="mb-4 flex flex-wrap gap-2">
+          {inclusion.symptomBadges.map((badge) => (
+            <Tooltip key={badge.label}>
+              <TooltipTrigger asChild>
+                <Badge variant="outline" className={`text-[10px] uppercase tracking-[0.12em] ${inclusionSymptomTone(badge.label)}`}>
+                  {badge.label}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" sideOffset={8}>
+                {badge.detail}
+              </TooltipContent>
+            </Tooltip>
+          ))}
+          {!inclusion.symptomBadges.length ? (
+            <Badge variant="outline" className="border-border/70 bg-background/35 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+              no symptom badge flagged
+            </Badge>
+          ) : null}
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+          {inclusionMetrics.map((item) => (
+            <div key={item.label} className="rounded-lg border border-border/55 bg-secondary/20 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{item.label}</p>
+                <InclusionConfidenceBadge confidence={item.confidence} />
+              </div>
+              <p className={`mt-2 truncate text-sm font-semibold ${item.label === 'Tx status' && inclusion.status === 'failed' ? 'text-rose-200' : 'text-foreground'}`}>
+                {item.value}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 grid gap-4 lg:grid-cols-[0.8fr_1fr_1fr]">
+          <div className="rounded-lg border border-border/55 bg-background/35 p-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold text-foreground">Signer wallet</p>
+              {inclusion.signerWallet ? <InclusionConfidenceBadge confidence={inclusion.signerWallet.confidence} /> : null}
+            </div>
+            {inclusion.signerWallet ? (
+              <p className="truncate font-mono text-xs text-muted-foreground">{inclusion.signerWallet.address}</p>
+            ) : (
+              <p className="text-xs text-muted-foreground">Signer metadata unavailable from RPC.</p>
+            )}
+            <div className="mt-3 rounded-md border border-border/50 bg-secondary/20 p-2">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Repeated signer activity</p>
+              {inclusion.repeatedSignerActivity ? (
+                <p className="mt-1 text-xs leading-5 text-foreground">
+                  {inclusion.repeatedSignerActivity.available
+                    ? `${inclusion.repeatedSignerActivity.otherRecentSignatureCount ?? 0} other recent signatures in ${inclusion.repeatedSignerActivity.recentSignatureCount ?? 0} sampled`
+                    : 'Recent signer signatures unavailable'}
+                </p>
+              ) : (
+                <p className="mt-1 text-xs text-muted-foreground">No signer address available to scan.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border/55 bg-background/35 p-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold text-foreground">Programs touched</p>
+              <InclusionConfidenceBadge confidence="observed" />
+            </div>
+            <div className="space-y-2">
+              {inclusion.programsTouched.slice(0, 4).map((program) => (
+                <div key={program.id} className="rounded-md border border-border/50 bg-secondary/20 px-3 py-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-xs font-semibold text-foreground">{program.label}</p>
+                    <span className="shrink-0 font-mono text-[10px] text-muted-foreground">{program.instructionCount} ix</span>
+                  </div>
+                  <p className="mt-1 truncate font-mono text-[10px] text-muted-foreground">{program.id}</p>
+                </div>
+              ))}
+              {!inclusion.programsTouched.length ? (
+                <p className="text-xs text-muted-foreground">No parsed programs returned by RPC.</p>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border/55 bg-background/35 p-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold text-foreground">Main writable accounts</p>
+              <InclusionConfidenceBadge confidence={inclusion.mainWritableAccounts.length ? 'observed' : 'needs inspection'} />
+            </div>
+            <div className="space-y-2">
+              {inclusion.mainWritableAccounts.slice(0, 4).map((account) => (
+                <div key={account.address} className="rounded-md border border-border/50 bg-secondary/20 px-3 py-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate font-mono text-[10px] text-muted-foreground">{account.address}</p>
+                    {account.signer ? (
+                      <Badge variant="outline" className="shrink-0 border-border/70 text-[10px] text-muted-foreground">
+                        signer
+                      </Badge>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-[10px] text-muted-foreground">{account.source ?? 'transaction'}</p>
+                </div>
+              ))}
+              {!inclusion.mainWritableAccounts.length ? (
+                <p className="text-xs text-muted-foreground">Writable account metadata unavailable from RPC.</p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-lg border border-border/55 bg-secondary/20 p-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-xs font-semibold text-foreground">Repeated program/account activity</p>
+            <InclusionConfidenceBadge confidence={repeatedProgramAccountActivity.length ? 'estimated' : 'needs inspection'} />
+          </div>
+          {repeatedProgramAccountActivity.length ? (
+            <div className="grid gap-2 md:grid-cols-2">
+              {repeatedProgramAccountActivity.slice(0, 4).map((activity) => (
+                <div key={`${activity.kind}-${activity.address}`} className="rounded-md border border-border/50 bg-background/35 p-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-xs font-semibold text-foreground">{activity.label}</p>
+                    <Badge variant="outline" className="border-border/70 text-[10px] text-muted-foreground">
+                      {activity.kind}
+                    </Badge>
+                  </div>
+                  <p className="mt-1 truncate font-mono text-[10px] text-muted-foreground">{activity.address}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {activity.otherRecentSignatureCount ?? 0} other recent signatures in {activity.recentSignatureCount ?? 0} sampled
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs leading-5 text-muted-foreground">
+              No repeated program/account activity was available in the small recent-signature scan.
+            </p>
+          )}
+        </div>
+
+        <p className="mt-3 rounded-md border border-sky-300/25 bg-sky-300/[0.04] px-3 py-2 text-xs leading-5 text-sky-100">
+          {inclusion.disclaimer}
+        </p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">

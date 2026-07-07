@@ -34,6 +34,8 @@ export type HeliusTransferSummary = {
 
 export type ReceiptConfidence = 'observed' | 'estimated' | 'conceptual'
 export type ReceiptSensitivityLevel = 'low' | 'medium' | 'high' | 'unknown'
+export type InclusionSymptomConfidence = ReceiptConfidence | 'needs inspection'
+export type ComputeUnitPriceStatus = 'zero' | 'omitted' | 'set' | 'unknown'
 export type CoinReceiptConfidence = ReceiptConfidence | 'unclear' | 'needs inspection'
 
 export type CoinActivityInsightLevel = 'low' | 'medium' | 'high' | 'none' | 'needs inspection'
@@ -128,6 +130,67 @@ export type BreadlinesReceipt = {
       confidence: ReceiptConfidence
       text: string
     }
+  }
+  inclusionSymptoms: {
+    status: 'landed' | 'failed'
+    totalFeeLamports: number | null
+    priorityFeeLamportsEstimated: number | null
+    computeUnitPriceMicroLamports: number | null
+    computeUnitLimit: number | null
+    computeUnitPriceStatus: ComputeUnitPriceStatus
+    computeUnitsConsumed: number | null
+    programsTouched: Array<{
+      id: string
+      label: string
+      instructionCount: number
+    }>
+    signerWallet: {
+      address: string
+      confidence: ReceiptConfidence
+    } | null
+    mainWritableAccounts: Array<{
+      address: string
+      signer?: boolean
+      source?: string
+      confidence: ReceiptConfidence
+    }>
+    repeatedSignerActivity: {
+      kind: 'signer'
+      address: string
+      label: string
+      available: boolean
+      recentSignatureCount: number | null
+      otherRecentSignatureCount: number | null
+      sampleSignatures: Array<{
+        signature: string
+        slot: number | null
+        blockTime: number | null
+        status: 'landed' | 'failed'
+      }>
+      confidence: InclusionSymptomConfidence
+    } | null
+    repeatedProgramAccountActivity: Array<{
+      kind: 'program' | 'account'
+      address: string
+      label: string
+      available: boolean
+      recentSignatureCount: number | null
+      otherRecentSignatureCount: number | null
+      sampleSignatures: Array<{
+        signature: string
+        slot: number | null
+        blockTime: number | null
+        status: 'landed' | 'failed'
+      }>
+      confidence: InclusionSymptomConfidence
+    }>
+    symptomBadges: Array<{
+      label: string
+      confidence: InclusionSymptomConfidence
+      detail: string
+    }>
+    disclaimer: string
+    shareText: string
   }
 }
 
