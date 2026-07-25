@@ -2749,7 +2749,7 @@ export default function Breadlines() {
                 <span className="text-primary">lines</span>
               </h1>
               <div className="mt-1">
-                <p className="text-sm text-foreground">Your Solana transaction did something you didn't expect — here's why.</p>
+                <p className="text-sm text-foreground">Your Solana transaction did something you didn't expect here's why.</p>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                   <span>Paste a Solana transaction. Understand what happened.</span>
                   <Tooltip>
