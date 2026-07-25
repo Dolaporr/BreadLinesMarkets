@@ -563,24 +563,24 @@ function buildWhatThisMeans(receipt: BreadlinesReceipt) {
       confidence: 'observed',
       text:
         receipt.status === 'success'
-          ? 'This transaction landed successfully; the execution facts above are pulled from the confirmed transaction response.'
-          : 'This transaction failed; the status is observed, but the receipt does not guess the user intent or exact failure cause.',
+          ? 'This transaction landed successfully, so the execution facts above are pulled from confirmed on-chain data.'
+          : 'This transaction failed, so the receipt surface is still useful for comparing this attempt with later retries or different routes.',
     },
     {
       confidence: 'estimated',
-      text: `The ${receipt.slotPressure.label} pressure label is a v0 estimate built from landed-slot activity, compute usage, program count, writable accounts, and failure state.`,
+      text: `The ${receipt.slotPressure.label} pressure label is an estimate, and it points to whether future executions along this path are likely to face congestion or ordering delay.`,
     },
     {
       confidence: 'conceptual',
       text:
-        'The Percolator Lens is a research framing layer: it points to where proposer competition, fresh state, or risk progress may matter, without claiming an alternate outcome.',
+        'The Percolator Lens is a framing tool: it highlights whether queueing, price freshness, or oracle/risk state may matter for similar future transactions, without asserting a different outcome for this one.',
     },
   ]
 
   if (receipt.percolatorLens.priceSensitive.level !== 'low') {
     notes.push({
       confidence: 'estimated',
-      text: 'The route has price-sensitive signals, so queueing and state freshness are more relevant than they would be for a plain transfer.',
+      text: 'Because this route shows price sensitivity, future runs may need fresher state and quicker execution to avoid slippage or stale prices.',
     })
   }
 
@@ -601,6 +601,79 @@ function buildCasebookSignals(receipt: BreadlinesReceipt) {
   if (receipt.percolatorLens.riskOracleSensitive.level !== 'low') tags.push('risk-oracle-sensitive')
 
   return tags
+}
+
+function buildReceiptStory(receipt: BreadlinesReceipt) {
+  const summary = receipt.status === 'success'
+    ? `This transaction landed successfully in slot ${receipt.slot}.`
+    : `This transaction failed to land in slot ${receipt.slot}.`
+
+  const feeSentence = receipt.feePaidSol != null
+    ? `It paid ${formatSol(receipt.feePaidSol)} in fees.`
+    : 'Fee data was unavailable from the transaction response.'
+
+  const pathSentence = `It touched ${receipt.programs.length} program${receipt.programs.length === 1 ? '' : 's'} and ${receipt.writableAccountCount} writable account${receipt.writableAccountCount === 1 ? '' : 's'}.`
+
+  const pressureReason = receipt.slotPressure.basis.length
+    ? `The slot pressure estimate is ${receipt.slotPressure.label} because ${receipt.slotPressure.basis.join(', ')}.`
+    : `Slot pressure is estimated as ${receipt.slotPressure.label}.`
+
+  const priorityFeeSentence = receipt.priorityFeeLamportsEstimated != null
+    ? receipt.priorityFeeLamportsEstimated > 0
+      ? `The estimated priority fee was ${receipt.priorityFeeLamportsEstimated.toLocaleString()} lamports, which may indicate the transaction competed on fee priority.`
+      : 'No extra priority fee was detected, so this transaction relied on regular ordering.'
+    : 'Priority fee information is unavailable.'
+
+  const narrative = [summary, feeSentence, pathSentence, pressureReason, priorityFeeSentence].join(' ')
+
+  const reasons = [
+    {
+      label: 'Slot pressure',
+      text: `This slot is labeled ${receipt.slotPressure.label} pressure, so congestion and ordering competition were likely relevant.`,
+    },
+    {
+      label: 'Program path',
+      text: receipt.programs.length
+        ? `It touched ${receipt.programs.length} programs, which makes execution more sensitive to scheduling and state freshness.`
+        : 'The transaction path could not be parsed into known programs.',
+    },
+    {
+      label: 'Writable accounts',
+      text: `It touched ${receipt.writableAccountCount} writable account${receipt.writableAccountCount === 1 ? '' : 's'}, which increases execution sensitivity under contention.`, 
+    },
+    {
+      label: 'Failure state',
+      text: receipt.status === 'failed'
+        ? 'The transaction failed, so the exact route or state conditions should be inspected for repeated executions.'
+        : 'The transaction succeeded, but the execution path may still matter for future similar trades.',
+    },
+  ]
+
+  const care = [
+    {
+      label: 'Queue impact',
+      text: `${receipt.percolatorLens.queueSensitive.level === 'high' ? 'High' : receipt.percolatorLens.queueSensitive.level === 'medium' ? 'Moderate' : 'Low'} queue sensitivity means this route ${receipt.percolatorLens.queueSensitive.level === 'high' ? 'could be blocked or delayed' : receipt.percolatorLens.queueSensitive.level === 'medium' ? 'may be affected by congestion' : 'is less likely to suffer queue pain'} under similar conditions.`,
+    },
+    {
+      label: 'Price impact',
+      text: `${receipt.percolatorLens.priceSensitive.level === 'high' ? 'High' : receipt.percolatorLens.priceSensitive.level === 'medium' ? 'Moderate' : 'Low'} price sensitivity means route freshness and execution timing matter ${receipt.percolatorLens.priceSensitive.level === 'high' ? 'more strongly' : receipt.percolatorLens.priceSensitive.level === 'medium' ? 'somewhat' : 'less across broad transfers'}.`,
+    },
+    {
+      label: 'Risk/Oracle impact',
+      text: `${receipt.percolatorLens.riskOracleSensitive.level === 'high' ? 'High' : receipt.percolatorLens.riskOracleSensitive.level === 'medium' ? 'Moderate' : 'Low'} risk sensitivity means this path may depend on fresh oracle updates or careful state transitions.`,
+    },
+  ]
+
+  const futureText = receipt.status === 'failed'
+    ? 'Future transactions along this path should be inspected for failure causes before retrying; the same route can still behave differently under lower slot pressure.'
+    : 'Future transactions with a similar program path should watch slot pressure and queue sensitivity, because they are more likely to be affected by congestion or stale state.'
+
+  return {
+    narrative,
+    details: reasons,
+    care,
+    futureText,
+  }
 }
 
 function mergeTransferScans(previous: HeliusTransferSummary, next: HeliusTransferSummary): HeliusTransferSummary {
@@ -745,6 +818,7 @@ function ReceiptResult({
   copiedReceipt: boolean
   onCopyReceipt: () => void
 }) {
+  const receiptStory = buildReceiptStory(receipt)
   const whatThisMeans = buildWhatThisMeans(receipt)
   const casebookSignals = buildCasebookSignals(receipt)
   const lensItems = [
@@ -819,6 +893,26 @@ function ReceiptResult({
       </div>
 
       <div className="rounded-lg border border-border/60 bg-background/45 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Executive summary</p>
+            <p className="mt-2 text-sm leading-6 text-foreground">
+              {receiptStory.narrative}
+            </p>
+          </div>
+          <ConfidenceBadge confidence="observed" />
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {receiptStory.details.map((detail) => (
+            <div key={detail.label} className="rounded-lg border border-border/55 bg-secondary/20 p-3">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{detail.label}</p>
+              <p className="mt-1 text-sm leading-6 text-foreground">{detail.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border/60 bg-background/45 p-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-2">
@@ -828,7 +922,7 @@ function ReceiptResult({
               </Badge>
             </div>
             <p className="mt-2 text-sm leading-6 text-foreground">
-              RPC data is separated from estimates and conceptual framing. This receipt does not infer user intent or claim an alternate Percolator outcome.
+              RPC data is separated from estimates and conceptual framing. This receipt does not infer user intent or claim an alternate outcome.
             </p>
             <p className="mt-2 text-xs leading-5 text-muted-foreground">
               Observed block time: {formatBlockTime(receipt.blockTime)}
@@ -1011,8 +1105,8 @@ function ReceiptResult({
         <div className="rounded-lg border border-border/60 bg-background/35 p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">Observed facts</p>
-              <p className="mt-1 text-xs text-muted-foreground">Programs and writable accounts from parsed transaction data.</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">What happened</p>
+              <p className="mt-1 text-xs text-muted-foreground">Observed execution details about how this transaction moved through programs and which accounts it wrote.</p>
             </div>
             <ConfidenceBadge confidence="observed" />
           </div>
@@ -1067,9 +1161,9 @@ function ReceiptResult({
         <div className="rounded-lg border border-border/60 bg-background/35 p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-200">Estimated pressure</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-200">Why it happened</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                A v0 estimate using landed-slot signatures plus receipt-level signals. Not a spam detector or exact historical congestion model.
+                A v0 estimate of slot pressure and contention signals based on landed-slot activity, transaction size, and outcome.
               </p>
             </div>
             <ConfidenceBadge confidence={receipt.slotPressure.confidence} />
@@ -1101,9 +1195,9 @@ function ReceiptResult({
       <div className="rounded-lg border border-border/60 bg-background/35 p-4">
         <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">Conceptual lens</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">Why this matters</p>
             <p className="mt-1 max-w-3xl text-xs leading-5 text-muted-foreground">
-              This section maps execution pain to market-structure questions. It does not claim what Percolator would have done.
+              This section explains whether this execution path is sensitive to queueing, price freshness, or oracle/risk state.
             </p>
           </div>
           <ConfidenceBadge confidence={receipt.confidence.percolatorLens} />
@@ -1140,20 +1234,26 @@ function ReceiptResult({
 
       <div className="rounded-lg border border-border/60 bg-background/35 p-4">
         <div className="mb-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">What this means</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">What this means for future transactions</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Plain-English notes with the same confidence boundary as the receipt.
+            Plain-English notes that explain how this execution story may matter for similar future routes.
           </p>
         </div>
-        <div className="grid gap-2">
-          {whatThisMeans.map((note) => (
-            <div key={note.text} className="rounded-md border border-border/50 bg-secondary/20 px-3 py-2">
-              <div className="mb-1">
-                <ConfidenceBadge confidence={note.confidence} />
+        <div className="grid gap-3">
+          <div className="rounded-md border border-border/55 bg-secondary/20 px-3 py-3">
+            <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Future implications</p>
+            <p className="mt-2 text-sm leading-6 text-foreground">{receiptStory.futureText}</p>
+          </div>
+          <div className="grid gap-2">
+            {whatThisMeans.map((note) => (
+              <div key={note.text} className="rounded-md border border-border/50 bg-secondary/20 px-3 py-2">
+                <div className="mb-1">
+                  <ConfidenceBadge confidence={note.confidence} />
+                </div>
+                <p className="text-xs leading-5 text-foreground">{note.text}</p>
               </div>
-              <p className="text-xs leading-5 text-foreground">{note.text}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 
@@ -2648,25 +2748,28 @@ export default function Breadlines() {
                 <span className="text-destructive">Bread</span>
                 <span className="text-primary">lines</span>
               </h1>
-              <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                <span>Paste a Solana transaction. Understand what happened.</span>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge
-                      variant="outline"
-                      className="border-border/70 bg-transparent text-muted-foreground"
-                    >
-                      MCP &gt; MPC
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" sideOffset={8}>
-                    Multiple Concurrent Proposers, not multi-party computation
-                  </TooltipContent>
-                </Tooltip>
+              <div className="mt-1">
+                <p className="text-sm text-foreground">Your Solana transaction did something you didn't expect — here's why.</p>
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                  <span>Paste a Solana transaction. Understand what happened.</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge
+                        variant="outline"
+                        className="border-border/70 bg-transparent text-muted-foreground"
+                      >
+                        MCP &gt; MPC
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" sideOffset={8}>
+                      Multiple Concurrent Proposers, not multi-party computation
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <p className="text-xs text-muted-foreground/70 mt-0.5">
+                  Execution receipts for Solana. Observed facts first.
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground/70 mt-0.5">
-                Execution receipts for Solana. Observed facts first.
-              </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Button asChild className="bg-foreground px-4 text-background hover:bg-foreground/90">
@@ -2697,6 +2800,8 @@ export default function Breadlines() {
               Hide
             </span>
           </summary>
+
+          <p className="mt-3 text-sm text-muted-foreground">This simulates how a Solana transaction's wait time and fees change depending on how the network orders transactions — try the sliders below.</p>
 
           <div className="mt-4 flex flex-col gap-6 lg:flex-row">
           {/* Sidebar Controls */}
