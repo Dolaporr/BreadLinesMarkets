@@ -805,6 +805,30 @@ function PerpsSketchResult({ result }: { result: PerpsResult }) {
   )
 }
 
+function CopyLinkButton({ receipt }: { receipt: BreadlinesReceipt }) {
+  const [copiedLink, setCopiedLink] = useState(false)
+
+  const handleCopyLink = useCallback(async () => {
+    try {
+      const url = new URL(window.location.href)
+      url.searchParams.set('tx', receipt.signature)
+      const link = url.toString()
+      await navigator.clipboard.writeText(link)
+      setCopiedLink(true)
+      window.setTimeout(() => setCopiedLink(false), 1500)
+    } catch {
+      setCopiedLink(false)
+    }
+  }, [receipt.signature])
+
+  return (
+    <Button variant="outline" size="sm" onClick={handleCopyLink} className="gap-2">
+      <Clipboard className="h-4 w-4" />
+      {copiedLink ? 'Copied link' : 'Copy link'}
+    </Button>
+  )
+}
+
 function ReceiptResult({
   receipt,
   receiptText,
@@ -946,6 +970,7 @@ function ReceiptResult({
                 <Share2 className="h-4 w-4" />
               </a>
             </Button>
+            <CopyLinkButton receipt={receipt} />
           </div>
         </div>
       </div>
@@ -1657,6 +1682,33 @@ function TxReceiptPanel({
       setIsSimulating(false)
     }
   }, [txInput])
+
+  // On mount, check for ?tx= query param and auto-run receipt if valid
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const txParam = params.get('tx')
+      if (txParam && SOLANA_SIGNATURE_PATTERN.test(txParam)) {
+        setTxInput(txParam)
+        // auto-run after pre-filling
+        void runReceipt(txParam)
+      }
+    } catch (e) {
+      // ignore URL parsing errors
+    }
+  }, [runReceipt])
+
+  // When a receipt is generated, push the tx param into the URL for deep-linking
+  useEffect(() => {
+    if (!receipt) return
+    try {
+      const url = new URL(window.location.href)
+      url.searchParams.set('tx', receipt.signature)
+      window.history.replaceState({}, '', url.toString())
+    } catch (e) {
+      // ignore
+    }
+  }, [receipt])
 
   const runCoinReceipt = useCallback(async (rawMint = coinMintInput, scanWindow = coinScanWindow) => {
     const mint = rawMint.trim()
