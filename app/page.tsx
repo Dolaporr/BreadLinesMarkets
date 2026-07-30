@@ -29,6 +29,7 @@ import {
   Share2
 } from 'lucide-react'
 import { simulateBlock, type SimParams as SimulationParams, type SimResult as Metrics } from '@/lib/simulateBlock'
+import { contextualPressureSentence, documentedErrorHeadline } from '@/lib/receipt-evidence'
 import {
   getBreadlinesReceipt,
   getCoinActivityReceipt,
@@ -41,6 +42,7 @@ import {
   type CoinReceiptConfidence,
   type HeliusTransferSummary,
   type ReceiptConfidence,
+  type ReceiptEvidenceType,
   type ReceiptSensitivityLevel,
 } from '@/lib/helius'
 
@@ -453,7 +455,7 @@ function formatComputeUnits(value: number | null | undefined) {
 
 function formatComputeUnitPrice(value: number | null | undefined) {
   if (value == null) return 'Unavailable'
-  return `${value.toLocaleString()} micro-lamports`
+  return `${value.toLocaleString()} micro-lamports/CU`
 }
 
 function formatBlockTime(value: number | null) {
@@ -464,6 +466,13 @@ function formatBlockTime(value: number | null) {
 function confidenceTone(confidence: ReceiptConfidence) {
   if (confidence === 'observed') return 'border-emerald-400/35 bg-emerald-400/[0.06] text-emerald-200'
   if (confidence === 'estimated') return 'border-amber-300/35 bg-amber-300/[0.06] text-amber-200'
+  return 'border-sky-300/35 bg-sky-300/[0.06] text-sky-200'
+}
+
+function receiptEvidenceTone(evidence: ReceiptEvidenceType) {
+  if (evidence === 'observed') return 'border-emerald-400/35 bg-emerald-400/[0.06] text-emerald-200'
+  if (evidence === 'derived') return 'border-sky-300/35 bg-sky-300/[0.06] text-sky-200'
+  if (evidence === 'inferred') return 'border-amber-300/35 bg-amber-300/[0.06] text-amber-200'
   return 'border-sky-300/35 bg-sky-300/[0.06] text-sky-200'
 }
 
@@ -487,9 +496,9 @@ function sensitivityTone(level: ReceiptSensitivityLevel | 'moderate') {
   return 'border-emerald-400/35 bg-emerald-400/[0.06] text-emerald-200'
 }
 
-function ConfidenceBadge({ confidence }: { confidence: ReceiptConfidence }) {
+function ConfidenceBadge({ confidence }: { confidence: ReceiptEvidenceType }) {
   return (
-    <Badge variant="outline" className={`text-[10px] uppercase tracking-[0.14em] ${confidenceTone(confidence)}`}>
+    <Badge variant="outline" className={`text-[10px] uppercase tracking-[0.14em] ${receiptEvidenceTone(confidence)}`}>
       {confidence}
     </Badge>
   )
@@ -511,9 +520,9 @@ function CoinConfidenceBadge({ confidence }: { confidence: CoinReceiptConfidence
   )
 }
 
-function InclusionConfidenceBadge({ confidence }: { confidence: ReceiptConfidence | 'needs inspection' }) {
+function InclusionConfidenceBadge({ confidence }: { confidence: ReceiptEvidenceType | 'needs inspection' }) {
   return (
-    <Badge variant="outline" className={`text-[10px] uppercase tracking-[0.14em] ${coinConfidenceTone(confidence)}`}>
+    <Badge variant="outline" className={`text-[10px] uppercase tracking-[0.14em] ${confidence === 'needs inspection' ? coinConfidenceTone(confidence) : receiptEvidenceTone(confidence)}`}>
       {confidence}
     </Badge>
   )
@@ -538,49 +547,84 @@ function formatPercentValue(value: number | null | undefined) {
   return `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}%`
 }
 
+function formatExecutionState(state: BreadlinesReceipt['executionState']) {
+  if (state === 'landed-but-failed') return 'landed but failed'
+  if (state === 'did-not-land') return 'did not land'
+  return 'landed'
+}
+
 function buildReceiptShareText(receipt: BreadlinesReceipt) {
+  const showPercolatorLens = receipt.executionState !== 'landed-but-failed' && receipt.percolatorLens != null
+  const errorLine = receipt.executionError
+    ? `Documented error: ${receipt.executionError.program}${receipt.executionError.code != null ? ` ${receipt.executionError.code}` : ''}${receipt.executionError.name ? ` (${receipt.executionError.name})` : ''} - ${receipt.executionError.message}`
+    : null
+
   return [
     `Breadlines receipt for ${receipt.shortSignature}`,
     receipt.inclusionSymptoms.shareText,
     '',
-    `Status: ${receipt.status} | Slot: ${receipt.slot}`,
+    `Execution: ${formatExecutionState(receipt.executionState)} | Slot: ${receipt.slot}`,
+    errorLine,
     `Fee paid: ${formatLamportsValue(receipt.feePaidLamports)}`,
+    receipt.priorityFeeDerivation
+      ? `Priority fee: ${formatLamportsValue(receipt.priorityFeeLamportsEstimated)} (derived: ${receipt.priorityFeeDerivation.formula})`
+      : 'Priority fee: unavailable (no complete Compute Budget price and limit pair)',
     `Inclusion symptoms: ${receipt.inclusionSymptoms.symptomBadges.map((badge) => badge.label).join(', ') || 'none flagged'}`,
     `Slot pressure: ${receipt.slotPressure.label} (${receipt.slotPressure.confidence})`,
-    `Queue-sensitive: ${receipt.percolatorLens.queueSensitive.level}`,
-    `Price-sensitive: ${receipt.percolatorLens.priceSensitive.level}`,
-    `Risk/oracle-sensitive: ${receipt.percolatorLens.riskOracleSensitive.level}`,
+    ...(showPercolatorLens
+      ? [
+          `Queue-sensitive: ${receipt.percolatorLens.queueSensitive.level}`,
+          `Price-sensitive: ${receipt.percolatorLens.priceSensitive.level}`,
+          `Risk/oracle-sensitive: ${receipt.percolatorLens.riskOracleSensitive.level}`,
+        ]
+      : []),
     '',
     receipt.inclusionSymptoms.disclaimer,
-    'Observed tx data + estimated pressure + conceptual Percolator Lens.',
+    showPercolatorLens
+      ? 'Observed tx data + derived fee + inferred pressure + conceptual Percolator Lens.'
+      : 'Observed tx data + derived fee + inferred pressure.',
     'https://breadlinesmarkets.com',
-  ].join('\n')
+  ].filter((line): line is string => line !== null).join('\n')
 }
 
 function buildWhatThisMeans(receipt: BreadlinesReceipt) {
-  const notes: Array<{ confidence: ReceiptConfidence; text: string }> = [
+  const notes: Array<{ confidence: ReceiptEvidenceType; text: string }> = []
+
+  if (receipt.executionError) {
+    notes.push({
+      confidence: 'observed',
+      text: `${receipt.executionError.program} reported${receipt.executionError.code != null ? ` error ${receipt.executionError.code}` : ' an error'}${receipt.executionError.name ? ` (${receipt.executionError.name})` : ''}: ${receipt.executionError.message}.`,
+    })
+  }
+
+  notes.push(
     {
       confidence: 'observed',
       text:
-        receipt.status === 'success'
+        receipt.executionState === 'landed'
           ? 'This transaction landed successfully, so the execution facts above are pulled from confirmed on-chain data.'
-          : 'This transaction failed, so the receipt surface is still useful for comparing this attempt with later retries or different routes.',
+          : receipt.executionState === 'landed-but-failed'
+            ? `This transaction landed in observed slot ${receipt.slot.toLocaleString()} but failed during program execution.`
+            : 'This transaction did not land, so a confirmed execution result is unavailable.',
     },
     {
-      confidence: 'estimated',
-      text: `The ${receipt.slotPressure.label} pressure label is an estimate, and it points to whether future executions along this path are likely to face congestion or ordering delay.`,
+      confidence: 'inferred',
+      text: `The ${receipt.slotPressure.label} pressure label is contextual: it is an inference about slot conditions, not an established cause of this transaction's result.`,
     },
-    {
+  )
+
+  if (receipt.executionState !== 'landed-but-failed' && receipt.percolatorLens) {
+    notes.push({
       confidence: 'conceptual',
       text:
         'The Percolator Lens is a framing tool: it highlights whether queueing, price freshness, or oracle/risk state may matter for similar future transactions, without asserting a different outcome for this one.',
-    },
-  ]
+    })
+  }
 
-  if (receipt.percolatorLens.priceSensitive.level !== 'low') {
+  if (receipt.executionState !== 'landed-but-failed' && receipt.percolatorLens?.priceSensitive.level !== 'low') {
     notes.push({
-      confidence: 'estimated',
-      text: 'Because this route shows price sensitivity, future runs may need fresher state and quicker execution to avoid slippage or stale prices.',
+      confidence: 'inferred',
+      text: 'This path has price-sensitive signals. That is context for future runs, not evidence that slot conditions caused this execution result.',
     })
   }
 
@@ -590,23 +634,23 @@ function buildWhatThisMeans(receipt: BreadlinesReceipt) {
 function buildCasebookSignals(receipt: BreadlinesReceipt) {
   const tags = [
     receipt.status === 'success' ? 'successful' : 'failed',
-    `${receipt.slotPressure.label}-pressure-estimate`,
+    `${receipt.slotPressure.label}-pressure-inference`,
     `${receipt.programs.length}-programs`,
     `${receipt.writableAccountCount}-writable-accounts`,
   ]
 
-  if (receipt.priorityFeeLamportsEstimated && receipt.priorityFeeLamportsEstimated > 0) tags.push('priority-fee-estimated')
-  if (receipt.percolatorLens.queueSensitive.level !== 'low') tags.push('queue-sensitive')
-  if (receipt.percolatorLens.priceSensitive.level !== 'low') tags.push('price-sensitive')
-  if (receipt.percolatorLens.riskOracleSensitive.level !== 'low') tags.push('risk-oracle-sensitive')
+  if (receipt.priorityFeeLamportsEstimated && receipt.priorityFeeLamportsEstimated > 0) tags.push('priority-fee-derived')
+  if (receipt.executionState !== 'landed-but-failed' && receipt.percolatorLens) {
+    if (receipt.percolatorLens.queueSensitive.level !== 'low') tags.push('queue-sensitive')
+    if (receipt.percolatorLens.priceSensitive.level !== 'low') tags.push('price-sensitive')
+    if (receipt.percolatorLens.riskOracleSensitive.level !== 'low') tags.push('risk-oracle-sensitive')
+  }
 
   return tags
 }
 
 function buildReceiptStory(receipt: BreadlinesReceipt) {
-  const summary = receipt.status === 'success'
-    ? `This transaction landed successfully in slot ${receipt.slot}.`
-    : `This transaction failed to land in slot ${receipt.slot}.`
+  const summary = documentedErrorHeadline(receipt)
 
   const feeSentence = receipt.feePaidSol != null
     ? `It paid ${formatSol(receipt.feePaidSol)} in fees.`
@@ -614,42 +658,40 @@ function buildReceiptStory(receipt: BreadlinesReceipt) {
 
   const pathSentence = `It touched ${receipt.programs.length} program${receipt.programs.length === 1 ? '' : 's'} and ${receipt.writableAccountCount} writable account${receipt.writableAccountCount === 1 ? '' : 's'}.`
 
-  const pressureReason = receipt.slotPressure.basis.length
-    ? `The slot pressure estimate is ${receipt.slotPressure.label} because ${receipt.slotPressure.basis.join(', ')}.`
-    : `Slot pressure is estimated as ${receipt.slotPressure.label}.`
+  const pressureContext = contextualPressureSentence(receipt.slotPressure.label, receipt.slotPressure.basis)
 
-  const priorityFeeSentence = receipt.priorityFeeLamportsEstimated != null
-    ? receipt.priorityFeeLamportsEstimated > 0
-      ? `The estimated priority fee was ${receipt.priorityFeeLamportsEstimated.toLocaleString()} lamports, which may indicate the transaction competed on fee priority.`
-      : 'No extra priority fee was detected, so this transaction relied on regular ordering.'
-    : 'Priority fee information is unavailable.'
+  const priorityFeeSentence = receipt.priorityFeeDerivation
+    ? `The priority fee is derived from observed Compute Budget instructions: ${receipt.priorityFeeDerivation.formula}.`
+    : 'Priority fee is unavailable because this transaction did not provide both an observed Compute Budget price and limit.'
 
-  const narrative = [summary, feeSentence, pathSentence, pressureReason, priorityFeeSentence].join(' ')
+  const narrative = [summary, feeSentence, pathSentence, priorityFeeSentence, pressureContext].join(' ')
 
   const reasons = [
     {
-      label: 'Slot pressure',
-      text: `This slot is labeled ${receipt.slotPressure.label} pressure, so congestion and ordering competition were likely relevant.`,
+      label: 'Execution state',
+      text: receipt.executionState === 'landed-but-failed'
+        ? `Landed in observed slot ${receipt.slot.toLocaleString()}, then failed during program execution.`
+        : receipt.executionState === 'landed'
+          ? `Landed successfully in observed slot ${receipt.slot.toLocaleString()}.`
+          : 'Did not land, so no confirmed execution state is available.',
     },
     {
-      label: 'Program path',
-      text: receipt.programs.length
-        ? `It touched ${receipt.programs.length} programs, which makes execution more sensitive to scheduling and state freshness.`
-        : 'The transaction path could not be parsed into known programs.',
+      label: 'Documented program error',
+      text: receipt.executionError
+        ? `${receipt.executionError.program}${receipt.executionError.code != null ? ` error ${receipt.executionError.code}` : ''}${receipt.executionError.name ? ` (${receipt.executionError.name})` : ''}: ${receipt.executionError.message}.`
+        : 'No human-readable program error was present in the RPC logs.',
     },
     {
-      label: 'Writable accounts',
-      text: `It touched ${receipt.writableAccountCount} writable account${receipt.writableAccountCount === 1 ? '' : 's'}, which increases execution sensitivity under contention.`, 
+      label: 'Deterministic facts',
+      text: `${feeSentence} ${receipt.computeUnitsConsumed != null ? `${formatComputeUnits(receipt.computeUnitsConsumed)} CUs consumed${receipt.inclusionSymptoms.computeUnitLimit != null ? ` of a ${formatComputeUnits(receipt.inclusionSymptoms.computeUnitLimit)} CU limit` : ''}.` : 'Compute usage was unavailable.'}`,
     },
     {
-      label: 'Failure state',
-      text: receipt.status === 'failed'
-        ? 'The transaction failed, so the exact route or state conditions should be inspected for repeated executions.'
-        : 'The transaction succeeded, but the execution path may still matter for future similar trades.',
+      label: 'Contextual pressure',
+      text: `${receipt.slotPressure.label} slot pressure is inferred from ${receipt.slotPressure.basis.join(', ') || 'available slot data'}. It is not an established cause of this failure.`,
     },
   ]
 
-  const care = [
+  const care = receipt.percolatorLens ? [
     {
       label: 'Queue impact',
       text: `${receipt.percolatorLens.queueSensitive.level === 'high' ? 'High' : receipt.percolatorLens.queueSensitive.level === 'medium' ? 'Moderate' : 'Low'} queue sensitivity means this route ${receipt.percolatorLens.queueSensitive.level === 'high' ? 'could be blocked or delayed' : receipt.percolatorLens.queueSensitive.level === 'medium' ? 'may be affected by congestion' : 'is less likely to suffer queue pain'} under similar conditions.`,
@@ -662,10 +704,10 @@ function buildReceiptStory(receipt: BreadlinesReceipt) {
       label: 'Risk/Oracle impact',
       text: `${receipt.percolatorLens.riskOracleSensitive.level === 'high' ? 'High' : receipt.percolatorLens.riskOracleSensitive.level === 'medium' ? 'Moderate' : 'Low'} risk sensitivity means this path may depend on fresh oracle updates or careful state transitions.`,
     },
-  ]
+  ] : []
 
-  const futureText = receipt.status === 'failed'
-    ? 'Future transactions along this path should be inspected for failure causes before retrying; the same route can still behave differently under lower slot pressure.'
+  const futureText = receipt.executionState === 'landed-but-failed'
+    ? 'Before retrying, inspect the documented program error and route parameters. Slot pressure can be useful context, but this receipt does not establish it as the cause.'
     : 'Future transactions with a similar program path should watch slot pressure and queue sensitivity, because they are more likely to be affected by congestion or stale state.'
 
   return {
@@ -845,27 +887,39 @@ function ReceiptResult({
   const receiptStory = buildReceiptStory(receipt)
   const whatThisMeans = buildWhatThisMeans(receipt)
   const casebookSignals = buildCasebookSignals(receipt)
-  const lensItems = [
-    ['Queue-sensitive?', receipt.percolatorLens.queueSensitive],
-    ['Price-sensitive?', receipt.percolatorLens.priceSensitive],
-    ['Risk/oracle-sensitive?', receipt.percolatorLens.riskOracleSensitive],
-  ] as const
+  const lens = receipt.percolatorLens
+  const showPercolatorLens = receipt.executionState !== 'landed-but-failed' && lens != null
+  const lensItems = lens ? [
+    ['Queue-sensitive?', lens.queueSensitive],
+    ['Price-sensitive?', lens.priceSensitive],
+    ['Risk/oracle-sensitive?', lens.riskOracleSensitive],
+  ] as const : []
   const inclusion = receipt.inclusionSymptoms
   const repeatedProgramAccountActivity = inclusion.repeatedProgramAccountActivity
     .filter((activity) => activity.available && (activity.otherRecentSignatureCount ?? 0) > 0)
-  const inclusionMetrics: Array<{ label: string; value: string; confidence: ReceiptConfidence | 'needs inspection' }> = [
-    { label: 'Tx status', value: inclusion.status, confidence: 'observed' },
+  const inclusionMetrics: Array<{
+    label: string
+    value: string
+    confidence: ReceiptEvidenceType | 'needs inspection'
+    detail?: string
+  }> = [
+    { label: 'Execution state', value: formatExecutionState(inclusion.status), confidence: 'observed' },
     { label: 'Total fee', value: formatLamportsValue(inclusion.totalFeeLamports), confidence: 'observed' },
-    { label: 'Estimated priority fee', value: formatLamportsValue(inclusion.priorityFeeLamportsEstimated), confidence: 'estimated' },
+    {
+      label: 'Derived priority fee',
+      value: formatLamportsValue(inclusion.priorityFeeLamportsEstimated),
+      confidence: inclusion.priorityFeeDerivation ? 'derived' : 'needs inspection',
+      detail: inclusion.priorityFeeDerivation?.formula ?? 'Unavailable: an observed Compute Budget limit and price pair is required for this derivation.',
+    },
     {
       label: 'CU price',
       value: formatComputeUnitPrice(inclusion.computeUnitPriceMicroLamports),
-      confidence: inclusion.computeUnitPriceStatus === 'omitted' ? 'estimated' : 'observed',
+      confidence: inclusion.computeUnitPriceMicroLamports == null ? 'needs inspection' : 'observed',
     },
     {
       label: 'CU price status',
       value: inclusion.computeUnitPriceStatus,
-      confidence: inclusion.computeUnitPriceStatus === 'unknown' ? 'needs inspection' : 'estimated',
+      confidence: inclusion.computeUnitPriceStatus === 'unknown' ? 'needs inspection' : 'observed',
     },
     {
       label: 'CU limit',
@@ -891,11 +945,11 @@ function ReceiptResult({
         </div>
         <div className="rounded-lg border border-border/60 bg-background/45 p-3">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Status</p>
+            <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Execution</p>
             <ConfidenceBadge confidence="observed" />
           </div>
           <p className={`mt-1 text-2xl font-semibold ${receipt.status === 'success' ? 'text-emerald-200' : 'text-rose-200'}`}>
-            {receipt.status}
+            {formatExecutionState(receipt.executionState)}
           </p>
         </div>
         <div className="rounded-lg border border-border/60 bg-background/45 p-3">
@@ -946,18 +1000,25 @@ function ReceiptResult({
               </Badge>
             </div>
             <p className="mt-2 text-sm leading-6 text-foreground">
-              RPC data is separated from estimates and conceptual framing. This receipt does not infer user intent or claim an alternate outcome.
+              {showPercolatorLens
+                ? 'RPC data is separated into observed, derived, inferred, and conceptual evidence. This receipt does not infer user intent or claim an alternate outcome.'
+                : 'RPC data is separated into observed, derived, and inferred evidence. This receipt does not infer user intent or claim an alternate outcome.'}
             </p>
             <p className="mt-2 text-xs leading-5 text-muted-foreground">
               Observed block time: {formatBlockTime(receipt.blockTime)}
               {receipt.computeUnitsConsumed != null ? ` | Compute units: ${receipt.computeUnitsConsumed.toLocaleString()}` : ' | Compute units unavailable'}
             </p>
-            {receipt.priorityFeeLamportsEstimated != null ? (
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <ConfidenceBadge confidence="estimated" />
-                <span>Estimated priority fee: {receipt.priorityFeeLamportsEstimated.toLocaleString()} lamports</span>
-              </div>
-            ) : null}
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <InclusionConfidenceBadge confidence={receipt.priorityFeeDerivation ? 'derived' : 'needs inspection'} />
+              <span>
+                {receipt.priorityFeeDerivation
+                  ? `Derived priority fee: ${formatLamportsValue(receipt.priorityFeeLamportsEstimated)}`
+                  : 'Priority fee unavailable'}
+              </span>
+            </div>
+            <p className="mt-1 max-w-3xl text-xs leading-5 text-muted-foreground">
+              {receipt.priorityFeeDerivation?.formula ?? 'No observed Compute Budget price and limit pair was available to derive a priority fee.'}
+            </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={onCopyReceipt} className="gap-2">
@@ -1013,9 +1074,10 @@ function ReceiptResult({
                 <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{item.label}</p>
                 <InclusionConfidenceBadge confidence={item.confidence} />
               </div>
-              <p className={`mt-2 truncate text-sm font-semibold ${item.label === 'Tx status' && inclusion.status === 'failed' ? 'text-rose-200' : 'text-foreground'}`}>
+              <p className={`mt-2 truncate text-sm font-semibold ${item.label === 'Execution state' && inclusion.status === 'landed-but-failed' ? 'text-rose-200' : 'text-foreground'}`}>
                 {item.value}
               </p>
+              {item.detail ? <p className="mt-1 text-[10px] leading-4 text-muted-foreground">{item.detail}</p> : null}
             </div>
           ))}
         </div>
@@ -1095,7 +1157,7 @@ function ReceiptResult({
         <div className="mt-4 rounded-lg border border-border/55 bg-secondary/20 p-3">
           <div className="mb-2 flex items-center justify-between gap-2">
             <p className="text-xs font-semibold text-foreground">Repeated program/account activity</p>
-            <InclusionConfidenceBadge confidence={repeatedProgramAccountActivity.length ? 'estimated' : 'needs inspection'} />
+            <InclusionConfidenceBadge confidence={repeatedProgramAccountActivity.length ? 'inferred' : 'needs inspection'} />
           </div>
           {repeatedProgramAccountActivity.length ? (
             <div className="grid gap-2 md:grid-cols-2">
@@ -1186,9 +1248,9 @@ function ReceiptResult({
         <div className="rounded-lg border border-border/60 bg-background/35 p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-200">Why it happened</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-200">Contextual pressure</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                A v0 estimate of slot pressure and contention signals based on landed-slot activity, transaction size, and outcome.
+                Inferred slot and contention context. It is not a documented explanation of this transaction's failure.
               </p>
             </div>
             <ConfidenceBadge confidence={receipt.slotPressure.confidence} />
@@ -1217,45 +1279,47 @@ function ReceiptResult({
         </div>
       </div>
 
-      <div className="rounded-lg border border-border/60 bg-background/35 p-4">
-        <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">Why this matters</p>
-            <p className="mt-1 max-w-3xl text-xs leading-5 text-muted-foreground">
-              This section explains whether this execution path is sensitive to queueing, price freshness, or oracle/risk state.
+      {showPercolatorLens && lens ? (
+        <div className="rounded-lg border border-border/60 bg-background/35 p-4">
+          <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">Why this matters</p>
+              <p className="mt-1 max-w-3xl text-xs leading-5 text-muted-foreground">
+                This section explains whether this execution path is sensitive to queueing, price freshness, or oracle/risk state.
+              </p>
+            </div>
+            <ConfidenceBadge confidence={lens.whyMarketStructureMayMatter.confidence} />
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-3">
+            {lensItems.map(([label, item]) => (
+              <div key={label} className="rounded-lg border border-border/55 bg-secondary/20 p-3">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="text-xs font-semibold text-foreground">{label}</p>
+                  <SensitivityBadge level={item.level} />
+                </div>
+                <div className="space-y-1.5">
+                  {item.reasons.slice(0, 3).map((reason) => (
+                    <p key={reason} className="text-xs leading-5 text-muted-foreground">
+                      {reason}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-3 rounded-lg border border-border/60 bg-secondary/20 p-3">
+            <div className="mb-2 flex items-center gap-2">
+              <p className="text-xs font-semibold text-foreground">Why better market structure may matter</p>
+              <ConfidenceBadge confidence={lens.whyMarketStructureMayMatter.confidence} />
+            </div>
+            <p className="text-sm leading-6 text-foreground">
+              {lens.whyMarketStructureMayMatter.text}
             </p>
           </div>
-          <ConfidenceBadge confidence={receipt.confidence.percolatorLens} />
         </div>
-
-        <div className="grid gap-3 md:grid-cols-3">
-          {lensItems.map(([label, item]) => (
-            <div key={label} className="rounded-lg border border-border/55 bg-secondary/20 p-3">
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="text-xs font-semibold text-foreground">{label}</p>
-                <SensitivityBadge level={item.level} />
-              </div>
-              <div className="space-y-1.5">
-                {item.reasons.slice(0, 3).map((reason) => (
-                  <p key={reason} className="text-xs leading-5 text-muted-foreground">
-                    {reason}
-                  </p>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-3 rounded-lg border border-border/60 bg-secondary/20 p-3">
-          <div className="mb-2 flex items-center gap-2">
-            <p className="text-xs font-semibold text-foreground">Why better market structure may matter</p>
-            <ConfidenceBadge confidence={receipt.percolatorLens.whyMarketStructureMayMatter.confidence} />
-          </div>
-          <p className="text-sm leading-6 text-foreground">
-            {receipt.percolatorLens.whyMarketStructureMayMatter.text}
-          </p>
-        </div>
-      </div>
+      ) : null}
 
       <div className="rounded-lg border border-border/60 bg-background/35 p-4">
         <div className="mb-3">

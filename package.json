@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "node --test --experimental-strip-types test/receipt-evidence.test.ts",
     "lint": "eslint ."
   },
   "dependencies": {

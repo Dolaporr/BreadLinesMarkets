@@ -33,8 +33,10 @@ export type HeliusTransferSummary = {
 }
 
 export type ReceiptConfidence = 'observed' | 'estimated' | 'conceptual'
+export type ReceiptEvidenceType = 'observed' | 'derived' | 'inferred' | 'conceptual'
 export type ReceiptSensitivityLevel = 'low' | 'medium' | 'high' | 'unknown'
-export type InclusionSymptomConfidence = ReceiptConfidence | 'needs inspection'
+export type ReceiptExecutionState = 'landed' | 'landed-but-failed' | 'did-not-land'
+export type InclusionSymptomConfidence = ReceiptEvidenceType | 'needs inspection'
 export type ComputeUnitPriceStatus = 'zero' | 'omitted' | 'set' | 'unknown'
 export type CoinReceiptConfidence = ReceiptConfidence | 'unclear' | 'needs inspection'
 
@@ -72,11 +74,29 @@ export type BreadlinesReceipt = {
   slot: number
   blockTime: number | null
   status: 'success' | 'failed'
+  executionState: ReceiptExecutionState
   confirmationStatus: string
   error: unknown
+  executionError: {
+    program: string
+    programId: string | null
+    code: number | null
+    name: string | null
+    message: string
+    log: string
+    evidence: 'observed'
+  } | null
   feePaidLamports: number | null
   feePaidSol: number | null
   priorityFeeLamportsEstimated?: number
+  priorityFeeDerivation: {
+    evidence: 'derived'
+    method: 'compute-budget'
+    computeUnitLimit: number
+    computeUnitPriceMicroLamports: number
+    formula: string
+    feeResidualLamports: number | null
+  } | null
   computeUnitsConsumed: number | null
   recentBlockhash: string | null
   signatureCount: number | null
@@ -91,13 +111,13 @@ export type BreadlinesReceipt = {
     address: string
     signer?: boolean
     source?: string
-    confidence: ReceiptConfidence
+    confidence: ReceiptEvidenceType
   }>
   writableAccountCount: number
   slotPressure: {
     label: 'low' | 'moderate' | 'high'
     score: number
-    confidence: ReceiptConfidence
+    confidence: ReceiptEvidenceType
     basis: string[]
     sample: {
       txPerSlot?: number
@@ -106,35 +126,43 @@ export type BreadlinesReceipt = {
     }
   }
   confidence: {
-    transaction: ReceiptConfidence
-    slotPressure: ReceiptConfidence
-    percolatorLens: ReceiptConfidence
+    transaction: ReceiptEvidenceType
+    slotPressure: ReceiptEvidenceType
+    percolatorLens: ReceiptEvidenceType | null
   }
   percolatorLens: {
     queueSensitive: {
       level: ReceiptSensitivityLevel
-      confidence: ReceiptConfidence
+      confidence: ReceiptEvidenceType
       reasons: string[]
     }
     priceSensitive: {
       level: ReceiptSensitivityLevel
-      confidence: ReceiptConfidence
+      confidence: ReceiptEvidenceType
       reasons: string[]
     }
     riskOracleSensitive: {
       level: ReceiptSensitivityLevel
-      confidence: ReceiptConfidence
+      confidence: ReceiptEvidenceType
       reasons: string[]
     }
     whyMarketStructureMayMatter: {
-      confidence: ReceiptConfidence
+      confidence: ReceiptEvidenceType
       text: string
     }
-  }
+  } | null
   inclusionSymptoms: {
-    status: 'landed' | 'failed'
+    status: ReceiptExecutionState
     totalFeeLamports: number | null
     priorityFeeLamportsEstimated: number | null
+    priorityFeeDerivation: {
+      evidence: 'derived'
+      method: 'compute-budget'
+      computeUnitLimit: number
+      computeUnitPriceMicroLamports: number
+      formula: string
+      feeResidualLamports: number | null
+    } | null
     computeUnitPriceMicroLamports: number | null
     computeUnitLimit: number | null
     computeUnitPriceStatus: ComputeUnitPriceStatus
@@ -146,13 +174,13 @@ export type BreadlinesReceipt = {
     }>
     signerWallet: {
       address: string
-      confidence: ReceiptConfidence
+      confidence: ReceiptEvidenceType
     } | null
     mainWritableAccounts: Array<{
       address: string
       signer?: boolean
       source?: string
-      confidence: ReceiptConfidence
+      confidence: ReceiptEvidenceType
     }>
     repeatedSignerActivity: {
       kind: 'signer'
