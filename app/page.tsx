@@ -554,7 +554,8 @@ function formatExecutionState(state: BreadlinesReceipt['executionState']) {
 }
 
 function buildReceiptShareText(receipt: BreadlinesReceipt) {
-  const showPercolatorLens = receipt.executionState !== 'landed-but-failed' && receipt.percolatorLens != null
+  const activePercolatorLens = receipt.executionState === 'landed-but-failed' ? null : receipt.percolatorLens
+  const showPercolatorLens = activePercolatorLens != null
   const errorLine = receipt.executionError
     ? `Documented error: ${receipt.executionError.program}${receipt.executionError.code != null ? ` ${receipt.executionError.code}` : ''}${receipt.executionError.name ? ` (${receipt.executionError.name})` : ''} - ${receipt.executionError.message}`
     : null
@@ -571,11 +572,11 @@ function buildReceiptShareText(receipt: BreadlinesReceipt) {
       : 'Priority fee: unavailable (no complete Compute Budget price and limit pair)',
     `Inclusion symptoms: ${receipt.inclusionSymptoms.symptomBadges.map((badge) => badge.label).join(', ') || 'none flagged'}`,
     `Slot pressure: ${receipt.slotPressure.label} (${receipt.slotPressure.confidence})`,
-    ...(showPercolatorLens
+    ...(activePercolatorLens
       ? [
-          `Queue-sensitive: ${receipt.percolatorLens.queueSensitive.level}`,
-          `Price-sensitive: ${receipt.percolatorLens.priceSensitive.level}`,
-          `Risk/oracle-sensitive: ${receipt.percolatorLens.riskOracleSensitive.level}`,
+          `Queue-sensitive: ${activePercolatorLens.queueSensitive.level}`,
+          `Price-sensitive: ${activePercolatorLens.priceSensitive.level}`,
+          `Risk/oracle-sensitive: ${activePercolatorLens.riskOracleSensitive.level}`,
         ]
       : []),
     '',
