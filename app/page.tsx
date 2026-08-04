@@ -871,9 +871,13 @@ function ReceiptResult({
 }) {
   const receiptStory = buildReceiptStory(receipt)
   const whatThisMeans = buildWhatThisMeans(receipt)
-  const casebookSignals = buildCasebookSignals(receipt)
   const lens = receipt.executionState === 'landed-but-failed' ? null : receipt.percolatorLens
   const showPercolatorLens = lens != null
+  const whatRemainsUnknown = receipt.executionState === 'landed-but-failed'
+    ? receipt.executionError?.program === 'Jupiter' && receipt.executionError.code === 6001 && receipt.executionError.name === 'SlippageToleranceExceeded'
+      ? "This receipt cannot determine whether price moved, Jupiter's route state changed, or execution timing altered the outcome. It only establishes that the transaction landed and Jupiter returned error 6001 (SlippageToleranceExceeded)."
+      : 'This receipt cannot determine whether price moved, route state changed, or execution timing altered the outcome. It only establishes that the transaction landed and failed during program execution.'
+    : null
   const lensItems = lens ? [
     ['Queue-sensitive?', lens.queueSensitive],
     ['Price-sensitive?', lens.priceSensitive],
@@ -1329,21 +1333,15 @@ function ReceiptResult({
         </div>
       </div>
 
-      <div className="rounded-lg border border-border/60 bg-background/35 p-4">
-        <div className="mb-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Casebook signals</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Read-only tags for now. They keep the receipt shape ready for future Casebook entries.
-          </p>
+      {whatRemainsUnknown ? (
+        <div className="rounded-lg border border-sky-300/30 bg-sky-300/[0.04] p-4">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">What remains unknown</p>
+            <InclusionConfidenceBadge confidence="needs inspection" />
+          </div>
+          <p className="text-sm leading-6 text-foreground">{whatRemainsUnknown}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {casebookSignals.map((tag) => (
-            <Badge key={tag} variant="outline" className="border-border/70 bg-background/35 text-[10px] text-muted-foreground">
-              {tag}
-            </Badge>
-          ))}
-        </div>
-      </div>
+      ) : null}
 
       <div className="rounded-lg border border-border/60 bg-background/35 p-4">
         <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
