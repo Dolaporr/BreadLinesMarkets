@@ -1,6 +1,7 @@
 export const BASE_FEE_LAMPORTS_PER_SIGNATURE = 5_000
 export const COMPUTE_BUDGET_PROGRAM_ID = 'ComputeBudget111111111111111111111111111111'
 export const JUPITER_PROGRAM_ID = 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4'
+export const HIGH_COMPUTE_UNITS = 750_000
 
 const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
@@ -302,4 +303,26 @@ export function documentedErrorHeadline({
 export function contextualPressureSentence(label: string, basis: string[]) {
   const signalText = basis.length ? `uses ${basis.join(', ')}` : `is ${label}`
   return `Separately, the ${label} slot-pressure inference ${signalText}. It is contextual, not a documented cause of this result.`
+}
+
+export function calculateHistoricalPressureScore({
+  slotSignatureCount,
+  computeUnitsConsumed,
+  programsTouched,
+  writableAccounts,
+}: {
+  slotSignatureCount?: number
+  computeUnitsConsumed?: number
+  programsTouched: number
+  writableAccounts: number
+}) {
+  let score = 12
+
+  // Historical receipts must not depend on live performance samples.
+  if (slotSignatureCount != null) score += Math.min(34, slotSignatureCount / 80)
+  if (computeUnitsConsumed != null && computeUnitsConsumed > HIGH_COMPUTE_UNITS) score += 16
+  if (programsTouched >= 4) score += 10
+  if (writableAccounts >= 12) score += 10
+
+  return Math.round(Math.max(0, Math.min(100, score)))
 }

@@ -498,7 +498,7 @@ function sensitivityTone(level: ReceiptSensitivityLevel | 'moderate') {
 
 function ConfidenceBadge({ confidence }: { confidence: ReceiptEvidenceType }) {
   return (
-    <Badge variant="outline" className={`text-[10px] uppercase tracking-[0.14em] ${receiptEvidenceTone(confidence)}`}>
+    <Badge variant="outline" className={`shrink-0 max-w-none text-[10px] uppercase tracking-[0.14em] ${receiptEvidenceTone(confidence)}`}>
       {confidence}
     </Badge>
   )
@@ -522,7 +522,7 @@ function CoinConfidenceBadge({ confidence }: { confidence: CoinReceiptConfidence
 
 function InclusionConfidenceBadge({ confidence }: { confidence: ReceiptEvidenceType | 'needs inspection' }) {
   return (
-    <Badge variant="outline" className={`text-[10px] uppercase tracking-[0.14em] ${confidence === 'needs inspection' ? coinConfidenceTone(confidence) : receiptEvidenceTone(confidence)}`}>
+    <Badge variant="outline" className={`shrink-0 max-w-none text-[10px] uppercase tracking-[0.14em] ${confidence === 'needs inspection' ? coinConfidenceTone(confidence) : receiptEvidenceTone(confidence)}`}>
       {confidence}
     </Badge>
   )
@@ -692,21 +692,6 @@ function buildReceiptStory(receipt: BreadlinesReceipt) {
     },
   ]
 
-  const care = receipt.percolatorLens ? [
-    {
-      label: 'Queue impact',
-      text: `${receipt.percolatorLens.queueSensitive.level === 'high' ? 'High' : receipt.percolatorLens.queueSensitive.level === 'medium' ? 'Moderate' : 'Low'} queue sensitivity means this route ${receipt.percolatorLens.queueSensitive.level === 'high' ? 'could be blocked or delayed' : receipt.percolatorLens.queueSensitive.level === 'medium' ? 'may be affected by congestion' : 'is less likely to suffer queue pain'} under similar conditions.`,
-    },
-    {
-      label: 'Price impact',
-      text: `${receipt.percolatorLens.priceSensitive.level === 'high' ? 'High' : receipt.percolatorLens.priceSensitive.level === 'medium' ? 'Moderate' : 'Low'} price sensitivity means route freshness and execution timing matter ${receipt.percolatorLens.priceSensitive.level === 'high' ? 'more strongly' : receipt.percolatorLens.priceSensitive.level === 'medium' ? 'somewhat' : 'less across broad transfers'}.`,
-    },
-    {
-      label: 'Risk/Oracle impact',
-      text: `${receipt.percolatorLens.riskOracleSensitive.level === 'high' ? 'High' : receipt.percolatorLens.riskOracleSensitive.level === 'medium' ? 'Moderate' : 'Low'} risk sensitivity means this path may depend on fresh oracle updates or careful state transitions.`,
-    },
-  ] : []
-
   const futureText = receipt.executionState === 'landed-but-failed'
     ? 'Before retrying, inspect the documented program error and route parameters. Slot pressure can be useful context, but this receipt does not establish it as the cause.'
     : 'Future transactions with a similar program path should watch slot pressure and queue sensitivity, because they are more likely to be affected by congestion or stale state.'
@@ -714,7 +699,6 @@ function buildReceiptStory(receipt: BreadlinesReceipt) {
   return {
     narrative,
     details: reasons,
-    care,
     futureText,
   }
 }
@@ -888,8 +872,8 @@ function ReceiptResult({
   const receiptStory = buildReceiptStory(receipt)
   const whatThisMeans = buildWhatThisMeans(receipt)
   const casebookSignals = buildCasebookSignals(receipt)
-  const lens = receipt.percolatorLens
-  const showPercolatorLens = receipt.executionState !== 'landed-but-failed' && lens != null
+  const lens = receipt.executionState === 'landed-but-failed' ? null : receipt.percolatorLens
+  const showPercolatorLens = lens != null
   const lensItems = lens ? [
     ['Queue-sensitive?', lens.queueSensitive],
     ['Price-sensitive?', lens.priceSensitive],
@@ -973,14 +957,12 @@ function ReceiptResult({
 
       <div className="rounded-lg border border-border/60 bg-background/45 p-4">
         <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Executive summary</p>
-            <p className="mt-2 text-sm leading-6 text-foreground">
-              {receiptStory.narrative}
-            </p>
-          </div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Executive summary</p>
           <ConfidenceBadge confidence="observed" />
         </div>
+        <p className="mt-2 text-sm leading-6 text-foreground">
+          {receiptStory.narrative}
+        </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {receiptStory.details.map((detail) => (
             <div key={detail.label} className="rounded-lg border border-border/55 bg-secondary/20 p-3">

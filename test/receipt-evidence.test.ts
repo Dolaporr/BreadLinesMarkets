@@ -3,6 +3,7 @@ import test from 'node:test'
 import {
   COMPUTE_BUDGET_PROGRAM_ID,
   JUPITER_PROGRAM_ID,
+  calculateHistoricalPressureScore,
   collectComputeBudget,
   contextualPressureSentence,
   deriveExecutionState,
@@ -146,4 +147,16 @@ test('slot pressure stays contextual and is never stated as the failure cause', 
   assert.match(sentence, /contextual/i)
   assert.match(sentence, /not a documented cause/i)
   assert.doesNotMatch(sentence, /caused the failure|because of slot pressure/i)
+})
+
+test('a historical receipt pressure score is stable without live performance samples', () => {
+  const caseOneInputs = {
+    slotSignatureCount: 1_415,
+    computeUnitsConsumed: 512_916,
+    programsTouched: 10,
+    writableAccounts: 38,
+  }
+
+  assert.equal(calculateHistoricalPressureScore(caseOneInputs), 50)
+  assert.equal(calculateHistoricalPressureScore({ ...caseOneInputs }), 50)
 })

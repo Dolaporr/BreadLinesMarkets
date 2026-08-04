@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import {
   COMPUTE_BUDGET_PROGRAM_ID,
+  HIGH_COMPUTE_UNITS,
   JUPITER_PROGRAM_ID,
+  calculateHistoricalPressureScore,
   collectComputeBudget as collectComputeBudgetEvidence,
   deriveExecutionState,
   derivePriorityFeeLamports as derivePriorityFeeEvidence,
@@ -11,7 +13,6 @@ import {
 
 const HELIUS_URL = `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`
 const SOLANA_SIGNATURE_PATTERN = /^[1-9A-HJ-NP-Za-km-z]{64,88}$/
-const HIGH_COMPUTE_UNITS = 750_000
 const ACTIVITY_SCAN_LIMIT = 12
 
 type Confidence = ReceiptEvidence
@@ -421,35 +422,30 @@ function buildPressure({
     sample?.samplePeriodSecs && sample?.numSlots ? (sample.samplePeriodSecs * 1000) / Math.max(1, sample.numSlots) : undefined
 
   const basis: string[] = []
-  let score = 12
-
-  if (slotSignatureCount != null && txPerSlot) {
-    const ratio = slotSignatureCount / Math.max(1, txPerSlot)
-    score += Math.min(34, ratio * 18)
-    basis.push(`landed slot carried ${slotSignatureCount} signatures`)
-  } else if (slotSignatureCount != null) {
-    score += Math.min(30, slotSignatureCount / 60)
+  if (slotSignatureCount != null) {
     basis.push(`landed slot carried ${slotSignatureCount} signatures`)
   } else {
     basis.push('landed slot signature count unavailable')
   }
 
   if (tx.meta?.computeUnitsConsumed && tx.meta.computeUnitsConsumed > HIGH_COMPUTE_UNITS) {
-    score += 16
     basis.push('high compute usage')
   }
 
   if (programsTouched >= 4) {
-    score += 10
     basis.push('multi-program execution path')
   }
 
   if (writableAccounts >= 12) {
-    score += 10
     basis.push('many writable accounts')
   }
 
-  const boundedScore = Math.round(Math.max(0, Math.min(100, score)))
+  const boundedScore = calculateHistoricalPressureScore({
+    slotSignatureCount,
+    computeUnitsConsumed: tx.meta?.computeUnitsConsumed,
+    programsTouched,
+    writableAccounts,
+  })
 
   return {
     label: pressureLabel(boundedScore),
