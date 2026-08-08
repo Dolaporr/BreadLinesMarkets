@@ -245,6 +245,7 @@ export function findExplicitProgramError(
   const opaqueProgramErrors: Array<NonNullable<ExplicitProgramError['technicalError']>> = []
   const insufficientLamportsLogs: Array<{ log: string; programId: string | null; index: number; availableLamports: number; requiredLamports: number }> = []
   const anchorErrors: ExplicitProgramError[] = []
+  const structuredProgramErrors: Array<{ log: string; programId: string | null; index: number; name: string }> = []
 
   for (const [index, log] of logs.entries()) {
     const invokeMatch = log.match(/^Program ([1-9A-HJ-NP-Za-km-z]+) invoke \[\d+\]$/)
@@ -280,6 +281,16 @@ export function findExplicitProgramError(
       })
     }
 
+    const structuredErrorMatch = log.match(/^(?:Program log: )?Error:\s*([A-Za-z][A-Za-z0-9_]*)\s*$/)
+    if (structuredErrorMatch) {
+      structuredProgramErrors.push({
+        log,
+        programId: activeProgramId,
+        index,
+        name: structuredErrorMatch[1],
+      })
+    }
+
     const customErrorMatch = log.match(/^Program ([1-9A-HJ-NP-Za-km-z]+) failed: custom program error: (0x[0-9a-f]+)$/i)
     if (!customErrorMatch) continue
 
@@ -295,15 +306,18 @@ export function findExplicitProgramError(
     })
   }
 
+  function nearbyTechnicalError(programId: string | null, index: number) {
+    return opaqueProgramErrors.find((error) => error.programId === programId)
+      ?? opaqueProgramErrors.find((error) => {
+        const errorIndex = logs.indexOf(error.log)
+        return errorIndex > index && errorIndex - index <= 4
+      })
+  }
+
   // A quantified failure emitted during the failing instruction is more useful than
   // an opaque custom-error code. It still needs a nearby matching failure record.
   for (const evidence of insufficientLamportsLogs) {
-    const technicalError = opaqueProgramErrors.find((error) =>
-      error.programId === evidence.programId,
-    ) ?? opaqueProgramErrors.find((error) => {
-      const errorIndex = logs.indexOf(error.log)
-      return errorIndex > evidence.index && errorIndex - evidence.index <= 4
-    })
+    const technicalError = nearbyTechnicalError(evidence.programId, evidence.index)
 
     if (!technicalError) continue
 
@@ -320,6 +334,25 @@ export function findExplicitProgramError(
         availableLamports: evidence.availableLamports,
         requiredLamports: evidence.requiredLamports,
       },
+      technicalError,
+    }
+  }
+
+  // Program-emitted Error: <Name> logs are structured failure evidence when the
+  // same program subsequently returns a custom error. This is semantic and
+  // execution-context matching, not a protocol- or code-specific lookup.
+  for (const evidence of structuredProgramErrors) {
+    const technicalError = nearbyTechnicalError(evidence.programId, evidence.index)
+    if (!technicalError) continue
+
+    return {
+      program: technicalError.program,
+      programId: technicalError.programId ?? evidence.programId,
+      code: null,
+      name: evidence.name,
+      message: `Error: ${evidence.name}`,
+      log: evidence.log,
+      evidence: 'observed',
       technicalError,
     }
   }
@@ -342,6 +375,10 @@ export function documentedErrorHeadline({
 
   if (executionError?.name === 'InsufficientLamports' && executionError.quantities) {
     return `This transaction landed but failed because a ${executionError.program} transfer required ${executionError.quantities.requiredLamports.toLocaleString()} lamports while only ${executionError.quantities.availableLamports.toLocaleString()} were available.`
+  }
+
+  if (executionError?.name === 'InvalidStatus') {
+    return 'This transaction landed but failed because the failing program reported InvalidStatus.'
   }
 
   if (executionState === 'landed-but-failed' && executionError) {
@@ -372,6 +409,10 @@ export function failedReceiptUnknowns({
     return "This receipt cannot determine whether price moved, Jupiter's route state changed, or execution timing altered the outcome. It only establishes that the transaction landed and Jupiter returned error 6001 (SlippageToleranceExceeded)."
   }
 
+  if (executionError?.name === 'InvalidStatus') {
+    return 'The transaction establishes that the program rejected the instruction because its state was invalid, but this receipt has not established which state condition caused InvalidStatus.'
+  }
+
   return null
 }
 
@@ -382,6 +423,10 @@ export function failedReceiptFutureText(executionError: ExplicitProgramError | n
 
   if (executionError?.name === 'InsufficientLamports') {
     return 'Before retrying, make sure the transfer source has enough lamports for the required amount.'
+  }
+
+  if (executionError?.name === 'InvalidStatus') {
+    return 'Before retrying, inspect the program state that produced InvalidStatus. This receipt does not establish which state condition was invalid.'
   }
 
   if (executionError) {

@@ -89,6 +89,7 @@ const PROGRAM_LABELS: Record<string, string> = {
   Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo: 'Memo Program',
   AddressLookupTab1e1111111111111111111111111: 'Address Lookup Table',
   [JUPITER_PROGRAM_ID]: 'Jupiter Aggregator',
+  '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8': 'Raydium AMM v4',
   whirLbMiicVdio4qvUfM5KAg6CtQonwY6WcAm7A9Xq: 'Orca Whirlpool',
   dRiftyHA39mYBAzirNc3LfgcHftc83mDtvrVQSaVbb: 'Drift Protocol',
   PhoeNiXZ8ByJGLkxNfZRnkUfjvmuYqLR89jjFHGqdXY: 'Phoenix',

@@ -182,6 +182,52 @@ test('Case #002 promotes the observed insufficient-lamports log over System Prog
   assert.doesNotMatch(`${headline} ${futureText}`, /price|route|slippage|swap|congestion|mev|contention|priority fee/i)
 })
 
+test('Case #003 promotes a structured InvalidStatus log over opaque custom error 0x16', () => {
+  const raydiumAmmV4ProgramId = '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8'
+  const tx = receiptTransaction([], {
+    err: { InstructionError: [7, { Custom: 22 }] },
+    logMessages: [
+      `Program ${raydiumAmmV4ProgramId} invoke [1]`,
+      'Program log: Error: InvalidStatus',
+      `Program ${raydiumAmmV4ProgramId} consumed 12734 of 1364002 compute units`,
+      `Program ${raydiumAmmV4ProgramId} failed: custom program error: 0x16`,
+    ],
+  })
+  const executionError = findExplicitProgramError(tx, (programId) =>
+    programId === raydiumAmmV4ProgramId ? 'Raydium AMM v4' : 'Unknown Program',
+  )
+  const headline = documentedErrorHeadline({
+    executionState: deriveExecutionState(tx),
+    slot: tx.slot,
+    executionError,
+  })
+  const unknowns = failedReceiptUnknowns({
+    executionState: deriveExecutionState(tx),
+    executionError,
+  })
+  const futureText = failedReceiptFutureText(executionError)
+
+  assert.equal(executionError?.program, 'Raydium AMM v4')
+  assert.equal(executionError?.name, 'InvalidStatus')
+  assert.equal(executionError?.message, 'Error: InvalidStatus')
+  assert.equal(executionError?.evidence, 'observed')
+  assert.equal(executionError?.technicalError?.code, 22)
+  assert.equal(executionError?.technicalError?.message, 'Custom program error 0x16')
+  assert.equal(
+    headline,
+    'This transaction landed but failed because the failing program reported InvalidStatus.',
+  )
+  assert.equal(
+    unknowns,
+    'The transaction establishes that the program rejected the instruction because its state was invalid, but this receipt has not established which state condition caused InvalidStatus.',
+  )
+  assert.equal(
+    futureText,
+    'Before retrying, inspect the program state that produced InvalidStatus. This receipt does not establish which state condition was invalid.',
+  )
+  assert.doesNotMatch(`${headline} ${unknowns} ${futureText}`, /pool|opening time|congestion|mev|contention|priority fee/i)
+})
+
 test('Case #001 unknowns and future guidance remain specific to Jupiter error 6001', () => {
   const tx = receiptTransaction([], {
     err: { InstructionError: [6, { Custom: 6001 }] },
