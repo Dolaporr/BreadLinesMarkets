@@ -85,6 +85,19 @@ export type BreadlinesReceipt = {
     message: string
     log: string
     evidence: 'observed'
+    quantities?: {
+      availableLamports: number
+      requiredLamports: number
+    }
+    technicalError?: {
+      program: string
+      programId: string | null
+      code: number | null
+      name: string | null
+      message: string
+      log: string
+      evidence: 'observed'
+    }
   } | null
   feePaidLamports: number | null
   feePaidSol: number | null

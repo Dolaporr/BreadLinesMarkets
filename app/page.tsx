@@ -29,7 +29,12 @@ import {
   Share2
 } from 'lucide-react'
 import { simulateBlock, type SimParams as SimulationParams, type SimResult as Metrics } from '@/lib/simulateBlock'
-import { contextualPressureSentence, documentedErrorHeadline } from '@/lib/receipt-evidence'
+import {
+  contextualPressureSentence,
+  documentedErrorHeadline,
+  failedReceiptFutureText,
+  failedReceiptUnknowns,
+} from '@/lib/receipt-evidence'
 import {
   getBreadlinesReceipt,
   getCoinActivityReceipt,
@@ -681,6 +686,9 @@ function buildReceiptStory(receipt: BreadlinesReceipt) {
       text: receipt.executionError
         ? `${receipt.executionError.program}${receipt.executionError.code != null ? ` error ${receipt.executionError.code}` : ''}${receipt.executionError.name ? ` (${receipt.executionError.name})` : ''}: ${receipt.executionError.message}.`
         : 'No human-readable program error was present in the RPC logs.',
+      technicalText: receipt.executionError?.technicalError
+        ? `${receipt.executionError.technicalError.program}${receipt.executionError.technicalError.code != null ? ` error ${receipt.executionError.technicalError.code}` : ''}${receipt.executionError.technicalError.name ? ` (${receipt.executionError.technicalError.name})` : ''}: ${receipt.executionError.technicalError.message}.`
+        : undefined,
     },
     {
       label: 'Deterministic facts',
@@ -693,7 +701,7 @@ function buildReceiptStory(receipt: BreadlinesReceipt) {
   ]
 
   const futureText = receipt.executionState === 'landed-but-failed'
-    ? 'Before retrying, inspect the documented program error and route parameters. Slot pressure can be useful context, but this receipt does not establish it as the cause.'
+    ? failedReceiptFutureText(receipt.executionError)
     : 'Future transactions with a similar program path should watch slot pressure and queue sensitivity, because they are more likely to be affected by congestion or stale state.'
 
   return {
@@ -873,11 +881,11 @@ function ReceiptResult({
   const whatThisMeans = buildWhatThisMeans(receipt)
   const lens = receipt.executionState === 'landed-but-failed' ? null : receipt.percolatorLens
   const showPercolatorLens = lens != null
-  const whatRemainsUnknown = receipt.executionState === 'landed-but-failed'
-    ? receipt.executionError?.program === 'Jupiter' && receipt.executionError.code === 6001 && receipt.executionError.name === 'SlippageToleranceExceeded'
-      ? "This receipt cannot determine whether price moved, Jupiter's route state changed, or execution timing altered the outcome. It only establishes that the transaction landed and Jupiter returned error 6001 (SlippageToleranceExceeded)."
-      : 'This receipt cannot determine whether price moved, route state changed, or execution timing altered the outcome. It only establishes that the transaction landed and failed during program execution.'
-    : null
+  const whatRemainsUnknown = failedReceiptUnknowns({
+    executionState: receipt.executionState,
+    executionError: receipt.executionError,
+  })
+  const collapseExecutionContext = receipt.executionState === 'landed-but-failed' && receipt.executionError != null
   const lensItems = lens ? [
     ['Queue-sensitive?', lens.queueSensitive],
     ['Price-sensitive?', lens.priceSensitive],
@@ -972,6 +980,11 @@ function ReceiptResult({
             <div key={detail.label} className="rounded-lg border border-border/55 bg-secondary/20 p-3">
               <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{detail.label}</p>
               <p className="mt-1 text-sm leading-6 text-foreground">{detail.text}</p>
+              {detail.technicalText ? (
+                <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                  Technical evidence: {detail.technicalText}
+                </p>
+              ) : null}
             </div>
           ))}
         </div>
@@ -1023,6 +1036,10 @@ function ReceiptResult({
         </div>
       </div>
 
+      <details open={!collapseExecutionContext} className={collapseExecutionContext ? 'rounded-lg border border-border/60 bg-background/35' : 'contents'}>
+        <summary className={collapseExecutionContext ? 'cursor-pointer list-none px-4 py-3 text-sm font-semibold text-muted-foreground hover:text-foreground' : 'sr-only'}>
+          Execution context (secondary)
+        </summary>
       <div className="rounded-lg border border-border/60 bg-background/35 p-4">
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
@@ -1174,6 +1191,7 @@ function ReceiptResult({
           {inclusion.disclaimer}
         </p>
       </div>
+      </details>
 
       <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="rounded-lg border border-border/60 bg-background/35 p-4">
@@ -1312,7 +1330,7 @@ function ReceiptResult({
         <div className="mb-3">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">What this means for future transactions</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Plain-English notes that explain how this execution story may matter for similar future routes.
+            Plain-English notes that explain how this execution story may matter for similar future transactions.
           </p>
         </div>
         <div className="grid gap-3">

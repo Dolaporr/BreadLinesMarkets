@@ -66,6 +66,19 @@ export type ExplicitProgramError = {
   message: string
   log: string
   evidence: 'observed'
+  quantities?: {
+    availableLamports: number
+    requiredLamports: number
+  }
+  technicalError?: {
+    program: string
+    programId: string | null
+    code: number | null
+    name: string | null
+    message: string
+    log: string
+    evidence: 'observed'
+  }
 }
 
 function accountAddress(account: ReceiptRpcAccountKey | undefined) {
@@ -229,36 +242,49 @@ export function findExplicitProgramError(
 ): ExplicitProgramError | null {
   const logs = tx.meta?.logMessages ?? []
   let activeProgramId: string | null = null
+  const opaqueProgramErrors: Array<NonNullable<ExplicitProgramError['technicalError']>> = []
+  const insufficientLamportsLogs: Array<{ log: string; programId: string | null; index: number; availableLamports: number; requiredLamports: number }> = []
+  const anchorErrors: ExplicitProgramError[] = []
 
-  for (const log of logs) {
+  for (const [index, log] of logs.entries()) {
     const invokeMatch = log.match(/^Program ([1-9A-HJ-NP-Za-km-z]+) invoke \[\d+\]$/)
     if (invokeMatch) {
       activeProgramId = invokeMatch[1]
       continue
     }
 
+    const insufficientLamportsMatch = log.match(/(?:Program log: )?Transfer: insufficient lamports (\d+), need (\d+)/i)
+    if (insufficientLamportsMatch) {
+      insufficientLamportsLogs.push({
+        log,
+        programId: activeProgramId,
+        index,
+        availableLamports: Number(insufficientLamportsMatch[1]),
+        requiredLamports: Number(insufficientLamportsMatch[2]),
+      })
+      continue
+    }
+
     const anchorMatch = log.match(
       /AnchorError thrown .*Error Code: ([^.]+)\. Error Number: (\d+)\. Error Message: (.+?)\.?$/,
     )
-    if (!anchorMatch) continue
-
-    return {
-      program: activeProgramId === JUPITER_PROGRAM_ID ? 'Jupiter' : activeProgramId ? getProgramLabel(activeProgramId) : 'Program',
-      programId: activeProgramId,
-      code: Number(anchorMatch[2]),
-      name: anchorMatch[1],
-      message: anchorMatch[3].replace(/\.$/, ''),
-      log,
-      evidence: 'observed',
+    if (anchorMatch) {
+      anchorErrors.push({
+        program: activeProgramId === JUPITER_PROGRAM_ID ? 'Jupiter' : activeProgramId ? getProgramLabel(activeProgramId) : 'Program',
+        programId: activeProgramId,
+        code: Number(anchorMatch[2]),
+        name: anchorMatch[1],
+        message: anchorMatch[3].replace(/\.$/, ''),
+        log,
+        evidence: 'observed',
+      })
     }
-  }
 
-  for (const log of logs) {
     const customErrorMatch = log.match(/^Program ([1-9A-HJ-NP-Za-km-z]+) failed: custom program error: (0x[0-9a-f]+)$/i)
     if (!customErrorMatch) continue
 
     const programId = customErrorMatch[1]
-    return {
+    opaqueProgramErrors.push({
       program: programId === JUPITER_PROGRAM_ID ? 'Jupiter' : getProgramLabel(programId),
       programId,
       code: Number.parseInt(customErrorMatch[2], 16),
@@ -266,10 +292,39 @@ export function findExplicitProgramError(
       message: `Custom program error ${customErrorMatch[2]}`,
       log,
       evidence: 'observed',
+    })
+  }
+
+  // A quantified failure emitted during the failing instruction is more useful than
+  // an opaque custom-error code. It still needs a nearby matching failure record.
+  for (const evidence of insufficientLamportsLogs) {
+    const technicalError = opaqueProgramErrors.find((error) =>
+      error.programId === evidence.programId,
+    ) ?? opaqueProgramErrors.find((error) => {
+      const errorIndex = logs.indexOf(error.log)
+      return errorIndex > evidence.index && errorIndex - evidence.index <= 4
+    })
+
+    if (!technicalError) continue
+
+    const programId = technicalError.programId ?? evidence.programId
+    return {
+      program: technicalError.program,
+      programId,
+      code: null,
+      name: 'InsufficientLamports',
+      message: `Transfer: insufficient lamports ${evidence.availableLamports.toLocaleString()}, need ${evidence.requiredLamports.toLocaleString()}`,
+      log: evidence.log,
+      evidence: 'observed',
+      quantities: {
+        availableLamports: evidence.availableLamports,
+        requiredLamports: evidence.requiredLamports,
+      },
+      technicalError,
     }
   }
 
-  return null
+  return anchorErrors[0] ?? opaqueProgramErrors[0] ?? null
 }
 
 export function documentedErrorHeadline({
@@ -285,6 +340,10 @@ export function documentedErrorHeadline({
     return "This transaction landed but failed because Jupiter's slippage tolerance was exceeded."
   }
 
+  if (executionError?.name === 'InsufficientLamports' && executionError.quantities) {
+    return `This transaction landed but failed because a ${executionError.program} transfer required ${executionError.quantities.requiredLamports.toLocaleString()} lamports while only ${executionError.quantities.availableLamports.toLocaleString()} were available.`
+  }
+
   if (executionState === 'landed-but-failed' && executionError) {
     return `This transaction landed but failed during execution because ${executionError.program} reported: ${executionError.message}.`
   }
@@ -298,6 +357,38 @@ export function documentedErrorHeadline({
   }
 
   return `This transaction landed successfully in slot ${slot}.`
+}
+
+export function failedReceiptUnknowns({
+  executionState,
+  executionError,
+}: {
+  executionState: ReceiptExecutionState
+  executionError: ExplicitProgramError | null
+}) {
+  if (executionState !== 'landed-but-failed') return null
+
+  if (executionError?.program === 'Jupiter' && executionError.code === 6001 && executionError.name === 'SlippageToleranceExceeded') {
+    return "This receipt cannot determine whether price moved, Jupiter's route state changed, or execution timing altered the outcome. It only establishes that the transaction landed and Jupiter returned error 6001 (SlippageToleranceExceeded)."
+  }
+
+  return null
+}
+
+export function failedReceiptFutureText(executionError: ExplicitProgramError | null) {
+  if (executionError?.program === 'Jupiter' && executionError.code === 6001 && executionError.name === 'SlippageToleranceExceeded') {
+    return 'Before retrying, inspect the documented program error and route parameters. Slot pressure can be useful context, but this receipt does not establish it as the cause.'
+  }
+
+  if (executionError?.name === 'InsufficientLamports') {
+    return 'Before retrying, make sure the transfer source has enough lamports for the required amount.'
+  }
+
+  if (executionError) {
+    return 'Before retrying, inspect the documented program error. This receipt does not establish an execution-context cause.'
+  }
+
+  return 'Before retrying, inspect the confirmed execution result.'
 }
 
 export function contextualPressureSentence(label: string, basis: string[]) {
