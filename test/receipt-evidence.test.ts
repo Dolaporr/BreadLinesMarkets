@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  buildFailedReceiptShareText,
   COMPUTE_BUDGET_PROGRAM_ID,
   JUPITER_PROGRAM_ID,
   calculateHistoricalPressureScore,
@@ -199,6 +200,63 @@ test('Case #001 unknowns and future guidance remain specific to Jupiter error 60
     failedReceiptFutureText(executionError),
     'Before retrying, inspect the documented program error and route parameters. Slot pressure can be useful context, but this receipt does not establish it as the cause.',
   )
+})
+
+test('Case #001 and Case #002 share text lead with documented failure evidence', () => {
+  const systemProgramId = '11111111111111111111111111111111'
+  const caseOne = receiptTransaction([], {
+    err: { InstructionError: [6, { Custom: 6001 }] },
+    logMessages: [
+      `Program ${JUPITER_PROGRAM_ID} invoke [1]`,
+      'Program log: AnchorError thrown in programs/jupiter/src/lib.rs:337. Error Code: SlippageToleranceExceeded. Error Number: 6001. Error Message: Slippage tolerance exceeded.',
+    ],
+  })
+  const caseTwo = receiptTransaction([], {
+    err: { InstructionError: [1, { Custom: 1 }] },
+    logMessages: [
+      `Program ${systemProgramId} invoke [2]`,
+      'Program log: Transfer: insufficient lamports 895600, need 2039280',
+      `Program ${systemProgramId} failed: custom program error: 0x1`,
+    ],
+  })
+  const caseOneError = findExplicitProgramError(caseOne, (programId) => programId)
+  const caseTwoError = findExplicitProgramError(caseTwo, (programId) =>
+    programId === systemProgramId ? 'System Program' : programId,
+  )
+  const context = {
+    label: 'moderate',
+    confidence: 'inferred' as const,
+    basis: ['landed slot carried 1415 signatures'],
+  }
+
+  assert.ok(caseOneError)
+  assert.ok(caseTwoError)
+
+  const caseOneShare = buildFailedReceiptShareText({
+    shortSignature: 'case001',
+    slot: caseOne.slot,
+    executionError: caseOneError,
+    feePaidLamports: 15_082,
+    priorityFeeDerivation: null,
+    slotPressure: context,
+  })
+  const caseTwoShare = buildFailedReceiptShareText({
+    shortSignature: 'case002',
+    slot: caseTwo.slot,
+    executionError: caseTwoError,
+    feePaidLamports: 5_000,
+    priorityFeeDerivation: null,
+    slotPressure: context,
+  })
+
+  assert.ok(caseOneShare.startsWith("This transaction landed but failed because Jupiter's slippage tolerance was exceeded."))
+  assert.ok(caseTwoShare.startsWith('This transaction landed but failed because a System Program transfer required 2,039,280 lamports while only 895,600 were available.'))
+
+  for (const shareText of [caseOneShare, caseTwoShare]) {
+    assert.doesNotMatch(shareText, /inclusion\/?mev|inclusion symptoms|symptom badge/i)
+    assert.match(shareText, /context only/i)
+    assert.match(shareText, /not a documented cause|not asserted as the cause/i)
+  }
 })
 
 test('slot pressure stays contextual and is never stated as the failure cause', () => {

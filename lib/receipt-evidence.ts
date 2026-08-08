@@ -391,6 +391,50 @@ export function failedReceiptFutureText(executionError: ExplicitProgramError | n
   return 'Before retrying, inspect the confirmed execution result.'
 }
 
+export function buildFailedReceiptShareText({
+  shortSignature,
+  slot,
+  executionError,
+  feePaidLamports,
+  priorityFeeDerivation,
+  slotPressure,
+}: {
+  shortSignature: string
+  slot: number
+  executionError: ExplicitProgramError
+  feePaidLamports: number | null
+  priorityFeeDerivation: PriorityFeeDerivation | null
+  slotPressure: { label: string; confidence: ReceiptEvidence; basis: string[] }
+}) {
+  const headline = documentedErrorHeadline({
+    executionState: 'landed-but-failed',
+    slot,
+    executionError,
+  })
+  const technicalEvidence = executionError.technicalError
+    ? `Technical evidence: ${executionError.technicalError.program}${executionError.technicalError.code != null ? ` error ${executionError.technicalError.code}` : ''}: ${executionError.technicalError.message}.`
+    : null
+  const priorityFee = priorityFeeDerivation
+    ? `Priority fee: ${priorityFeeDerivation.formula} (derived from observed Compute Budget instructions).`
+    : 'Priority fee: unavailable (no complete observed Compute Budget price and limit pair).'
+  const fee = feePaidLamports == null
+    ? 'Fee paid: unavailable.'
+    : `Fee paid: ${feePaidLamports.toLocaleString()} lamports.`
+
+  return [
+    headline,
+    `Breadlines receipt for ${shortSignature}`,
+    `Execution: landed but failed | Slot: ${slot.toLocaleString()}`,
+    `Observed program evidence: ${executionError.program}${executionError.name ? ` (${executionError.name})` : ''}: ${executionError.message}.`,
+    technicalEvidence,
+    fee,
+    priorityFee,
+    `Context only: ${contextualPressureSentence(slotPressure.label, slotPressure.basis)}`,
+    'Observed transaction data + derived fee + inferred pressure. Pressure is not asserted as the cause of this failure.',
+    'https://breadlinesmarkets.com',
+  ].filter((line): line is string => line !== null).join('\n')
+}
+
 export function contextualPressureSentence(label: string, basis: string[]) {
   const signalText = basis.length ? `uses ${basis.join(', ')}` : `is ${label}`
   return `Separately, the ${label} slot-pressure inference ${signalText}. It is contextual, not a documented cause of this result.`

@@ -30,6 +30,7 @@ import {
 } from 'lucide-react'
 import { simulateBlock, type SimParams as SimulationParams, type SimResult as Metrics } from '@/lib/simulateBlock'
 import {
+  buildFailedReceiptShareText,
   contextualPressureSentence,
   documentedErrorHeadline,
   failedReceiptFutureText,
@@ -559,6 +560,17 @@ function formatExecutionState(state: BreadlinesReceipt['executionState']) {
 }
 
 function buildReceiptShareText(receipt: BreadlinesReceipt) {
+  if (receipt.executionState === 'landed-but-failed' && receipt.executionError) {
+    return buildFailedReceiptShareText({
+      shortSignature: receipt.shortSignature,
+      slot: receipt.slot,
+      executionError: receipt.executionError,
+      feePaidLamports: receipt.feePaidLamports,
+      priorityFeeDerivation: receipt.priorityFeeDerivation,
+      slotPressure: receipt.slotPressure,
+    })
+  }
+
   const activePercolatorLens = receipt.executionState === 'landed-but-failed' ? null : receipt.percolatorLens
   const showPercolatorLens = activePercolatorLens != null
   const errorLine = receipt.executionError
