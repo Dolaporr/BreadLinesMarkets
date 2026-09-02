@@ -1,0 +1,432 @@
+{
+  "generated_at": "2026-08-15T15:27:17.872Z",
+  "scope": "Only the fixed 500-execution Phase 2 population. No new address-history executions were sampled.",
+  "population": {
+    "insufficient_lamports_failures": 159,
+    "all_quantified": true
+  },
+  "concentration": {
+    "parent_program": {
+      "total_observations": 159,
+      "unique": 1,
+      "top_1_share": 1,
+      "top_5_share": 1,
+      "top_10_share": 1,
+      "top": [
+        {
+          "value": "DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH",
+          "count": 159
+        }
+      ]
+    },
+    "invocation_path": {
+      "total_observations": 159,
+      "unique": 1,
+      "top_1_share": 1,
+      "top_5_share": 1,
+      "top_10_share": 1,
+      "top": [
+        {
+          "value": "[\"DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH\",\"11111111111111111111111111111111\"]",
+          "count": 159
+        }
+      ]
+    },
+    "jtx_instruction_structure": {
+      "total_observations": 159,
+      "unique": 1,
+      "top_1_share": 1,
+      "top_5_share": 1,
+      "top_10_share": 1,
+      "top": [
+        {
+          "value": "2:3,5",
+          "count": 159
+        }
+      ]
+    },
+    "fee_payer": {
+      "total_observations": 159,
+      "unique": 1,
+      "top_1_share": 1,
+      "top_5_share": 1,
+      "top_10_share": 1,
+      "top": [
+        {
+          "value": "23zyeKyn8wpF8VyWSGHTGvTVEGi5SPyziGSs9pGKr5ta",
+          "count": 159
+        }
+      ]
+    },
+    "signer": {
+      "total_observations": 159,
+      "unique": 1,
+      "top_1_share": 1,
+      "top_5_share": 1,
+      "top_10_share": 1,
+      "top": [
+        {
+          "value": "23zyeKyn8wpF8VyWSGHTGvTVEGi5SPyziGSs9pGKr5ta",
+          "count": 159
+        }
+      ]
+    },
+    "requested_lamports": {
+      "total_observations": 159,
+      "unique": 4,
+      "top_1_share": 0.27044025157232704,
+      "top_5_share": 1,
+      "top_10_share": 1,
+      "top": [
+        {
+          "value": "8527025228",
+          "count": 43
+        },
+        {
+          "value": "3915945163",
+          "count": 40
+        },
+        {
+          "value": "3130879605",
+          "count": 38
+        },
+        {
+          "value": "4207614539",
+          "count": 38
+        }
+      ]
+    },
+    "available_lamports": {
+      "total_observations": 159,
+      "unique": 159,
+      "top_1_share": 0.006289308176100629,
+      "top_5_share": 0.031446540880503145,
+      "top_10_share": 0.06289308176100629,
+      "top": [
+        {
+          "value": "1465426792",
+          "count": 1
+        },
+        {
+          "value": "1465456792",
+          "count": 1
+        },
+        {
+          "value": "1465466792",
+          "count": 1
+        },
+        {
+          "value": "1465476792",
+          "count": 1
+        },
+        {
+          "value": "1465486792",
+          "count": 1
+        },
+        {
+          "value": "1465496792",
+          "count": 1
+        },
+        {
+          "value": "1465506792",
+          "count": 1
+        },
+        {
+          "value": "1465516792",
+          "count": 1
+        },
+        {
+          "value": "1465546792",
+          "count": 1
+        },
+        {
+          "value": "1465556792",
+          "count": 1
+        }
+      ]
+    },
+    "shortfall_lamports": {
+      "total_observations": 159,
+      "unique": 159,
+      "top_1_share": 0.006289308176100629,
+      "top_5_share": 0.031446540880503145,
+      "top_10_share": 0.06289308176100629,
+      "top": [
+        {
+          "value": "1662802813",
+          "count": 1
+        },
+        {
+          "value": "1662852813",
+          "count": 1
+        },
+        {
+          "value": "1662932813",
+          "count": 1
+        },
+        {
+          "value": "1662982813",
+          "count": 1
+        },
+        {
+          "value": "1663032813",
+          "count": 1
+        },
+        {
+          "value": "1663082813",
+          "count": 1
+        },
+        {
+          "value": "1663162813",
+          "count": 1
+        },
+        {
+          "value": "1663262813",
+          "count": 1
+        },
+        {
+          "value": "1663322813",
+          "count": 1
+        },
+        {
+          "value": "1663392813",
+          "count": 1
+        }
+      ]
+    },
+    "recovered_source_account": {
+      "total_observations": 159,
+      "unique": 1,
+      "top_1_share": 1,
+      "top_5_share": 1,
+      "top_10_share": 1,
+      "top": [
+        {
+          "value": "23zyeKyn8wpF8VyWSGHTGvTVEGi5SPyziGSs9pGKr5ta",
+          "count": 159
+        }
+      ]
+    },
+    "recovered_destination_account": {
+      "total_observations": 159,
+      "unique": 1,
+      "top_1_share": 1,
+      "top_5_share": 1,
+      "top_10_share": 1,
+      "top": [
+        {
+          "value": "4cPb3ieD57pgrNvsLYPrvXGzSQzeedAR286pDbrbufJh",
+          "count": 159
+        }
+      ]
+    },
+    "temporal_spacing_seconds": [
+      0,
+      0,
+      0,
+      83,
+      0,
+      0,
+      0,
+      815,
+      0,
+      0,
+      85,
+      0,
+      0,
+      814,
+      0,
+      0,
+      0,
+      87,
+      0,
+      0,
+      0,
+      1798,
+      0,
+      0,
+      0,
+      899,
+      0,
+      0,
+      1,
+      816,
+      0,
+      0,
+      0,
+      85,
+      0,
+      0,
+      0,
+      901,
+      1802,
+      0,
+      812,
+      0,
+      0,
+      0,
+      900,
+      85,
+      814,
+      86,
+      0,
+      0,
+      0,
+      814,
+      0,
+      0,
+      0,
+      901,
+      87,
+      900,
+      0,
+      0,
+      0,
+      813,
+      0,
+      0,
+      0,
+      86,
+      0,
+      0,
+      0,
+      900,
+      0,
+      0,
+      0,
+      2700,
+      0,
+      0,
+      0,
+      814,
+      0,
+      0,
+      0,
+      901,
+      0,
+      0,
+      0,
+      86,
+      0,
+      0,
+      0,
+      812,
+      0,
+      0,
+      0,
+      89,
+      0,
+      0,
+      0,
+      812,
+      0,
+      0,
+      84,
+      0,
+      0,
+      0,
+      815,
+      86,
+      0,
+      0,
+      814,
+      0,
+      0,
+      0,
+      88,
+      0,
+      0,
+      0,
+      813,
+      0,
+      0,
+      0,
+      89,
+      0,
+      0,
+      0,
+      811,
+      86,
+      0,
+      0,
+      1800,
+      0,
+      901,
+      0,
+      0,
+      0,
+      1713,
+      0,
+      0,
+      0,
+      87,
+      0,
+      0,
+      0,
+      818,
+      0,
+      0,
+      0,
+      83,
+      0,
+      0,
+      0,
+      812,
+      0,
+      0,
+      0,
+      87,
+      0,
+      0,
+      1
+    ]
+  },
+  "source_destination_recovery": {
+    "uniquely_recovered": 159,
+    "ambiguous_or_unavailable": 0
+  },
+  "actor_concentration": {
+    "unique_fee_payers": 1,
+    "unique_signers": 1,
+    "top_fee_payer_shares": {
+      "total_observations": 159,
+      "unique": 1,
+      "top_1_share": 1,
+      "top_5_share": 1,
+      "top_10_share": 1,
+      "top": [
+        {
+          "value": "23zyeKyn8wpF8VyWSGHTGvTVEGi5SPyziGSs9pGKr5ta",
+          "count": 159
+        }
+      ]
+    },
+    "affected_fee_payers_with_successful_execution_in_same_sample": 1
+  },
+  "structural_fingerprint": {
+    "unique_fingerprints": 1,
+    "top_fingerprints": [
+      {
+        "value": "{\"parent\":\"DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH\",\"path\":[\"DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH\",\"11111111111111111111111111111111\"],\"jtx_position\":[3,5],\"jtx_count\":2,\"system_outer\":false,\"transfer_outer_index\":2}",
+        "count": 159
+      }
+    ]
+  },
+  "successful_comparison": {
+    "successful_same_fee_payer_in_fixed_population": 114,
+    "exact_outer_structure_matches_dflow_2_jtx_3_5": 7,
+    "same_source_destination_requested_amount_transfer_matches": 0,
+    "matching_transfers": [],
+    "comparison_note": "All comparison receipts are from successful transactions already in the fixed 500-execution population. Source pre/post balances are observed only for the matched parsed System Program transfers."
+  },
+  "attribution": {
+    "A_wallet_did_not_have_enough_SOL": "SUPPORTED BUT INCOMPLETE — the uniquely recovered transfer source is also the sole signer and fee payer, and its observed available lamports are below the requested transfer. The receipt does not establish a person, wallet application, or account ownership.",
+    "B_system_transfer_did_not_have_enough_lamports_available": "PROVEN — each retained record has the observed System Program log with available and required lamports.",
+    "C_JTX_controlled_account_did_not_have_enough_lamports": "NOT ESTABLISHED — account ownership/control is not established by this receipt analysis.",
+    "D_JTX_instruction_caused_a_CPI_that_ultimately_attempted_the_insufficient_transfer": "FALSE for this failure set — the observed path is DFlow → System Program and the uniquely recovered transfer belongs to outer instruction 2, before the outer JTX instructions at 3 and 5.",
+    "E_user_attempted_to_trade_more_SOL_than_available": "NOT ESTABLISHED — the receipt establishes a failed transfer amount, not user intent or trade semantics.",
+    "F_JTX_order_architecture_produced_the_condition": "NOT ESTABLISHED — the exact failing outer instruction is DFlow, not JTX."
+  },
+  "question_of_product_problem": "NO for this 159-failure cluster as a JTX-specific product claim — all failures are one address and the deterministically failing path is DFlow → System Program before JTX instructions. This does not rule out a general execution-explanation integration.",
+  "ui_incremental_information": "YES, conditionally: an evidence-backed receipt can state the observed System Program transfer shortfall, failing DFlow frame, and attribution boundary, which is materially more specific than a generic failed state. What JTX currently displays remains UNKNOWN."
+}

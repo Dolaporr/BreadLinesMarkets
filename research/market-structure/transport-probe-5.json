@@ -1,0 +1,271 @@
+{
+  "generatedAt": "2026-08-14T23:05:59.981Z",
+  "selection": "First five previously incomplete mints in frozen token-universe order. No token attributes, activity, outcomes, or Episode metrics were used.",
+  "selected": [
+    {
+      "mint": "Exwh9w2y4bhcxuvtXJtnsSGFJgJPXzQuwhkV8nwXpump",
+      "graduation_signature": "3G9xmPQKBR8Pj5uiBdeQifTxiNHu6sdvKK9AHjVAP4FeVCF2bW5KPHCYF4vnzLsfQxQ9TDkTXEuLzCeQCgMqMC85",
+      "graduation_slot": 363842306,
+      "graduation_timestamp_utc": "2025-09-01T00:58:34.000Z",
+      "observation_end_utc": "2025-09-01T02:58:34.000Z",
+      "bonding_curve": "67ZpbJAKaehbScFY8VdWoSBi95ZEtEtnqCgg4Z2QkdTn",
+      "pumpswap_pool": "3434P2ihaW9mJcBGCkjU9h2FnZKdTMKxzHq3CrysN7Mn",
+      "migration_authority": "39azUYFWPz3VHgKCf3VChUwbpURdCHRxjWVowf5jUJjg",
+      "inclusion_evidence": {
+        "transaction_inside_locked_window": true,
+        "transaction_succeeded": true,
+        "outer_pump_migrate_discriminator": [
+          155,
+          234,
+          231,
+          146,
+          236,
+          158,
+          162,
+          30
+        ],
+        "inner_pumpswap_create_pool_discriminator": [
+          233,
+          146,
+          209,
+          142,
+          207,
+          104,
+          64,
+          188
+        ],
+        "pump_migrate_idl_accounts": {
+          "mint": 2,
+          "bonding_curve": 3,
+          "pump_amm": 8,
+          "pool": 9,
+          "migration_authority": 1
+        },
+        "pump_amm": "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA",
+        "create_pool_log_observed": true
+      },
+      "source_provenance": {
+        "source": "Helius archival RPC getTransactionsForAddress",
+        "queried_address": "39azUYFWPz3VHgKCf3VChUwbpURdCHRxjWVowf5jUJjg",
+        "methodology": "pump-migration-authority-universe-v1",
+        "commitment": "finalized",
+        "transaction_details": "full",
+        "encoding": "jsonParsed",
+        "window_start_utc": "2025-09-01T00:00:00.000Z",
+        "window_end_utc_inclusive": "2025-09-15T23:59:59.000Z"
+      }
+    },
+    {
+      "mint": "2hv1jd7SGCtWCd4UbeDL6VznwpNmu47o8oC1XB6bpump",
+      "graduation_signature": "5Mxm1vFq38FBcTYjhsF4LrB9gLvvnnPKi1bBcnPiKA1K9qJ8tUuUCNYZXRQqdQquva76Y8PhjdSvyLjp8vjwN3zn",
+      "graduation_slot": 363842919,
+      "graduation_timestamp_utc": "2025-09-01T01:02:38.000Z",
+      "observation_end_utc": "2025-09-01T03:02:38.000Z",
+      "bonding_curve": "BEyMevmfpqvXp3UtEZeAXsb3BZofWUutrZkvXJUQK24u",
+      "pumpswap_pool": "ETyhM2jegEaYaDrLVmGgkD9ja2XQz9v5DL9iTmAWJRkb",
+      "migration_authority": "39azUYFWPz3VHgKCf3VChUwbpURdCHRxjWVowf5jUJjg",
+      "inclusion_evidence": {
+        "transaction_inside_locked_window": true,
+        "transaction_succeeded": true,
+        "outer_pump_migrate_discriminator": [
+          155,
+          234,
+          231,
+          146,
+          236,
+          158,
+          162,
+          30
+        ],
+        "inner_pumpswap_create_pool_discriminator": [
+          233,
+          146,
+          209,
+          142,
+          207,
+          104,
+          64,
+          188
+        ],
+        "pump_migrate_idl_accounts": {
+          "mint": 2,
+          "bonding_curve": 3,
+          "pump_amm": 8,
+          "pool": 9,
+          "migration_authority": 1
+        },
+        "pump_amm": "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA",
+        "create_pool_log_observed": true
+      },
+      "source_provenance": {
+        "source": "Helius archival RPC getTransactionsForAddress",
+        "queried_address": "39azUYFWPz3VHgKCf3VChUwbpURdCHRxjWVowf5jUJjg",
+        "methodology": "pump-migration-authority-universe-v1",
+        "commitment": "finalized",
+        "transaction_details": "full",
+        "encoding": "jsonParsed",
+        "window_start_utc": "2025-09-01T00:00:00.000Z",
+        "window_end_utc_inclusive": "2025-09-15T23:59:59.000Z"
+      }
+    },
+    {
+      "mint": "23muG5sEKAwSg1a7CB5v89CAN7HyMxBF9JLBf4N2pump",
+      "graduation_signature": "5HBnVaV2mdqGDMRYgDY94QSgte9Qk93fuR69yEXpESqgPc623H2yu6tGTpVaALmL3LWR1vwMpBvmYJj6D8Vnsq2k",
+      "graduation_slot": 363846141,
+      "graduation_timestamp_utc": "2025-09-01T01:23:55.000Z",
+      "observation_end_utc": "2025-09-01T03:23:55.000Z",
+      "bonding_curve": "iwxyJEf8hemxWGLFmnCsDyMMuTH3MeN3Fm7GiAruBQn",
+      "pumpswap_pool": "NjQHpzpQnEUnWdKH2L3GJr8gbpFV3P7fweVjjJGbqzV",
+      "migration_authority": "39azUYFWPz3VHgKCf3VChUwbpURdCHRxjWVowf5jUJjg",
+      "inclusion_evidence": {
+        "transaction_inside_locked_window": true,
+        "transaction_succeeded": true,
+        "outer_pump_migrate_discriminator": [
+          155,
+          234,
+          231,
+          146,
+          236,
+          158,
+          162,
+          30
+        ],
+        "inner_pumpswap_create_pool_discriminator": [
+          233,
+          146,
+          209,
+          142,
+          207,
+          104,
+          64,
+          188
+        ],
+        "pump_migrate_idl_accounts": {
+          "mint": 2,
+          "bonding_curve": 3,
+          "pump_amm": 8,
+          "pool": 9,
+          "migration_authority": 1
+        },
+        "pump_amm": "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA",
+        "create_pool_log_observed": true
+      },
+      "source_provenance": {
+        "source": "Helius archival RPC getTransactionsForAddress",
+        "queried_address": "39azUYFWPz3VHgKCf3VChUwbpURdCHRxjWVowf5jUJjg",
+        "methodology": "pump-migration-authority-universe-v1",
+        "commitment": "finalized",
+        "transaction_details": "full",
+        "encoding": "jsonParsed",
+        "window_start_utc": "2025-09-01T00:00:00.000Z",
+        "window_end_utc_inclusive": "2025-09-15T23:59:59.000Z"
+      }
+    },
+    {
+      "mint": "E6UMS8uNnMbppFVhnoWs7CZHrxXJrYuXJMrgWKyfpump",
+      "graduation_signature": "4su9sbcLMWLsNXK8Vxps7BLyg9C73nhiUjf7e46tGAemNe21gib2jzkJjcVbkcvTWf5m8FHG2S4AzQjkcNkibsLn",
+      "graduation_slot": 363852177,
+      "graduation_timestamp_utc": "2025-09-01T02:03:39.000Z",
+      "observation_end_utc": "2025-09-01T04:03:39.000Z",
+      "bonding_curve": "9PgNdUY6K7kUMwVcjJjXygMRWus8enxRfGhMMzyuLDk7",
+      "pumpswap_pool": "DiU7njqxnjDYVVp78ysh5Vp5FsY7VdTvAmNfLi2qa7c",
+      "migration_authority": "39azUYFWPz3VHgKCf3VChUwbpURdCHRxjWVowf5jUJjg",
+      "inclusion_evidence": {
+        "transaction_inside_locked_window": true,
+        "transaction_succeeded": true,
+        "outer_pump_migrate_discriminator": [
+          155,
+          234,
+          231,
+          146,
+          236,
+          158,
+          162,
+          30
+        ],
+        "inner_pumpswap_create_pool_discriminator": [
+          233,
+          146,
+          209,
+          142,
+          207,
+          104,
+          64,
+          188
+        ],
+        "pump_migrate_idl_accounts": {
+          "mint": 2,
+          "bonding_curve": 3,
+          "pump_amm": 8,
+          "pool": 9,
+          "migration_authority": 1
+        },
+        "pump_amm": "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA",
+        "create_pool_log_observed": true
+      },
+      "source_provenance": {
+        "source": "Helius archival RPC getTransactionsForAddress",
+        "queried_address": "39azUYFWPz3VHgKCf3VChUwbpURdCHRxjWVowf5jUJjg",
+        "methodology": "pump-migration-authority-universe-v1",
+        "commitment": "finalized",
+        "transaction_details": "full",
+        "encoding": "jsonParsed",
+        "window_start_utc": "2025-09-01T00:00:00.000Z",
+        "window_end_utc_inclusive": "2025-09-15T23:59:59.000Z"
+      }
+    },
+    {
+      "mint": "JEDPqSwGJYW3rCrW4WEwwWBWj6HUHi4ZkjPrEENDpump",
+      "graduation_signature": "2yHSzYUSS6sVdiU1PYvoazHmoKWmBrQWYWP9HVgopxXFwdEH9jTrx1egACsVBXvdgCMyFui58xE5dP6bWAJiMAfM",
+      "graduation_slot": 363852763,
+      "graduation_timestamp_utc": "2025-09-01T02:07:33.000Z",
+      "observation_end_utc": "2025-09-01T04:07:33.000Z",
+      "bonding_curve": "BPHqR2dUEfjRA4MViGSxooTaMD7oibkJ5psWfRZxdfHL",
+      "pumpswap_pool": "8AKcuUA46onLXUJEHTPsomQewMbEoQgCfJsZKstS9Ghg",
+      "migration_authority": "39azUYFWPz3VHgKCf3VChUwbpURdCHRxjWVowf5jUJjg",
+      "inclusion_evidence": {
+        "transaction_inside_locked_window": true,
+        "transaction_succeeded": true,
+        "outer_pump_migrate_discriminator": [
+          155,
+          234,
+          231,
+          146,
+          236,
+          158,
+          162,
+          30
+        ],
+        "inner_pumpswap_create_pool_discriminator": [
+          233,
+          146,
+          209,
+          142,
+          207,
+          104,
+          64,
+          188
+        ],
+        "pump_migrate_idl_accounts": {
+          "mint": 2,
+          "bonding_curve": 3,
+          "pump_amm": 8,
+          "pool": 9,
+          "migration_authority": 1
+        },
+        "pump_amm": "pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA",
+        "create_pool_log_observed": true
+      },
+      "source_provenance": {
+        "source": "Helius archival RPC getTransactionsForAddress",
+        "queried_address": "39azUYFWPz3VHgKCf3VChUwbpURdCHRxjWVowf5jUJjg",
+        "methodology": "pump-migration-authority-universe-v1",
+        "commitment": "finalized",
+        "transaction_details": "full",
+        "encoding": "jsonParsed",
+        "window_start_utc": "2025-09-01T00:00:00.000Z",
+        "window_end_utc_inclusive": "2025-09-15T23:59:59.000Z"
+      }
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "selection": "One lexicographically earliest signature per deterministic failure-category/class/failing-program group; first ten groups.",
+  "examples": [
+    {
+      "signature": "YH8Dmrj7nZsGfzNJubrycfq2vvwSuZuK37MLJh13Utf3LqUeSqT58knrb8qM9tQWCVgwVKR7ZRTyoF4aKPJq7uH",
+      "raw_chain_evidence": {
+        "failing_frame": {
+          "programId": "DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH",
+          "log": "Program DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH failed: custom program error: 0x1"
+        },
+        "failure_logs_exact": [
+          "Transfer: insufficient lamports 1465456792, need 3915945163",
+          "Program 11111111111111111111111111111111 failed: custom program error: 0x1",
+          "Program DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH failed: custom program error: 0x1"
+        ],
+        "total_fee_lamports": 10000,
+        "compute_units_consumed": 22079
+      },
+      "breadlines_interpretation": "This transaction landed but failed because a Program 1111...1111 transfer required 3,915,945,163 lamports while only 1,465,456,792 were available.",
+      "classification": "DOCUMENTED_ACTIONABLE"
+    },
+    {
+      "signature": "4igQ6KHvHPjxk6BNzGkH3CjyNiFkyZ8PuFqVYVKQYDUuMprWDcW9HC9wqmVXTeeav1yGbgo6aDrXg2wVfc5ubezL",
+      "raw_chain_evidence": {
+        "failing_frame": {
+          "programId": "DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH",
+          "log": "Program DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH failed: custom program error: 0x3a99"
+        },
+        "failure_logs_exact": [
+          "Program DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH failed: custom program error: 0x3a99"
+        ],
+        "total_fee_lamports": 10000,
+        "compute_units_consumed": 200901
+      },
+      "breadlines_interpretation": "This transaction landed but failed because program DF1o...7QBH returned custom error 15001 (0x3a99). The available logs do not expose what that error means.",
+      "classification": "DOCUMENTED_TECHNICAL"
+    },
+    {
+      "signature": "Af74FYwsGThFQHM9dX4qmJsoyZvT2rfujf6j1DEmdHPJEwDrNmuKcwCwkyrswm6fLpw44vHtCAYXvmXNhwx1oNZ",
+      "raw_chain_evidence": {
+        "failing_frame": {
+          "programId": "JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj",
+          "log": "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner"
+        },
+        "failure_logs_exact": [
+          "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner"
+        ],
+        "total_fee_lamports": 23327,
+        "compute_units_consumed": 679
+      },
+      "breadlines_interpretation": "This transaction landed but failed during execution. RPC did not include a human-readable program error.",
+      "classification": "INSUFFICIENT_EVIDENCE"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "generated_at": "2026-08-15T18:15:31.424Z",
+  "population_label": "0x Settler executions (not necessarily 0x Swap API executions)",
+  "settler_program": "Sett1erwx2eqT5A8uvu8GBxDFT2W5TNnhirL7hLmb8m",
+  "observation_end_utc": "2026-08-15T18:15:31.424Z",
+  "observation_start_utc": null,
+  "ordering": "Most-recent first via descending deterministic pagination; output ascending chronological.",
+  "stopping_rule": "Retain the first 500 locally verified outer-Settler transactions.",
+  "exclusions": "No status, signer, error, route, program, fee, token, or behavioural selection."
+}

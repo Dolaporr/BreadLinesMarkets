@@ -1,0 +1,839 @@
+{
+  "schemaVersion": "breadlines-execution-pulse-v0",
+  "generatedAt": "2026-08-15T19:50:14.877Z",
+  "token": {
+    "mint": "A13oRB9FFaiUjfi6LdCg6p9ka1u8SfGkUFs4SKvPpump",
+    "label": "TOAD"
+  },
+  "observationWindow": {
+    "startSlot": 438061664,
+    "endSlot": 438429195,
+    "startUtc": null,
+    "endUtc": null
+  },
+  "methodology": {
+    "samplingSummary": "Two interleaved sets of 250 evenly spaced full-block slices; TOAD-mint account-key filter; stable signature-hash quota per slice; signature deduplication across phases",
+    "selectionSummary": "Each phase is selected solely by slot position. Within each sampled block, all transactions whose account keys contain the TOAD mint are eligible and the first 32 after stable FNV-1a signature-hash ordering are retained. Receipt facts are not used for selection.",
+    "coverage": "SAMPLED",
+    "transactionCount": 8770,
+    "fetchFailures": 0,
+    "evidenceBoundary": "Observed transaction data, deterministic derived aggregates, and non-causal patterns."
+  },
+  "coreMetrics": [
+    {
+      "id": "observed_executions",
+      "value": 8770,
+      "unit": "sampled transactions",
+      "evidenceBasis": "Token-touching transactions retained under the source sampling contract.",
+      "evidenceStatus": "DERIVED",
+      "confidence": "HIGH",
+      "safeInterpretation": "8,770 sampled token-touching transactions are represented.",
+      "prohibitedInterpretations": [
+        "This covers every transaction in the market.",
+        "This measures token demand."
+      ]
+    },
+    {
+      "id": "observed_primary_signers",
+      "value": 333,
+      "unit": "unique primary signer addresses",
+      "evidenceBasis": "Deterministic primary-signer field in the source Episode.",
+      "evidenceStatus": "DERIVED",
+      "confidence": "HIGH",
+      "safeInterpretation": "333 observed primary signer addresses appeared in the sample; successful-address-only coverage is unavailable in this source projection.",
+      "prohibitedInterpretations": [
+        "These are unique people, users, buyers, or traders."
+      ]
+    },
+    {
+      "id": "successful_execution_concentration",
+      "value": {
+        "top1SharePercent": 23.8,
+        "top5SharePercent": 49.2,
+        "top10SharePercent": null,
+        "hhi": null
+      },
+      "unit": "share of sampled successful executions",
+      "evidenceBasis": "Successful-execution concentration calculated by the source Episode.",
+      "evidenceStatus": "DERIVED",
+      "confidence": "HIGH",
+      "safeInterpretation": "The five most active observed signer addresses accounted for 49.2% of sampled successful executions.",
+      "prohibitedInterpretations": [
+        "Whales controlled the market.",
+        "Bots generated the activity.",
+        "These addresses controlled the token."
+      ]
+    },
+    {
+      "id": "participation_through_time",
+      "value": [
+        {
+          "slice": 1,
+          "newSuccessfulParticipants": 61,
+          "returningSuccessfulParticipants": 0
+        },
+        {
+          "slice": 2,
+          "newSuccessfulParticipants": 19,
+          "returningSuccessfulParticipants": 26
+        },
+        {
+          "slice": 3,
+          "newSuccessfulParticipants": 9,
+          "returningSuccessfulParticipants": 33
+        },
+        {
+          "slice": 4,
+          "newSuccessfulParticipants": 8,
+          "returningSuccessfulParticipants": 29
+        },
+        {
+          "slice": 5,
+          "newSuccessfulParticipants": 14,
+          "returningSuccessfulParticipants": 20
+        },
+        {
+          "slice": 6,
+          "newSuccessfulParticipants": 10,
+          "returningSuccessfulParticipants": 22
+        },
+        {
+          "slice": 7,
+          "newSuccessfulParticipants": 8,
+          "returningSuccessfulParticipants": 19
+        },
+        {
+          "slice": 8,
+          "newSuccessfulParticipants": 14,
+          "returningSuccessfulParticipants": 29
+        },
+        {
+          "slice": 9,
+          "newSuccessfulParticipants": 15,
+          "returningSuccessfulParticipants": 31
+        },
+        {
+          "slice": 10,
+          "newSuccessfulParticipants": 10,
+          "returningSuccessfulParticipants": 20
+        },
+        {
+          "slice": 11,
+          "newSuccessfulParticipants": 5,
+          "returningSuccessfulParticipants": 21
+        },
+        {
+          "slice": 12,
+          "newSuccessfulParticipants": 7,
+          "returningSuccessfulParticipants": 29
+        },
+        {
+          "slice": 13,
+          "newSuccessfulParticipants": 12,
+          "returningSuccessfulParticipants": 41
+        },
+        {
+          "slice": 14,
+          "newSuccessfulParticipants": 3,
+          "returningSuccessfulParticipants": 30
+        },
+        {
+          "slice": 15,
+          "newSuccessfulParticipants": 5,
+          "returningSuccessfulParticipants": 27
+        },
+        {
+          "slice": 16,
+          "newSuccessfulParticipants": 12,
+          "returningSuccessfulParticipants": 25
+        },
+        {
+          "slice": 17,
+          "newSuccessfulParticipants": 14,
+          "returningSuccessfulParticipants": 31
+        },
+        {
+          "slice": 18,
+          "newSuccessfulParticipants": 5,
+          "returningSuccessfulParticipants": 23
+        },
+        {
+          "slice": 19,
+          "newSuccessfulParticipants": 12,
+          "returningSuccessfulParticipants": 28
+        },
+        {
+          "slice": 20,
+          "newSuccessfulParticipants": 6,
+          "returningSuccessfulParticipants": 23
+        }
+      ],
+      "unit": "normalized chronological slices",
+      "evidenceBasis": "First-observed and returning signer participation is calculated within the predetermined observation window.",
+      "evidenceStatus": "DERIVED",
+      "confidence": "HIGH",
+      "safeInterpretation": "Counts of new-to-sample and returning successful signer addresses are shown by chronological slice.",
+      "prohibitedInterpretations": [
+        "New buyers kept arriving.",
+        "Adoption increased.",
+        "Participation broadened or narrowed."
+      ]
+    },
+    {
+      "id": "failure_ecology",
+      "value": {
+        "failedExecutions": 2711,
+        "classifiedFailureClasses": [
+          {
+            "value": "opaque-custom-error",
+            "count": 1863
+          },
+          {
+            "value": "explicit-no-profit-or-route",
+            "count": 728
+          },
+          {
+            "value": "NoProfit",
+            "count": 79
+          },
+          {
+            "value": "BuySlippageBelowMinBaseAmountOut",
+            "count": 10
+          },
+          {
+            "value": "undocumented",
+            "count": 9
+          },
+          {
+            "value": "ExceededSlippage",
+            "count": 6
+          },
+          {
+            "value": "Overflow",
+            "count": 5
+          },
+          {
+            "value": "NotProfitable",
+            "count": 4
+          },
+          {
+            "value": "NonceAlreadyExists",
+            "count": 2
+          },
+          {
+            "value": "Unknown",
+            "count": 2
+          },
+          {
+            "value": "InsufficientLamports",
+            "count": 1
+          },
+          {
+            "value": "LessThanMinimumAmountOut",
+            "count": 1
+          },
+          {
+            "value": "BuyNotEnoughQuoteTokensToCoverFees",
+            "count": 1
+          }
+        ],
+        "explicitNoProfitOrRoute": {
+          "observedCount": 728,
+          "observedPrimarySignerAddresses": 27,
+          "observedProgramIds": 3,
+          "top1PrimarySignerSharePercent": 22.4,
+          "top3PrimarySignerSharePercent": 41.1,
+          "top5PrimarySignerSharePercent": 54.7,
+          "programs": [
+            {
+              "value": "4Qv3mbzcq1bKmrhGG4voS3EemfPd7f838FLUU7wBHSyi",
+              "total": 472
+            },
+            {
+              "value": "Prism8hsRo6Ww5jiN5Zeh3YDPLZHqHduCPSAV7JF7qv",
+              "total": 230
+            },
+            {
+              "value": "HiPMPcYjLNPgjvdzBoavzMbCeHaXWkAuDxyuE9VoPrkf",
+              "total": 26
+            }
+          ]
+        }
+      },
+      "unit": "observed failed executions",
+      "evidenceBasis": "Failure classes and no-profit/no-route evidence from the source Episode.",
+      "evidenceStatus": "DERIVED",
+      "confidence": "HIGH",
+      "safeInterpretation": "2,711 observed executions failed; the leading recorded failure class is opaque-custom-error (1,863).",
+      "prohibitedInterpretations": [
+        "Failures were caused by the token team.",
+        "Every failure had the same cause.",
+        "Affected signer addresses are users."
+      ]
+    },
+    {
+      "id": "execution_success_rate_through_time",
+      "value": {
+        "overallPercent": 69.1,
+        "slices": [
+          {
+            "slice": 1,
+            "successRatePercent": 60.8
+          },
+          {
+            "slice": 2,
+            "successRatePercent": 71.6
+          },
+          {
+            "slice": 3,
+            "successRatePercent": 62.5
+          },
+          {
+            "slice": 4,
+            "successRatePercent": 67.2
+          },
+          {
+            "slice": 5,
+            "successRatePercent": 70.7
+          },
+          {
+            "slice": 6,
+            "successRatePercent": 69.2
+          },
+          {
+            "slice": 7,
+            "successRatePercent": 75.4
+          },
+          {
+            "slice": 8,
+            "successRatePercent": 66.9
+          },
+          {
+            "slice": 9,
+            "successRatePercent": 67.2
+          },
+          {
+            "slice": 10,
+            "successRatePercent": 69.4
+          },
+          {
+            "slice": 11,
+            "successRatePercent": 75.1
+          },
+          {
+            "slice": 12,
+            "successRatePercent": 70.7
+          },
+          {
+            "slice": 13,
+            "successRatePercent": 67.4
+          },
+          {
+            "slice": 14,
+            "successRatePercent": 75
+          },
+          {
+            "slice": 15,
+            "successRatePercent": 72.2
+          },
+          {
+            "slice": 16,
+            "successRatePercent": 68.6
+          },
+          {
+            "slice": 17,
+            "successRatePercent": 64.4
+          },
+          {
+            "slice": 18,
+            "successRatePercent": 60.9
+          },
+          {
+            "slice": 19,
+            "successRatePercent": 78.4
+          },
+          {
+            "slice": 20,
+            "successRatePercent": 79.6
+          }
+        ]
+      },
+      "unit": "success rate",
+      "evidenceBasis": "Successes divided by observed transactions in each normalized chronological slice.",
+      "evidenceStatus": "DERIVED",
+      "confidence": "HIGH",
+      "safeInterpretation": "69.1% of sampled executions succeeded; slice-level rates are shown without causal explanation.",
+      "prohibitedInterpretations": [
+        "The token became more reliable because of a particular change.",
+        "Execution success predicts market performance."
+      ]
+    }
+  ],
+  "chronologicalSlices": [
+    {
+      "index": 1,
+      "relativeStart": null,
+      "relativeEnd": null,
+      "slotStart": 438061664,
+      "slotEnd": 438080040,
+      "transactions": 735,
+      "successes": 447,
+      "failures": 288,
+      "successRate": 0.6081632653061224,
+      "uniquePrimarySigners": 85,
+      "newSuccessfulParticipants": 61,
+      "returningSuccessfulParticipants": 0,
+      "newParticipants": 85,
+      "returningParticipants": 0
+    },
+    {
+      "index": 2,
+      "relativeStart": null,
+      "relativeEnd": null,
+      "slotStart": 438080041,
+      "slotEnd": 438098417,
+      "transactions": 582,
+      "successes": 417,
+      "failures": 165,
+      "successRate": 0.7164948453608248,
+      "uniquePrimarySigners": 63,
+      "newSuccessfulParticipants": 19,
+      "returningSuccessfulParticipants": 26,
+      "newParticipants": 27,
+      "returningParticipants": 36
+    },
+    {
+      "index": 3,
+      "relativeStart": null,
+      "relativeEnd": null,
+      "slotStart": 438098418,
+      "slotEnd": 438116794,
+      "transactions": 614,
+      "successes": 384,
+      "failures": 230,
+      "successRate": 0.6254071661237784,
+      "uniquePrimarySigners": 68,
+      "newSuccessfulParticipants": 9,
+      "returningSuccessfulParticipants": 33,
+      "newParticipants": 18,
+      "returningParticipants": 50
+    },
+    {
+      "index": 4,
+      "relativeStart": null,
+      "relativeEnd": null,
+      "slotStart": 438116795,
+      "slotEnd": 438135171,
+      "transactions": 574,
+      "successes": 386,
+      "failures": 188,
+      "successRate": 0.6724738675958188,
+      "uniquePrimarySigners": 59,
+      "newSuccessfulParticipants": 8,
+      "returningSuccessfulParticipants": 29,
+      "newParticipants": 15,
+      "returningParticipants": 44
+    },
+    {
+      "index": 5,
+      "relativeStart": null,
+      "relativeEnd": null,
+      "slotStart": 438135172,
+      "slotEnd": 438153548,
+      "transactions": 440,
+      "successes": 311,
+      "failures": 129,
+      "successRate": 0.7068181818181818,
+      "uniquePrimarySigners": 47,
+      "newSuccessfulParticipants": 14,
+      "returningSuccessfulParticipants": 20,
+      "newParticipants": 18,
+      "returningParticipants": 29
+    },
+    {
+      "index": 6,
+      "relativeStart": null,
+      "relativeEnd": null,
+      "slotStart": 438153549,
+      "slotEnd": 438171925,
+      "transactions": 383,
+      "successes": 265,
+      "failures": 118,
+      "successRate": 0.6919060052219321,
+      "uniquePrimarySigners": 53,
+      "newSuccessfulParticipants": 10,
+      "returningSuccessfulParticipants": 22,
+      "newParticipants": 13,
+      "returningParticipants": 40
+    },
+    {
+      "index": 7,
+      "relativeStart": null,
+      "relativeEnd": null,
+      "slotStart": 438171926,
+      "slotEnd": 438190302,
+      "transactions": 378,
+      "successes": 285,
+      "failures": 93,
+      "successRate": 0.753968253968254,
+      "uniquePrimarySigners": 39,
+      "newSuccessfulParticipants": 8,
+      "returningSuccessfulParticipants": 19,
+      "newParticipants": 9,
+      "returningParticipants": 30
+    },
+    {
+      "index": 8,
+      "relativeStart": null,
+      "relativeEnd": null,
+      "slotStart": 438190303,
+      "slotEnd": 438208679,
+      "transactions": 426,
+      "successes": 285,
+      "failures": 141,
+      "successRate": 0.6690140845070423,
+      "uniquePrimarySigners": 64,
+      "newSuccessfulParticipants": 14,
+      "returningSuccessfulParticipants": 29,
+      "newParticipants": 17,
+      "returningParticipants": 47
+    },
+    {
+      "index": 9,
+      "relativeStart": null,
+      "relativeEnd": null,
+      "slotStart": 438208680,
+      "slotEnd": 438227056,
+      "transactions": 500,
+      "successes": 336,
+      "failures": 164,
+      "successRate": 0.672,
+      "uniquePrimarySigners": 74,
+      "newSuccessfulParticipants": 15,
+      "returningSuccessfulParticipants": 31,
+      "newParticipants": 21,
+      "returningParticipants": 53
+    },
+    {
+      "index": 10,
+      "relativeStart": null,
+      "relativeEnd": null,
+      "slotStart": 438227057,
+      "slotEnd": 438245433,
+      "transactions": 395,
+      "successes": 274,
+      "failures": 121,
+      "successRate": 0.6936708860759494,
+      "uniquePrimarySigners": 46,
+      "newSuccessfulParticipants": 10,
+      "returningSuccessfulParticipants": 20,
+      "newParticipants": 12,
+      "returningParticipants": 34
+    },
+    {
+      "index": 11,
+      "relativeStart": null,
+      "relativeEnd": null,
+      "slotStart": 438245434,
+      "slotEnd": 438263810,
+      "transactions": 313,
+      "successes": 235,
+      "failures": 78,
+      "successRate": 0.7507987220447284,
+      "uniquePrimarySigners": 41,
+      "newSuccessfulParticipants": 5,
+      "returningSuccessfulParticipants": 21,
+      "newParticipants": 8,
+      "returningParticipants": 33
+    },
+    {
+      "index": 12,
+      "relativeStart": null,
+      "relativeEnd": null,
+      "slotStart": 438263811,
+      "slotEnd": 438282187,
+      "transactions": 471,
+      "successes": 333,
+      "failures": 138,
+      "successRate": 0.7070063694267515,
+      "uniquePrimarySigners": 57,
+      "newSuccessfulParticipants": 7,
+      "returningSuccessfulParticipants": 29,
+      "newParticipants": 10,
+      "returningParticipants": 47
+    },
+    {
+      "index": 13,
+      "relativeStart": null,
+      "relativeEnd": null,
+      "slotStart": 438282188,
+      "slotEnd": 438300564,
+      "transactions": 570,
+      "successes": 384,
+      "failures": 186,
+      "successRate": 0.6736842105263158,
+      "uniquePrimarySigners": 81,
+      "newSuccessfulParticipants": 12,
+      "returningSuccessfulParticipants": 41,
+      "newParticipants": 18,
+      "returningParticipants": 63
+    },
+    {
+      "index": 14,
+      "relativeStart": null,
+      "relativeEnd": null,
+      "slotStart": 438300565,
+      "slotEnd": 438318941,
+      "transactions": 444,
+      "successes": 333,
+      "failures": 111,
+      "successRate": 0.75,
+      "uniquePrimarySigners": 46,
+      "newSuccessfulParticipants": 3,
+      "returningSuccessfulParticipants": 30,
+      "newParticipants": 3,
+      "returningParticipants": 43
+    },
+    {
+      "index": 15,
+      "relativeStart": null,
+      "relativeEnd": null,
+      "slotStart": 438318942,
+      "slotEnd": 438337318,
+      "transactions": 482,
+      "successes": 348,
+      "failures": 134,
+      "successRate": 0.7219917012448133,
+      "uniquePrimarySigners": 46,
+      "newSuccessfulParticipants": 5,
+      "returningSuccessfulParticipants": 27,
+      "newParticipants": 5,
+      "returningParticipants": 41
+    },
+    {
+      "index": 16,
+      "relativeStart": null,
+      "relativeEnd": null,
+      "slotStart": 438337319,
+      "slotEnd": 438355695,
+      "transactions": 309,
+      "successes": 212,
+      "failures": 97,
+      "successRate": 0.686084142394822,
+      "uniquePrimarySigners": 52,
+      "newSuccessfulParticipants": 12,
+      "returningSuccessfulParticipants": 25,
+      "newParticipants": 13,
+      "returningParticipants": 39
+    },
+    {
+      "index": 17,
+      "relativeStart": null,
+      "relativeEnd": null,
+      "slotStart": 438355696,
+      "slotEnd": 438374072,
+      "transactions": 368,
+      "successes": 237,
+      "failures": 131,
+      "successRate": 0.6440217391304348,
+      "uniquePrimarySigners": 64,
+      "newSuccessfulParticipants": 14,
+      "returningSuccessfulParticipants": 31,
+      "newParticipants": 16,
+      "returningParticipants": 48
+    },
+    {
+      "index": 18,
+      "relativeStart": null,
+      "relativeEnd": null,
+      "slotStart": 438374073,
+      "slotEnd": 438392449,
+      "transactions": 184,
+      "successes": 112,
+      "failures": 72,
+      "successRate": 0.6086956521739131,
+      "uniquePrimarySigners": 37,
+      "newSuccessfulParticipants": 5,
+      "returningSuccessfulParticipants": 23,
+      "newParticipants": 6,
+      "returningParticipants": 31
+    },
+    {
+      "index": 19,
+      "relativeStart": null,
+      "relativeEnd": null,
+      "slotStart": 438392450,
+      "slotEnd": 438410826,
+      "transactions": 357,
+      "successes": 280,
+      "failures": 77,
+      "successRate": 0.7843137254901961,
+      "uniquePrimarySigners": 49,
+      "newSuccessfulParticipants": 12,
+      "returningSuccessfulParticipants": 28,
+      "newParticipants": 13,
+      "returningParticipants": 36
+    },
+    {
+      "index": 20,
+      "relativeStart": null,
+      "relativeEnd": null,
+      "slotStart": 438410827,
+      "slotEnd": 438429195,
+      "transactions": 245,
+      "successes": 195,
+      "failures": 50,
+      "successRate": 0.7959183673469388,
+      "uniquePrimarySigners": 42,
+      "newSuccessfulParticipants": 6,
+      "returningSuccessfulParticipants": 23,
+      "newParticipants": 6,
+      "returningParticipants": 36
+    }
+  ],
+  "failureEcology": {
+    "totalFailedExecutions": 2711,
+    "classes": [
+      {
+        "value": "opaque-custom-error",
+        "count": 1863
+      },
+      {
+        "value": "explicit-no-profit-or-route",
+        "count": 728
+      },
+      {
+        "value": "NoProfit",
+        "count": 79
+      },
+      {
+        "value": "BuySlippageBelowMinBaseAmountOut",
+        "count": 10
+      },
+      {
+        "value": "undocumented",
+        "count": 9
+      },
+      {
+        "value": "ExceededSlippage",
+        "count": 6
+      },
+      {
+        "value": "Overflow",
+        "count": 5
+      },
+      {
+        "value": "NotProfitable",
+        "count": 4
+      },
+      {
+        "value": "NonceAlreadyExists",
+        "count": 2
+      },
+      {
+        "value": "Unknown",
+        "count": 2
+      },
+      {
+        "value": "InsufficientLamports",
+        "count": 1
+      },
+      {
+        "value": "LessThanMinimumAmountOut",
+        "count": 1
+      },
+      {
+        "value": "BuyNotEnoughQuoteTokensToCoverFees",
+        "count": 1
+      }
+    ],
+    "explicitNoProfitOrRoute": {
+      "observedCount": 728,
+      "observedPrimarySignerAddresses": 27,
+      "observedProgramIds": 3,
+      "top1PrimarySignerSharePercent": 22.4,
+      "top3PrimarySignerSharePercent": 41.1,
+      "top5PrimarySignerSharePercent": 54.7,
+      "programs": [
+        {
+          "value": "4Qv3mbzcq1bKmrhGG4voS3EemfPd7f838FLUU7wBHSyi",
+          "total": 472
+        },
+        {
+          "value": "Prism8hsRo6Ww5jiN5Zeh3YDPLZHqHduCPSAV7JF7qv",
+          "total": 230
+        },
+        {
+          "value": "HiPMPcYjLNPgjvdzBoavzMbCeHaXWkAuDxyuE9VoPrkf",
+          "total": 26
+        }
+      ]
+    }
+  },
+  "historicalBenchmark": {
+    "cohortDefinition": null,
+    "metric": null,
+    "percentile": null,
+    "comparison": null,
+    "sampleSize": null,
+    "methodologyVersion": null,
+    "status": "UNAVAILABLE"
+  },
+  "limitations": [
+    "The source is a deterministic sample, not a complete market census.",
+    "Primary signer addresses are not proven people, users, buyers, traders, bots, or coordinated entities.",
+    "This report does not establish intent, causality, price impact, token quality, or any later market outcome.",
+    "Values unavailable in the source Episode remain unavailable here."
+  ],
+  "provenance": {
+    "sourceArtifact": "research/toad-market-structure-episode.json",
+    "sourceGeneratedAt": "2026-08-11T03:44:42.867Z",
+    "sourceMethodologyVersion": null
+  },
+  "shareCardCandidates": [
+    {
+      "headline": "Successful execution concentration",
+      "primaryValue": "49.2%",
+      "secondaryContext": "of sampled successful executions came from the five most active observed signer addresses",
+      "evidenceStatement": "Top-5 successful-execution share was 49.2%.",
+      "observationWindowQualifier": "Observed sampled window; not a full-market claim.",
+      "methodologyQualifier": "Receipt-derived, deterministic sampled evidence.",
+      "confidence": "HIGH",
+      "whyInteresting": "A compact, directly observed concentration fact.",
+      "prohibitedClaims": [
+        "Whales controlled the market.",
+        "Bots generated the activity.",
+        "These addresses controlled the token."
+      ]
+    },
+    {
+      "headline": "Observed execution success rate",
+      "primaryValue": "69.1%",
+      "secondaryContext": "6,059 of 8,770 sampled executions succeeded",
+      "evidenceStatement": "Observed success rate was 69.1% in the predetermined window.",
+      "observationWindowQualifier": "Observed sampled window; not a full-market claim.",
+      "methodologyQualifier": "Receipt-derived, deterministic sampled evidence.",
+      "confidence": "HIGH",
+      "whyInteresting": "A simple reliability observation with a clear denominator.",
+      "prohibitedClaims": [
+        "The token became more reliable because of a particular change.",
+        "Execution success predicts market performance."
+      ]
+    },
+    {
+      "headline": "Explicit no-profit/no-route outcomes",
+      "primaryValue": "728",
+      "secondaryContext": "observed across 27 primary signer addresses",
+      "evidenceStatement": "728 observed failures had explicit no-profit/no-route evidence.",
+      "observationWindowQualifier": "Observed sampled window; not a full-market claim.",
+      "methodologyQualifier": "Receipt-derived, deterministic sampled evidence.",
+      "confidence": "HIGH",
+      "whyInteresting": "Specific receipt evidence, with concentration available in the full report.",
+      "prohibitedClaims": [
+        "Failures were caused by the token team.",
+        "Every failure had the same cause.",
+        "Affected signer addresses are users."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,551 @@
+{
+  "records": [
+    {
+      "signature": "3n3epxHKMeoDLTfWadzFETwmNM3U42WzG7wrCZbwQoCMrKU1dk99Km6gmrJB5P47TLe6TdQpnmKynHkjgZtJnpz9",
+      "slot": 439450348,
+      "block_time_utc": "2026-08-15T14:23:26.000Z",
+      "failing_invocation_frame": {
+        "program_id": "JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj",
+        "log": "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner",
+        "invocation_path": [
+          "JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj"
+        ],
+        "parent_frame": null
+      },
+      "full_relevant_log_sequence": [
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj invoke [1]",
+        "Program log: ix: LimitOrderCancel",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj consumed 379 of 199700 compute units",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner"
+      ],
+      "custom_error": null,
+      "structured_program_logs_before_failure": [
+        {
+          "index": 5,
+          "instruction_name": "LimitOrderCancel",
+          "log": "Program log: ix: LimitOrderCancel"
+        },
+        {
+          "index": 7,
+          "log": "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner"
+        }
+      ],
+      "strongest_deterministic_plain_language_evidence": "JTX logged ix: LimitOrderCancel and then failed: Invalid account owner. The receipt does not identify which account failed the owner check.",
+      "jtx_outer_instruction_positions": [
+        2,
+        3
+      ],
+      "jtx_outer_instruction_count": 2,
+      "exact_instruction_name_exposed": "LimitOrderCancel",
+      "fee_lamports": 23327,
+      "compute_budget": {
+        "computeUnitPriceMicroLamports": 91634,
+        "computeUnitLimit": 200000,
+        "computeUnitPriceStatus": "set"
+      },
+      "compute_units_consumed": 679,
+      "signer_addresses": [
+        "3Gwh9M2SaDBrUWxaZfxxQbyNZ12QzFZMFePTqTaiRPnG"
+      ],
+      "fee_payer": "3Gwh9M2SaDBrUWxaZfxxQbyNZ12QzFZMFePTqTaiRPnG",
+      "same_fee_payer_successes_in_fixed_500": 115,
+      "exact_outer_structure_successes_in_fixed_500": 89
+    },
+    {
+      "signature": "4BpPffRTpH9EvnXZrNELQ29c6AJunKH791ahs27EXpFWb5paC2ZGkS2Bt95ESM3SFkcmEBsKh2CadaDxu4nLZSLk",
+      "slot": 439416167,
+      "block_time_utc": "2026-08-15T10:26:45.000Z",
+      "failing_invocation_frame": {
+        "program_id": "JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj",
+        "log": "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner",
+        "invocation_path": [
+          "JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj"
+        ],
+        "parent_frame": null
+      },
+      "full_relevant_log_sequence": [
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj invoke [1]",
+        "Program log: ix: LimitOrderCancel",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj consumed 379 of 199700 compute units",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner"
+      ],
+      "custom_error": null,
+      "structured_program_logs_before_failure": [
+        {
+          "index": 5,
+          "instruction_name": "LimitOrderCancel",
+          "log": "Program log: ix: LimitOrderCancel"
+        },
+        {
+          "index": 7,
+          "log": "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner"
+        }
+      ],
+      "strongest_deterministic_plain_language_evidence": "JTX logged ix: LimitOrderCancel and then failed: Invalid account owner. The receipt does not identify which account failed the owner check.",
+      "jtx_outer_instruction_positions": [
+        2,
+        3
+      ],
+      "jtx_outer_instruction_count": 2,
+      "exact_instruction_name_exposed": "LimitOrderCancel",
+      "fee_lamports": 24294,
+      "compute_budget": {
+        "computeUnitPriceMicroLamports": 96468,
+        "computeUnitLimit": 200000,
+        "computeUnitPriceStatus": "set"
+      },
+      "compute_units_consumed": 679,
+      "signer_addresses": [
+        "3Gwh9M2SaDBrUWxaZfxxQbyNZ12QzFZMFePTqTaiRPnG"
+      ],
+      "fee_payer": "3Gwh9M2SaDBrUWxaZfxxQbyNZ12QzFZMFePTqTaiRPnG",
+      "same_fee_payer_successes_in_fixed_500": 115,
+      "exact_outer_structure_successes_in_fixed_500": 89
+    },
+    {
+      "signature": "4gBmfx62E3GBCpnD1ohsXFBiN2Y7BEgShJQQ8PUqzeibmDuU1LJHoGtigNSGMC5TDpqJ2pFGpnKzfFXwPC4Pk1i3",
+      "slot": 439438170,
+      "block_time_utc": "2026-08-15T12:59:01.000Z",
+      "failing_invocation_frame": {
+        "program_id": "JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj",
+        "log": "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner",
+        "invocation_path": [
+          "JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj"
+        ],
+        "parent_frame": null
+      },
+      "full_relevant_log_sequence": [
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj invoke [1]",
+        "Program log: ix: LimitOrderCancel",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj consumed 379 of 199700 compute units",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner"
+      ],
+      "custom_error": null,
+      "structured_program_logs_before_failure": [
+        {
+          "index": 5,
+          "instruction_name": "LimitOrderCancel",
+          "log": "Program log: ix: LimitOrderCancel"
+        },
+        {
+          "index": 7,
+          "log": "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner"
+        }
+      ],
+      "strongest_deterministic_plain_language_evidence": "JTX logged ix: LimitOrderCancel and then failed: Invalid account owner. The receipt does not identify which account failed the owner check.",
+      "jtx_outer_instruction_positions": [
+        2,
+        3
+      ],
+      "jtx_outer_instruction_count": 2,
+      "exact_instruction_name_exposed": "LimitOrderCancel",
+      "fee_lamports": 17468,
+      "compute_budget": {
+        "computeUnitPriceMicroLamports": 62340,
+        "computeUnitLimit": 200000,
+        "computeUnitPriceStatus": "set"
+      },
+      "compute_units_consumed": 679,
+      "signer_addresses": [
+        "3Gwh9M2SaDBrUWxaZfxxQbyNZ12QzFZMFePTqTaiRPnG"
+      ],
+      "fee_payer": "3Gwh9M2SaDBrUWxaZfxxQbyNZ12QzFZMFePTqTaiRPnG",
+      "same_fee_payer_successes_in_fixed_500": 115,
+      "exact_outer_structure_successes_in_fixed_500": 89
+    },
+    {
+      "signature": "4igQ6KHvHPjxk6BNzGkH3CjyNiFkyZ8PuFqVYVKQYDUuMprWDcW9HC9wqmVXTeeav1yGbgo6aDrXg2wVfc5ubezL",
+      "slot": 439375798,
+      "block_time_utc": "2026-08-15T05:47:06.000Z",
+      "failing_invocation_frame": {
+        "program_id": "DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH",
+        "log": "Program DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH failed: custom program error: 0x3a99",
+        "invocation_path": [
+          "DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH"
+        ],
+        "parent_frame": null
+      },
+      "full_relevant_log_sequence": [
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj invoke [1]",
+        "Program log: ix: FeeSweepPrepare",
+        "Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL invoke [2]",
+        "Program log: CreateIdempotent",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 179 of 1391506 compute units",
+        "Program return: TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA pQAAAAAAAAA=",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+        "Program 11111111111111111111111111111111 invoke [3]",
+        "Program 11111111111111111111111111111111 success",
+        "Program log: Initialize the associated token account",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 37 of 1386417 compute units",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 233 of 1383954 compute units",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+        "Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL consumed 13518 of 1396935 compute units",
+        "Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL success",
+        "Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL invoke [2]",
+        "Program log: CreateIdempotent",
+        "Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL consumed 4338 of 1382289 compute units",
+        "Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL success",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [2]",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 105 of 1376851 compute units",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj invoke [2]",
+        "Program log: ix: EmitEvent",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj consumed 332 of 1375501 compute units",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj success",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj consumed 24548 of 1399700 compute units",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj success",
+        "Program DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH invoke [1]",
+        "Program log: Instruction: SwapWithDestination",
+        "Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL invoke [2]",
+        "Program log: Create",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 179 of 1319117 compute units",
+        "Program return: TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA pQAAAAAAAAA=",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+        "Program 11111111111111111111111111111111 invoke [3]",
+        "Program 11111111111111111111111111111111 success",
+        "Program log: Initialize the associated token account",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 37 of 1314028 compute units",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 229 of 1311567 compute units",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+        "Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL consumed 14905 of 1325960 compute units",
+        "Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL success",
+        "Program SSwapUtytfBdBn1b9NUGG6foMVPtcWgpRU32HToDUZr invoke [2]",
+        "Program log: Instruction: Swap",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 76 of 1292561 compute units",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 120 of 1268231 compute units",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 83 of 1265196 compute units",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+        "Program SSwapUtytfBdBn1b9NUGG6foMVPtcWgpRU32HToDUZr consumed 42929 of 1307479 compute units",
+        "Program SSwapUtytfBdBn1b9NUGG6foMVPtcWgpRU32HToDUZr success",
+        "Program DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH invoke [2]",
+        "Program DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH consumed 2024 of 1260948 compute units",
+        "Program DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH success",
+        "Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL invoke [2]",
+        "Program log: Create",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 179 of 1247825 compute units",
+        "Program return: TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA pQAAAAAAAAA=",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+        "Program 11111111111111111111111111111111 invoke [3]",
+        "Program 11111111111111111111111111111111 success",
+        "Program log: Initialize the associated token account",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 37 of 1242736 compute units",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 233 of 1240275 compute units",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+        "Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL consumed 14909 of 1254668 compute units",
+        "Program ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL success",
+        "Program LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo invoke [2]",
+        "Program log: Instruction: Swap",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 112 of 1212605 compute units",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA invoke [3]",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA consumed 105 of 1210329 compute units",
+        "Program TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA success",
+        "Program LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo invoke [3]",
+        "Program LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo consumed 772 of 1207526 compute units",
+        "Program LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo success",
+        "Program LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo invoke [3]",
+        "Program LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo consumed 772 of 1204118 compute units",
+        "Program LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo success",
+        "Program LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo consumed 32133 of 1234541 compute units",
+        "Program LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo success",
+        "Program log: AnchorError occurred. Error Code: SlippageLimitExceeded. Error Number: 15001. Error Message: Slippage limit exceeded.",
+        "Program DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH consumed 176053 of 1375152 compute units",
+        "Program DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH failed: custom program error: 0x3a99"
+      ],
+      "custom_error": {
+        "hex": "0x3a99",
+        "decimal": 15001
+      },
+      "structured_program_logs_before_failure": [
+        {
+          "index": 5,
+          "instruction_name": "FeeSweepPrepare",
+          "log": "Program log: ix: FeeSweepPrepare"
+        },
+        {
+          "index": 31,
+          "instruction_name": "EmitEvent",
+          "log": "Program log: ix: EmitEvent"
+        },
+        {
+          "index": 104,
+          "log": "Program log: AnchorError occurred. Error Code: SlippageLimitExceeded. Error Number: 15001. Error Message: Slippage limit exceeded."
+        }
+      ],
+      "strongest_deterministic_plain_language_evidence": "DFlow logged AnchorError: SlippageLimitExceeded (15001), then returned custom error 0x3a99.",
+      "jtx_outer_instruction_positions": [
+        2,
+        4
+      ],
+      "jtx_outer_instruction_count": 2,
+      "exact_instruction_name_exposed": "SwapWithDestination",
+      "fee_lamports": 10000,
+      "compute_budget": {
+        "computeUnitPriceMicroLamports": 3571,
+        "computeUnitLimit": 1400000,
+        "computeUnitPriceStatus": "set"
+      },
+      "compute_units_consumed": 200901,
+      "signer_addresses": [
+        "23zyeKyn8wpF8VyWSGHTGvTVEGi5SPyziGSs9pGKr5ta"
+      ],
+      "fee_payer": "23zyeKyn8wpF8VyWSGHTGvTVEGi5SPyziGSs9pGKr5ta",
+      "same_fee_payer_successes_in_fixed_500": 114,
+      "exact_outer_structure_successes_in_fixed_500": 69
+    },
+    {
+      "signature": "4sGmDDnZ2tdM9z37aByXLLBDz7VtKuVAfJ3cK2VcCqkG9YjLhioNTGQojGJARQFwYzND79PwxHQguYT9SeaiNoV4",
+      "slot": 439400220,
+      "block_time_utc": "2026-08-15T08:36:17.000Z",
+      "failing_invocation_frame": {
+        "program_id": "JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj",
+        "log": "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner",
+        "invocation_path": [
+          "JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj"
+        ],
+        "parent_frame": null
+      },
+      "full_relevant_log_sequence": [
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj invoke [1]",
+        "Program log: ix: LimitOrderCancel",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj consumed 379 of 199700 compute units",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner"
+      ],
+      "custom_error": null,
+      "structured_program_logs_before_failure": [
+        {
+          "index": 5,
+          "instruction_name": "LimitOrderCancel",
+          "log": "Program log: ix: LimitOrderCancel"
+        },
+        {
+          "index": 7,
+          "log": "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner"
+        }
+      ],
+      "strongest_deterministic_plain_language_evidence": "JTX logged ix: LimitOrderCancel and then failed: Invalid account owner. The receipt does not identify which account failed the owner check.",
+      "jtx_outer_instruction_positions": [
+        2,
+        3
+      ],
+      "jtx_outer_instruction_count": 2,
+      "exact_instruction_name_exposed": "LimitOrderCancel",
+      "fee_lamports": 75000,
+      "compute_budget": {
+        "computeUnitPriceMicroLamports": 350000,
+        "computeUnitLimit": 200000,
+        "computeUnitPriceStatus": "set"
+      },
+      "compute_units_consumed": 679,
+      "signer_addresses": [
+        "3Gwh9M2SaDBrUWxaZfxxQbyNZ12QzFZMFePTqTaiRPnG"
+      ],
+      "fee_payer": "3Gwh9M2SaDBrUWxaZfxxQbyNZ12QzFZMFePTqTaiRPnG",
+      "same_fee_payer_successes_in_fixed_500": 115,
+      "exact_outer_structure_successes_in_fixed_500": 89
+    },
+    {
+      "signature": "4X7P9KHHrMMcUedyYmK67Gu3rnzJLbTLDJTCEXQ9wsoqrMwrgTV7z6qmeSNCDc5f4JWTReaeZeuE58MJjmu9xMMV",
+      "slot": 439450348,
+      "block_time_utc": "2026-08-15T14:23:26.000Z",
+      "failing_invocation_frame": {
+        "program_id": "JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj",
+        "log": "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner",
+        "invocation_path": [
+          "JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj"
+        ],
+        "parent_frame": null
+      },
+      "full_relevant_log_sequence": [
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj invoke [1]",
+        "Program log: ix: LimitOrderCancel",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj consumed 379 of 199700 compute units",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner"
+      ],
+      "custom_error": null,
+      "structured_program_logs_before_failure": [
+        {
+          "index": 5,
+          "instruction_name": "LimitOrderCancel",
+          "log": "Program log: ix: LimitOrderCancel"
+        },
+        {
+          "index": 7,
+          "log": "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner"
+        }
+      ],
+      "strongest_deterministic_plain_language_evidence": "JTX logged ix: LimitOrderCancel and then failed: Invalid account owner. The receipt does not identify which account failed the owner check.",
+      "jtx_outer_instruction_positions": [
+        2,
+        3
+      ],
+      "jtx_outer_instruction_count": 2,
+      "exact_instruction_name_exposed": "LimitOrderCancel",
+      "fee_lamports": 17000,
+      "compute_budget": {
+        "computeUnitPriceMicroLamports": 60000,
+        "computeUnitLimit": 200000,
+        "computeUnitPriceStatus": "set"
+      },
+      "compute_units_consumed": 679,
+      "signer_addresses": [
+        "3Gwh9M2SaDBrUWxaZfxxQbyNZ12QzFZMFePTqTaiRPnG"
+      ],
+      "fee_payer": "3Gwh9M2SaDBrUWxaZfxxQbyNZ12QzFZMFePTqTaiRPnG",
+      "same_fee_payer_successes_in_fixed_500": 115,
+      "exact_outer_structure_successes_in_fixed_500": 89
+    },
+    {
+      "signature": "51NnPe6GLhJ8aNGP9yQUsNvvER6QCdfuSgXtb8kuMDE6TBHk9nk7FLXGYLeEwP1Jat1NDTR8tYWZ5FBeYw9wEEX8",
+      "slot": 439403255,
+      "block_time_utc": "2026-08-15T08:57:18.000Z",
+      "failing_invocation_frame": {
+        "program_id": "JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj",
+        "log": "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner",
+        "invocation_path": [
+          "JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj"
+        ],
+        "parent_frame": null
+      },
+      "full_relevant_log_sequence": [
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj invoke [1]",
+        "Program log: ix: LimitOrderCancel",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj consumed 379 of 199700 compute units",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner"
+      ],
+      "custom_error": null,
+      "structured_program_logs_before_failure": [
+        {
+          "index": 5,
+          "instruction_name": "LimitOrderCancel",
+          "log": "Program log: ix: LimitOrderCancel"
+        },
+        {
+          "index": 7,
+          "log": "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner"
+        }
+      ],
+      "strongest_deterministic_plain_language_evidence": "JTX logged ix: LimitOrderCancel and then failed: Invalid account owner. The receipt does not identify which account failed the owner check.",
+      "jtx_outer_instruction_positions": [
+        2,
+        3
+      ],
+      "jtx_outer_instruction_count": 2,
+      "exact_instruction_name_exposed": "LimitOrderCancel",
+      "fee_lamports": 50987,
+      "compute_budget": {
+        "computeUnitPriceMicroLamports": 229932,
+        "computeUnitLimit": 200000,
+        "computeUnitPriceStatus": "set"
+      },
+      "compute_units_consumed": 679,
+      "signer_addresses": [
+        "3Gwh9M2SaDBrUWxaZfxxQbyNZ12QzFZMFePTqTaiRPnG"
+      ],
+      "fee_payer": "3Gwh9M2SaDBrUWxaZfxxQbyNZ12QzFZMFePTqTaiRPnG",
+      "same_fee_payer_successes_in_fixed_500": 115,
+      "exact_outer_structure_successes_in_fixed_500": 89
+    },
+    {
+      "signature": "Af74FYwsGThFQHM9dX4qmJsoyZvT2rfujf6j1DEmdHPJEwDrNmuKcwCwkyrswm6fLpw44vHtCAYXvmXNhwx1oNZ",
+      "slot": 439450349,
+      "block_time_utc": "2026-08-15T14:23:26.000Z",
+      "failing_invocation_frame": {
+        "program_id": "JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj",
+        "log": "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner",
+        "invocation_path": [
+          "JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj"
+        ],
+        "parent_frame": null
+      },
+      "full_relevant_log_sequence": [
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program ComputeBudget111111111111111111111111111111 invoke [1]",
+        "Program ComputeBudget111111111111111111111111111111 success",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj invoke [1]",
+        "Program log: ix: LimitOrderCancel",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj consumed 379 of 199700 compute units",
+        "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner"
+      ],
+      "custom_error": null,
+      "structured_program_logs_before_failure": [
+        {
+          "index": 5,
+          "instruction_name": "LimitOrderCancel",
+          "log": "Program log: ix: LimitOrderCancel"
+        },
+        {
+          "index": 7,
+          "log": "Program JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj failed: Invalid account owner"
+        }
+      ],
+      "strongest_deterministic_plain_language_evidence": "JTX logged ix: LimitOrderCancel and then failed: Invalid account owner. The receipt does not identify which account failed the owner check.",
+      "jtx_outer_instruction_positions": [
+        2,
+        3
+      ],
+      "jtx_outer_instruction_count": 2,
+      "exact_instruction_name_exposed": "LimitOrderCancel",
+      "fee_lamports": 23327,
+      "compute_budget": {
+        "computeUnitPriceMicroLamports": 91634,
+        "computeUnitLimit": 200000,
+        "computeUnitPriceStatus": "set"
+      },
+      "compute_units_consumed": 679,
+      "signer_addresses": [
+        "3Gwh9M2SaDBrUWxaZfxxQbyNZ12QzFZMFePTqTaiRPnG"
+      ],
+      "fee_payer": "3Gwh9M2SaDBrUWxaZfxxQbyNZ12QzFZMFePTqTaiRPnG",
+      "same_fee_payer_successes_in_fixed_500": 115,
+      "exact_outer_structure_successes_in_fixed_500": 89
+    }
+  ]
+}

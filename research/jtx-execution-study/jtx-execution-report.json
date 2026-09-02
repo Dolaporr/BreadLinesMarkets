@@ -1,0 +1,112 @@
+{
+  "generated_at": "2026-08-15T14:46:37.645Z",
+  "protocol": {
+    "generated_at": "2026-08-15T14:46:32.982Z",
+    "inclusion_fingerprint": "JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj",
+    "target_attributable_executions": 500,
+    "observation_end_utc": "2026-08-15T14:46:32.982Z",
+    "observation_start_utc": "2026-08-15T05:30:41.000Z",
+    "ordering": "Most-recent consecutive JTX-program-address history ending at observation_end_utc; retain in API descending order, then output ascending chronological order.",
+    "transaction_selection": "No success/failure, signer, fee, route, token, order-type, or behavior filter.",
+    "stopping_rule": "Stop after the first 500 locally verified outer-JTX invocations encountered in deterministic reverse-chronological pagination.",
+    "billing_assumption_helius_credits_per_full_page": 50,
+    "full_page_limit": 100,
+    "retained_first_slot": 439373434,
+    "retained_last_slot": 439453665
+  },
+  "collection": {
+    "pages_fetched": 5,
+    "helius_credit_estimate": 250,
+    "retained_outer_jtx": 500,
+    "rejected_non_outer": 0,
+    "complete_target": true
+  },
+  "totals": {
+    "total_attributable_jtx_executions": 500,
+    "successful": 333,
+    "landed_but_failed": 167,
+    "failure_rate": 0.334,
+    "documented_actionable_failures": 159,
+    "documented_technical_failures": 1,
+    "insufficient_evidence_failures": 7,
+    "useful_deterministic_evidence_beyond_generic_or_raw_custom": 159,
+    "useful_deterministic_evidence_percentage_of_failed": 0.9520958083832335
+  },
+  "top_failing_programs": [
+    {
+      "value": "11111111111111111111111111111111",
+      "count": 159
+    },
+    {
+      "value": "JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj",
+      "count": 7
+    },
+    {
+      "value": "DF1ow4tspfHX9JwWJsAb9epbkA8hmpSEAtxXy1V27QBH",
+      "count": 1
+    }
+  ],
+  "top_documented_failure_classes": [
+    {
+      "value": "InsufficientLamports",
+      "count": 159
+    },
+    {
+      "value": "custom-error-15001",
+      "count": 1
+    }
+  ],
+  "fees_paid_lamports_by_failed": {
+    "count": 167,
+    "total": 1831403,
+    "p50": 10000,
+    "p95": 10000
+  },
+  "compute_units_consumed": {
+    "successful": {
+      "p50": 74066,
+      "p95": 269499.99999999994,
+      "count": 333
+    },
+    "failed": {
+      "p50": 22079,
+      "p95": 22079,
+      "count": 167
+    }
+  },
+  "repeated_signer_observations": [
+    {
+      "value": "23zyeKyn8wpF8VyWSGHTGvTVEGi5SPyziGSs9pGKr5ta",
+      "count": 274
+    },
+    {
+      "value": "3Gwh9M2SaDBrUWxaZfxxQbyNZ12QzFZMFePTqTaiRPnG",
+      "count": 122
+    },
+    {
+      "value": "H8w2543WuYbpaJH1WQuwx2144JFbojCVdG1C918LwEwK",
+      "count": 74
+    },
+    {
+      "value": "F12e1oS7RGehkT9m8NTLsV1VfSR86gWndSVGGWfjYUmk",
+      "count": 7
+    },
+    {
+      "value": "3erBdG2z47uhQ93CDKzBHZfYB39sUbGCgzmYoqKkRFFy",
+      "count": 6
+    },
+    {
+      "value": "8mHfZ4tcwJTGe5zW3zzW61iaSCM2vytF9y8skuBzLXgn",
+      "count": 4
+    },
+    {
+      "value": "3JvJj9Yeu1qgnECArQJV1bkwqCHMKGU2smucvTs7Qp8e",
+      "count": 3
+    },
+    {
+      "value": "5q7TJJBxruKnYpR9RxUV9ASdZMzYG5BArxKr5fhZX7YA",
+      "count": 2
+    }
+  ],
+  "ui_visibility": "UNKNOWN from on-chain evidence. This study does not assert what JTX shows users."
+}

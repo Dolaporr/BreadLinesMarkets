@@ -1,0 +1,35 @@
+{
+  "scope": "Exactly the eight non-System landed failures from the frozen 500-execution population. No new population sampled.",
+  "totals": {
+    "jtx_frame_failures": 7,
+    "dflow_frame_failures": 1
+  },
+  "jtx_taxonomy": {
+    "deterministic_named_instruction_and_error": {
+      "count": 7,
+      "interpretation": "JTX itself was the active failing frame. The observed JTX log names LimitOrderCancel; the program then returned Invalid account owner. No custom numeric error is present."
+    },
+    "opaque": {
+      "count": 0
+    }
+  },
+  "dflow_taxonomy": {
+    "count": 1,
+    "interpretation": "DFlow itself was the active failing frame. Its observed Anchor log names SlippageLimitExceeded, error 15001, immediately before custom error 0x3a99."
+  },
+  "public_decode_check": {
+    "jtx": "No public error-table mapping was needed or used: all seven JTX receipts contain their own deterministic instruction name and runtime reason. No undocumented numeric JTX error was inferred.",
+    "dflow": "No external DFlow table was used: the transaction itself emitted AnchorError SlippageLimitExceeded (15001)."
+  },
+  "breadlines_deterministically_explains": {
+    "jtx": 7,
+    "dflow": 1,
+    "opaque": 0
+  },
+  "representative_receipts": [
+    "3n3epxHKMeoDLTfWadzFETwmNM3U42WzG7wrCZbwQoCMrKU1dk99Km6gmrJB5P47TLe6TdQpnmKynHkjgZtJnpz9",
+    "4igQ6KHvHPjxk6BNzGkH3CjyNiFkyZ8PuFqVYVKQYDUuMprWDcW9HC9wqmVXTeeav1yGbgo6aDrXg2wVfc5ubezL"
+  ],
+  "commercial_verdict": "WEAK WEDGE — the eight receipts demonstrate accurate first-party frame attribution and a clean explanation for LimitOrderCancel / Invalid account owner, but all seven JTX-frame failures are one repeated pattern from one fee payer. Frequency and actor diversity are insufficient for a strong JTX-specific failure-receipt wedge.",
+  "ui_incremental_information": "A receipt can name the failing program frame, named instruction, and observed reason/structured error instead of only a failed state or raw code. JTX UI visibility remains UNKNOWN."
+}

@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-08-15T14:46:32.982Z",
+  "inclusion_fingerprint": "JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj",
+  "target_attributable_executions": 500,
+  "observation_end_utc": "2026-08-15T14:46:32.982Z",
+  "observation_start_utc": "2026-08-15T05:30:41.000Z",
+  "ordering": "Most-recent consecutive JTX-program-address history ending at observation_end_utc; retain in API descending order, then output ascending chronological order.",
+  "transaction_selection": "No success/failure, signer, fee, route, token, order-type, or behavior filter.",
+  "stopping_rule": "Stop after the first 500 locally verified outer-JTX invocations encountered in deterministic reverse-chronological pagination.",
+  "billing_assumption_helius_credits_per_full_page": 50,
+  "full_page_limit": 100,
+  "retained_first_slot": 439373434,
+  "retained_last_slot": 439453665
+}

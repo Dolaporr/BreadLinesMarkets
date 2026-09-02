@@ -1,0 +1,396 @@
+{
+  "generated_at": "2026-08-15T18:19:36.164Z",
+  "protocol": {
+    "generated_at": "2026-08-15T18:15:31.424Z",
+    "population_label": "0x Settler executions (not necessarily 0x Swap API executions)",
+    "settler_program": "Sett1erwx2eqT5A8uvu8GBxDFT2W5TNnhirL7hLmb8m",
+    "observation_end_utc": "2026-08-15T18:15:31.424Z",
+    "observation_start_utc": "2026-08-15T03:27:57.000Z",
+    "ordering": "Most-recent first via descending deterministic pagination; output ascending chronological.",
+    "stopping_rule": "Retain the first 500 locally verified outer-Settler transactions.",
+    "exclusions": "No status, signer, error, route, program, fee, token, or behavioural selection."
+  },
+  "collection": {
+    "pages_fetched": 5,
+    "retained_outer_settler": 500,
+    "rejected_non_outer": 0,
+    "complete_target": true
+  },
+  "totals": {
+    "total": 500,
+    "successful": 271,
+    "landed_but_failed": 229,
+    "failure_rate": 0.458,
+    "attribution": [
+      {
+        "value": "DOWNSTREAM_PROGRAM",
+        "count": 211
+      },
+      {
+        "value": "SETTLER_FRAME",
+        "count": 14
+      },
+      {
+        "value": "SYSTEM_OR_TOKEN_PROGRAM",
+        "count": 2
+      },
+      {
+        "value": "UNKNOWN_ATTRIBUTION",
+        "count": 2
+      }
+    ],
+    "explanatory_depth": [
+      {
+        "value": "TECHNICAL_BUT_OPAQUE",
+        "count": 227
+      },
+      {
+        "value": "INSUFFICIENT_EVIDENCE",
+        "count": 2
+      }
+    ],
+    "correct_execution_layer_attributable_percentage": 0.9912663755458515,
+    "useful_plain_language_percentage": 0,
+    "distinct_failure_classes": 10,
+    "distinct_affected_fee_payers": 11,
+    "distinct_affected_signers": 11,
+    "total_failure_actor_concentration": {
+      "unique_signers": 11,
+      "unique_fee_payers": 11,
+      "top_1_signer_share": 0.9213973799126638,
+      "top_5_signer_share": 0.9737991266375546,
+      "top_10_signer_share": 0.9956331877729258,
+      "top_fee_payers": [
+        {
+          "value": "GvPT9HAWQLF9mUsuHwrhwsUTiWPfDQXV17hVy5WjSk5y",
+          "count": 211
+        },
+        {
+          "value": "CVN8mjHY9EWTX3YmTqkG3fohHUcw2zVWi5VS8q7YWfih",
+          "count": 5
+        },
+        {
+          "value": "By7sE6qTxDrewqaWCrKr1TxoJEhVJ5i1PevxPRDMzRbz",
+          "count": 4
+        },
+        {
+          "value": "DaD3nN9P7ZxwZ3mJxff3qMFpqrQqReGZUrZGdWZv6C7V",
+          "count": 2
+        },
+        {
+          "value": "3FybVkaPS6zZgmXXjzYG9eYwqAbjRPmcSd3r9EkSSwZq",
+          "count": 1
+        },
+        {
+          "value": "8AfYMmbC6YAyNLA5ENiWDWAkVepnPhPh5rXXZFsgGpV7",
+          "count": 1
+        },
+        {
+          "value": "8Mq5aQtqviNEW3CDfKybzh611xWe5yvHXyfBdPqsTatC",
+          "count": 1
+        },
+        {
+          "value": "C9UmPtchRhRRVesuY2imi8v8YF3hAygiDmzaM6pK7mwL",
+          "count": 1
+        },
+        {
+          "value": "F2k3w67DA4p2vKrW4rTExu2NYhrpUEvsPxgEZvCt8UM2",
+          "count": 1
+        },
+        {
+          "value": "H9bqiqZ4B66Pe28745XZJnYvU56BspTWSN8DsBMvi4at",
+          "count": 1
+        }
+      ]
+    }
+  },
+  "recurring_failure_classes": [
+    {
+      "value": "DOWNSTREAM_PROGRAM|proVF4pMXVaYqmy4NjniPh4pqKNfMmsihgd4wdkCX3u|6010",
+      "count": 204,
+      "actor_concentration": {
+        "unique_signers": 1,
+        "unique_fee_payers": 1,
+        "top_1_signer_share": 1,
+        "top_5_signer_share": 1,
+        "top_10_signer_share": 1,
+        "top_fee_payers": [
+          {
+            "value": "GvPT9HAWQLF9mUsuHwrhwsUTiWPfDQXV17hVy5WjSk5y",
+            "count": 204
+          }
+        ]
+      },
+      "affected_fee_payers_with_successes": 1,
+      "exact_observable_structural_successes": 0,
+      "closest_observable_successes": {
+        "score_out_of_8": 8,
+        "count": 48,
+        "comparison_fields": "outer-program order, Settler positions, fee payer, any overlapping downstream program; no causality asserted."
+      }
+    },
+    {
+      "value": "SETTLER_FRAME|Sett1erwx2eqT5A8uvu8GBxDFT2W5TNnhirL7hLmb8m|7001",
+      "count": 8,
+      "actor_concentration": {
+        "unique_signers": 5,
+        "unique_fee_payers": 5,
+        "top_1_signer_share": 0.5,
+        "top_5_signer_share": 1,
+        "top_10_signer_share": 1,
+        "top_fee_payers": [
+          {
+            "value": "By7sE6qTxDrewqaWCrKr1TxoJEhVJ5i1PevxPRDMzRbz",
+            "count": 4
+          },
+          {
+            "value": "8AfYMmbC6YAyNLA5ENiWDWAkVepnPhPh5rXXZFsgGpV7",
+            "count": 1
+          },
+          {
+            "value": "8Mq5aQtqviNEW3CDfKybzh611xWe5yvHXyfBdPqsTatC",
+            "count": 1
+          },
+          {
+            "value": "DaD3nN9P7ZxwZ3mJxff3qMFpqrQqReGZUrZGdWZv6C7V",
+            "count": 1
+          },
+          {
+            "value": "WLKZNss6FJXLqtF58o2cjBqJ7rdcaTDBic6BCsTrCzf",
+            "count": 1
+          }
+        ]
+      },
+      "affected_fee_payers_with_successes": 0,
+      "exact_observable_structural_successes": 0,
+      "closest_observable_successes": {
+        "score_out_of_8": 7,
+        "count": 31,
+        "comparison_fields": "outer-program order, Settler positions, fee payer, any overlapping downstream program; no causality asserted."
+      }
+    },
+    {
+      "value": "SETTLER_FRAME|Sett1erwx2eqT5A8uvu8GBxDFT2W5TNnhirL7hLmb8m|7000",
+      "count": 5,
+      "actor_concentration": {
+        "unique_signers": 3,
+        "unique_fee_payers": 3,
+        "top_1_signer_share": 0.6,
+        "top_5_signer_share": 1,
+        "top_10_signer_share": 1,
+        "top_fee_payers": [
+          {
+            "value": "CVN8mjHY9EWTX3YmTqkG3fohHUcw2zVWi5VS8q7YWfih",
+            "count": 3
+          },
+          {
+            "value": "C9UmPtchRhRRVesuY2imi8v8YF3hAygiDmzaM6pK7mwL",
+            "count": 1
+          },
+          {
+            "value": "F2k3w67DA4p2vKrW4rTExu2NYhrpUEvsPxgEZvCt8UM2",
+            "count": 1
+          }
+        ]
+      },
+      "affected_fee_payers_with_successes": 0,
+      "exact_observable_structural_successes": 0,
+      "closest_observable_successes": {
+        "score_out_of_8": 7,
+        "count": 4,
+        "comparison_fields": "outer-program order, Settler positions, fee payer, any overlapping downstream program; no causality asserted."
+      }
+    },
+    {
+      "value": "DOWNSTREAM_PROGRAM|proVF4pMXVaYqmy4NjniPh4pqKNfMmsihgd4wdkCX3u|SwapV2",
+      "count": 4,
+      "actor_concentration": {
+        "unique_signers": 1,
+        "unique_fee_payers": 1,
+        "top_1_signer_share": 1,
+        "top_5_signer_share": 1,
+        "top_10_signer_share": 1,
+        "top_fee_payers": [
+          {
+            "value": "GvPT9HAWQLF9mUsuHwrhwsUTiWPfDQXV17hVy5WjSk5y",
+            "count": 4
+          }
+        ]
+      },
+      "affected_fee_payers_with_successes": 1,
+      "exact_observable_structural_successes": 0,
+      "closest_observable_successes": {
+        "score_out_of_8": 8,
+        "count": 57,
+        "comparison_fields": "outer-program order, Settler positions, fee payer, any overlapping downstream program; no causality asserted."
+      }
+    },
+    {
+      "value": "SYSTEM_OR_TOKEN_PROGRAM|11111111111111111111111111111111|SwapTobWithTokenLedgerV3",
+      "count": 2,
+      "actor_concentration": {
+        "unique_signers": 1,
+        "unique_fee_payers": 1,
+        "top_1_signer_share": 1,
+        "top_5_signer_share": 1,
+        "top_10_signer_share": 1,
+        "top_fee_payers": [
+          {
+            "value": "GvPT9HAWQLF9mUsuHwrhwsUTiWPfDQXV17hVy5WjSk5y",
+            "count": 2
+          }
+        ]
+      },
+      "affected_fee_payers_with_successes": 1,
+      "exact_observable_structural_successes": 34,
+      "closest_observable_successes": {
+        "score_out_of_8": 8,
+        "count": 57,
+        "comparison_fields": "outer-program order, Settler positions, fee payer, any overlapping downstream program; no causality asserted."
+      }
+    },
+    {
+      "value": "UNKNOWN_ATTRIBUTION|none|TransferChecked",
+      "count": 2,
+      "actor_concentration": {
+        "unique_signers": 1,
+        "unique_fee_payers": 1,
+        "top_1_signer_share": 1,
+        "top_5_signer_share": 1,
+        "top_10_signer_share": 1,
+        "top_fee_payers": [
+          {
+            "value": "CVN8mjHY9EWTX3YmTqkG3fohHUcw2zVWi5VS8q7YWfih",
+            "count": 2
+          }
+        ]
+      },
+      "affected_fee_payers_with_successes": 0,
+      "exact_observable_structural_successes": 0,
+      "closest_observable_successes": {
+        "score_out_of_8": 3,
+        "count": 13,
+        "comparison_fields": "outer-program order, Settler positions, fee payer, any overlapping downstream program; no causality asserted."
+      }
+    },
+    {
+      "value": "DOWNSTREAM_PROGRAM|CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK|3012",
+      "count": 1,
+      "actor_concentration": {
+        "unique_signers": 1,
+        "unique_fee_payers": 1,
+        "top_1_signer_share": 1,
+        "top_5_signer_share": 1,
+        "top_10_signer_share": 1,
+        "top_fee_payers": [
+          {
+            "value": "DaD3nN9P7ZxwZ3mJxff3qMFpqrQqReGZUrZGdWZv6C7V",
+            "count": 1
+          }
+        ]
+      },
+      "affected_fee_payers_with_successes": 0,
+      "exact_observable_structural_successes": 0,
+      "closest_observable_successes": {
+        "score_out_of_8": 7,
+        "count": 3,
+        "comparison_fields": "outer-program order, Settler positions, fee payer, any overlapping downstream program; no causality asserted."
+      }
+    },
+    {
+      "value": "DOWNSTREAM_PROGRAM|proVF4pMXVaYqmy4NjniPh4pqKNfMmsihgd4wdkCX3u|SwapTobWithTokenLedgerV3",
+      "count": 1,
+      "actor_concentration": {
+        "unique_signers": 1,
+        "unique_fee_payers": 1,
+        "top_1_signer_share": 1,
+        "top_5_signer_share": 1,
+        "top_10_signer_share": 1,
+        "top_fee_payers": [
+          {
+            "value": "GvPT9HAWQLF9mUsuHwrhwsUTiWPfDQXV17hVy5WjSk5y",
+            "count": 1
+          }
+        ]
+      },
+      "affected_fee_payers_with_successes": 1,
+      "exact_observable_structural_successes": 0,
+      "closest_observable_successes": {
+        "score_out_of_8": 8,
+        "count": 57,
+        "comparison_fields": "outer-program order, Settler positions, fee payer, any overlapping downstream program; no causality asserted."
+      }
+    },
+    {
+      "value": "DOWNSTREAM_PROGRAM|whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc|6038",
+      "count": 1,
+      "actor_concentration": {
+        "unique_signers": 1,
+        "unique_fee_payers": 1,
+        "top_1_signer_share": 1,
+        "top_5_signer_share": 1,
+        "top_10_signer_share": 1,
+        "top_fee_payers": [
+          {
+            "value": "3FybVkaPS6zZgmXXjzYG9eYwqAbjRPmcSd3r9EkSSwZq",
+            "count": 1
+          }
+        ]
+      },
+      "affected_fee_payers_with_successes": 0,
+      "exact_observable_structural_successes": 0,
+      "closest_observable_successes": {
+        "score_out_of_8": 7,
+        "count": 31,
+        "comparison_fields": "outer-program order, Settler positions, fee payer, any overlapping downstream program; no causality asserted."
+      }
+    },
+    {
+      "value": "SETTLER_FRAME|Sett1erwx2eqT5A8uvu8GBxDFT2W5TNnhirL7hLmb8m|7019",
+      "count": 1,
+      "actor_concentration": {
+        "unique_signers": 1,
+        "unique_fee_payers": 1,
+        "top_1_signer_share": 1,
+        "top_5_signer_share": 1,
+        "top_10_signer_share": 1,
+        "top_fee_payers": [
+          {
+            "value": "H9bqiqZ4B66Pe28745XZJnYvU56BspTWSN8DsBMvi4at",
+            "count": 1
+          }
+        ]
+      },
+      "affected_fee_payers_with_successes": 0,
+      "exact_observable_structural_successes": 0,
+      "closest_observable_successes": {
+        "score_out_of_8": 3,
+        "count": 119,
+        "comparison_fields": "outer-program order, Settler positions, fee payer, any overlapping downstream program; no causality asserted."
+      }
+    }
+  ],
+  "opaque_error_investigation": {
+    "error_6010": {
+      "statement": "No deterministic semantic mapping is asserted: public searches did not yield a first-party source, verified program source, or program-specific error table for proVF…CX3u.",
+      "occurrences": 204,
+      "programs": [
+        {
+          "value": "proVF4pMXVaYqmy4NjniPh4pqKNfMmsihgd4wdkCX3u",
+          "count": 204
+        }
+      ]
+    },
+    "error_7001": {
+      "statement": "No deterministic semantic mapping is asserted: public searches did not yield a first-party 0x Settler error table, IDL, or verified client error map for 7001.",
+      "occurrences": 8,
+      "programs": [
+        {
+          "value": "Sett1erwx2eqT5A8uvu8GBxDFT2W5TNnhirL7hLmb8m",
+          "count": 8
+        }
+      ]
+    }
+  },
+  "verdict": "WEAK WEDGE — 99.13% frame attribution is useful operational evidence, but 0% of landed failures have an evidence-backed plain-language explanation and 92.14% of failures are concentrated in one signer. Do not build an integrator micro-product from this sample alone."
+}

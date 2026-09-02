@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "breadlines-execution-pulse-v0",
+  "token": {
+    "mint": "A13oRB9FFaiUjfi6LdCg6p9ka1u8SfGkUFs4SKvPpump",
+    "label": "TOAD"
+  },
+  "observationWindow": {
+    "startSlot": 438061664,
+    "endSlot": 438429195,
+    "startUtc": null,
+    "endUtc": null
+  },
+  "candidates": [
+    {
+      "headline": "Successful execution concentration",
+      "primaryValue": "49.2%",
+      "secondaryContext": "of sampled successful executions came from the five most active observed signer addresses",
+      "evidenceStatement": "Top-5 successful-execution share was 49.2%.",
+      "observationWindowQualifier": "Observed sampled window; not a full-market claim.",
+      "methodologyQualifier": "Receipt-derived, deterministic sampled evidence.",
+      "confidence": "HIGH",
+      "whyInteresting": "A compact, directly observed concentration fact.",
+      "prohibitedClaims": [
+        "Whales controlled the market.",
+        "Bots generated the activity.",
+        "These addresses controlled the token."
+      ]
+    },
+    {
+      "headline": "Observed execution success rate",
+      "primaryValue": "69.1%",
+      "secondaryContext": "6,059 of 8,770 sampled executions succeeded",
+      "evidenceStatement": "Observed success rate was 69.1% in the predetermined window.",
+      "observationWindowQualifier": "Observed sampled window; not a full-market claim.",
+      "methodologyQualifier": "Receipt-derived, deterministic sampled evidence.",
+      "confidence": "HIGH",
+      "whyInteresting": "A simple reliability observation with a clear denominator.",
+      "prohibitedClaims": [
+        "The token became more reliable because of a particular change.",
+        "Execution success predicts market performance."
+      ]
+    },
+    {
+      "headline": "Explicit no-profit/no-route outcomes",
+      "primaryValue": "728",
+      "secondaryContext": "observed across 27 primary signer addresses",
+      "evidenceStatement": "728 observed failures had explicit no-profit/no-route evidence.",
+      "observationWindowQualifier": "Observed sampled window; not a full-market claim.",
+      "methodologyQualifier": "Receipt-derived, deterministic sampled evidence.",
+      "confidence": "HIGH",
+      "whyInteresting": "Specific receipt evidence, with concentration available in the full report.",
+      "prohibitedClaims": [
+        "Failures were caused by the token team.",
+        "Every failure had the same cause.",
+        "Affected signer addresses are users."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,617 @@
+{
+  "generatedFrom": "research/toad-large-study.json",
+  "generatedAt": "2026-08-11T03:44:42.867Z",
+  "internalOnly": true,
+  "evidenceBoundary": "Observed transaction data, deterministic derived aggregates, and non-causal patterns.",
+  "sample": {
+    "mint": "A13oRB9FFaiUjfi6LdCg6p9ka1u8SfGkUFs4SKvPpump",
+    "startSlot": 438061664,
+    "endSlot": 438429195,
+    "transactions": 8770,
+    "successes": 6059,
+    "failures": 2711,
+    "uniquePrimarySigners": 333,
+    "fetchFailures": 0,
+    "methodology": "Two interleaved sets of 250 evenly spaced full-block slices; TOAD-mint account-key filter; stable signature-hash quota per slice; signature deduplication across phases",
+    "selection": "Each phase is selected solely by slot position. Within each sampled block, all transactions whose account keys contain the TOAD mint are eligible and the first 32 after stable FNV-1a signature-hash ordering are retained. Receipt facts are not used for selection."
+  },
+  "participation": [
+    {
+      "slice": 1,
+      "slotStart": 438061664,
+      "slotEnd": 438080040,
+      "uniquePrimarySigners": 85,
+      "newToSample": 85,
+      "returning": 0,
+      "successfulNewToSample": 61,
+      "successfulReturning": 0
+    },
+    {
+      "slice": 2,
+      "slotStart": 438080041,
+      "slotEnd": 438098417,
+      "uniquePrimarySigners": 63,
+      "newToSample": 27,
+      "returning": 36,
+      "successfulNewToSample": 19,
+      "successfulReturning": 26
+    },
+    {
+      "slice": 3,
+      "slotStart": 438098418,
+      "slotEnd": 438116794,
+      "uniquePrimarySigners": 68,
+      "newToSample": 18,
+      "returning": 50,
+      "successfulNewToSample": 9,
+      "successfulReturning": 33
+    },
+    {
+      "slice": 4,
+      "slotStart": 438116795,
+      "slotEnd": 438135171,
+      "uniquePrimarySigners": 59,
+      "newToSample": 15,
+      "returning": 44,
+      "successfulNewToSample": 8,
+      "successfulReturning": 29
+    },
+    {
+      "slice": 5,
+      "slotStart": 438135172,
+      "slotEnd": 438153548,
+      "uniquePrimarySigners": 47,
+      "newToSample": 18,
+      "returning": 29,
+      "successfulNewToSample": 14,
+      "successfulReturning": 20
+    },
+    {
+      "slice": 6,
+      "slotStart": 438153549,
+      "slotEnd": 438171925,
+      "uniquePrimarySigners": 53,
+      "newToSample": 13,
+      "returning": 40,
+      "successfulNewToSample": 10,
+      "successfulReturning": 22
+    },
+    {
+      "slice": 7,
+      "slotStart": 438171926,
+      "slotEnd": 438190302,
+      "uniquePrimarySigners": 39,
+      "newToSample": 9,
+      "returning": 30,
+      "successfulNewToSample": 8,
+      "successfulReturning": 19
+    },
+    {
+      "slice": 8,
+      "slotStart": 438190303,
+      "slotEnd": 438208679,
+      "uniquePrimarySigners": 64,
+      "newToSample": 17,
+      "returning": 47,
+      "successfulNewToSample": 14,
+      "successfulReturning": 29
+    },
+    {
+      "slice": 9,
+      "slotStart": 438208680,
+      "slotEnd": 438227056,
+      "uniquePrimarySigners": 74,
+      "newToSample": 21,
+      "returning": 53,
+      "successfulNewToSample": 15,
+      "successfulReturning": 31
+    },
+    {
+      "slice": 10,
+      "slotStart": 438227057,
+      "slotEnd": 438245433,
+      "uniquePrimarySigners": 46,
+      "newToSample": 12,
+      "returning": 34,
+      "successfulNewToSample": 10,
+      "successfulReturning": 20
+    },
+    {
+      "slice": 11,
+      "slotStart": 438245434,
+      "slotEnd": 438263810,
+      "uniquePrimarySigners": 41,
+      "newToSample": 8,
+      "returning": 33,
+      "successfulNewToSample": 5,
+      "successfulReturning": 21
+    },
+    {
+      "slice": 12,
+      "slotStart": 438263811,
+      "slotEnd": 438282187,
+      "uniquePrimarySigners": 57,
+      "newToSample": 10,
+      "returning": 47,
+      "successfulNewToSample": 7,
+      "successfulReturning": 29
+    },
+    {
+      "slice": 13,
+      "slotStart": 438282188,
+      "slotEnd": 438300564,
+      "uniquePrimarySigners": 81,
+      "newToSample": 18,
+      "returning": 63,
+      "successfulNewToSample": 12,
+      "successfulReturning": 41
+    },
+    {
+      "slice": 14,
+      "slotStart": 438300565,
+      "slotEnd": 438318941,
+      "uniquePrimarySigners": 46,
+      "newToSample": 3,
+      "returning": 43,
+      "successfulNewToSample": 3,
+      "successfulReturning": 30
+    },
+    {
+      "slice": 15,
+      "slotStart": 438318942,
+      "slotEnd": 438337318,
+      "uniquePrimarySigners": 46,
+      "newToSample": 5,
+      "returning": 41,
+      "successfulNewToSample": 5,
+      "successfulReturning": 27
+    },
+    {
+      "slice": 16,
+      "slotStart": 438337319,
+      "slotEnd": 438355695,
+      "uniquePrimarySigners": 52,
+      "newToSample": 13,
+      "returning": 39,
+      "successfulNewToSample": 12,
+      "successfulReturning": 25
+    },
+    {
+      "slice": 17,
+      "slotStart": 438355696,
+      "slotEnd": 438374072,
+      "uniquePrimarySigners": 64,
+      "newToSample": 16,
+      "returning": 48,
+      "successfulNewToSample": 14,
+      "successfulReturning": 31
+    },
+    {
+      "slice": 18,
+      "slotStart": 438374073,
+      "slotEnd": 438392449,
+      "uniquePrimarySigners": 37,
+      "newToSample": 6,
+      "returning": 31,
+      "successfulNewToSample": 5,
+      "successfulReturning": 23
+    },
+    {
+      "slice": 19,
+      "slotStart": 438392450,
+      "slotEnd": 438410826,
+      "uniquePrimarySigners": 49,
+      "newToSample": 13,
+      "returning": 36,
+      "successfulNewToSample": 12,
+      "successfulReturning": 28
+    },
+    {
+      "slice": 20,
+      "slotStart": 438410827,
+      "slotEnd": 438429195,
+      "uniquePrimarySigners": 42,
+      "newToSample": 6,
+      "returning": 36,
+      "successfulNewToSample": 6,
+      "successfulReturning": 23
+    }
+  ],
+  "concentration": {
+    "overall": {
+      "successfulTop1SharePercent": 23.8,
+      "successfulTop5SharePercent": 49.2,
+      "transactionTop1SharePercent": 16.4,
+      "transactionTop5SharePercent": 36.2,
+      "transactionTop10SharePercent": 55.2,
+      "hhi": 0.048784092135388805
+    },
+    "bySlice": [
+      {
+        "slice": 1,
+        "successfulTransactions": 447,
+        "top1SuccessSharePercent": 18.3,
+        "top5SuccessSharePercent": 47.7,
+        "top10SuccessSharePercent": 68.7,
+        "successHhi": 0.06877067599557583
+      },
+      {
+        "slice": 2,
+        "successfulTransactions": 417,
+        "top1SuccessSharePercent": 26.4,
+        "top5SuccessSharePercent": 53.2,
+        "top10SuccessSharePercent": 70.7,
+        "successHhi": 0.09913795582239246
+      },
+      {
+        "slice": 3,
+        "successfulTransactions": 384,
+        "top1SuccessSharePercent": 23.2,
+        "top5SuccessSharePercent": 57.3,
+        "top10SuccessSharePercent": 77.6,
+        "successHhi": 0.09578450520833329
+      },
+      {
+        "slice": 4,
+        "successfulTransactions": 386,
+        "top1SuccessSharePercent": 22,
+        "top5SuccessSharePercent": 54.1,
+        "top10SuccessSharePercent": 75.4,
+        "successHhi": 0.08837821149561058
+      },
+      {
+        "slice": 5,
+        "successfulTransactions": 311,
+        "top1SuccessSharePercent": 33.1,
+        "top5SuccessSharePercent": 69.1,
+        "top10SuccessSharePercent": 88.1,
+        "successHhi": 0.15228337176001067
+      },
+      {
+        "slice": 6,
+        "successfulTransactions": 265,
+        "top1SuccessSharePercent": 21.5,
+        "top5SuccessSharePercent": 61.1,
+        "top10SuccessSharePercent": 85.7,
+        "successHhi": 0.10043431826272696
+      },
+      {
+        "slice": 7,
+        "successfulTransactions": 285,
+        "top1SuccessSharePercent": 34.4,
+        "top5SuccessSharePercent": 62.1,
+        "top10SuccessSharePercent": 84.2,
+        "successHhi": 0.1504832256078793
+      },
+      {
+        "slice": 8,
+        "successfulTransactions": 285,
+        "top1SuccessSharePercent": 35.8,
+        "top5SuccessSharePercent": 63.2,
+        "top10SuccessSharePercent": 81.1,
+        "successHhi": 0.15565404739919964
+      },
+      {
+        "slice": 9,
+        "successfulTransactions": 336,
+        "top1SuccessSharePercent": 27.7,
+        "top5SuccessSharePercent": 64,
+        "top10SuccessSharePercent": 82.4,
+        "successHhi": 0.12184665532879814
+      },
+      {
+        "slice": 10,
+        "successfulTransactions": 274,
+        "top1SuccessSharePercent": 25.5,
+        "top5SuccessSharePercent": 68.6,
+        "top10SuccessSharePercent": 88.3,
+        "successHhi": 0.13136022164206937
+      },
+      {
+        "slice": 11,
+        "successfulTransactions": 235,
+        "top1SuccessSharePercent": 20.9,
+        "top5SuccessSharePercent": 66.8,
+        "top10SuccessSharePercent": 83.8,
+        "successHhi": 0.11583521955636032
+      },
+      {
+        "slice": 12,
+        "successfulTransactions": 333,
+        "top1SuccessSharePercent": 16.5,
+        "top5SuccessSharePercent": 52,
+        "top10SuccessSharePercent": 76.3,
+        "successHhi": 0.07760012264516764
+      },
+      {
+        "slice": 13,
+        "successfulTransactions": 384,
+        "top1SuccessSharePercent": 19.8,
+        "top5SuccessSharePercent": 48.4,
+        "top10SuccessSharePercent": 70.3,
+        "successHhi": 0.07423231336805546
+      },
+      {
+        "slice": 14,
+        "successfulTransactions": 333,
+        "top1SuccessSharePercent": 22.8,
+        "top5SuccessSharePercent": 55.9,
+        "top10SuccessSharePercent": 80.8,
+        "successHhi": 0.09522134747359967
+      },
+      {
+        "slice": 15,
+        "successfulTransactions": 348,
+        "top1SuccessSharePercent": 19,
+        "top5SuccessSharePercent": 52.3,
+        "top10SuccessSharePercent": 83,
+        "successHhi": 0.08622341128286432
+      },
+      {
+        "slice": 16,
+        "successfulTransactions": 212,
+        "top1SuccessSharePercent": 17.9,
+        "top5SuccessSharePercent": 55.2,
+        "top10SuccessSharePercent": 76.4,
+        "successHhi": 0.08045567817728733
+      },
+      {
+        "slice": 17,
+        "successfulTransactions": 237,
+        "top1SuccessSharePercent": 16.5,
+        "top5SuccessSharePercent": 51.5,
+        "top10SuccessSharePercent": 77.2,
+        "successHhi": 0.07497017928038605
+      },
+      {
+        "slice": 18,
+        "successfulTransactions": 112,
+        "top1SuccessSharePercent": 20.5,
+        "top5SuccessSharePercent": 55.4,
+        "top10SuccessSharePercent": 75,
+        "successHhi": 0.08577806122448978
+      },
+      {
+        "slice": 19,
+        "successfulTransactions": 280,
+        "top1SuccessSharePercent": 24.6,
+        "top5SuccessSharePercent": 62.5,
+        "top10SuccessSharePercent": 80.7,
+        "successHhi": 0.10599489795918356
+      },
+      {
+        "slice": 20,
+        "successfulTransactions": 195,
+        "top1SuccessSharePercent": 31.8,
+        "top5SuccessSharePercent": 68.7,
+        "top10SuccessSharePercent": 82.1,
+        "successHhi": 0.14487836949375402
+      }
+    ]
+  },
+  "failureEcology": {
+    "bySlice": [
+      {
+        "slice": 1,
+        "failures": 288,
+        "explicitNoProfitOrRoute": 121,
+        "opaqueCustomErrors": 165,
+        "otherDocumentedFailures": 2
+      },
+      {
+        "slice": 2,
+        "failures": 165,
+        "explicitNoProfitOrRoute": 58,
+        "opaqueCustomErrors": 105,
+        "otherDocumentedFailures": 2
+      },
+      {
+        "slice": 3,
+        "failures": 230,
+        "explicitNoProfitOrRoute": 92,
+        "opaqueCustomErrors": 138,
+        "otherDocumentedFailures": 0
+      },
+      {
+        "slice": 4,
+        "failures": 188,
+        "explicitNoProfitOrRoute": 49,
+        "opaqueCustomErrors": 128,
+        "otherDocumentedFailures": 11
+      },
+      {
+        "slice": 5,
+        "failures": 129,
+        "explicitNoProfitOrRoute": 23,
+        "opaqueCustomErrors": 88,
+        "otherDocumentedFailures": 18
+      },
+      {
+        "slice": 6,
+        "failures": 118,
+        "explicitNoProfitOrRoute": 22,
+        "opaqueCustomErrors": 88,
+        "otherDocumentedFailures": 8
+      },
+      {
+        "slice": 7,
+        "failures": 93,
+        "explicitNoProfitOrRoute": 14,
+        "opaqueCustomErrors": 74,
+        "otherDocumentedFailures": 5
+      },
+      {
+        "slice": 8,
+        "failures": 141,
+        "explicitNoProfitOrRoute": 41,
+        "opaqueCustomErrors": 87,
+        "otherDocumentedFailures": 13
+      },
+      {
+        "slice": 9,
+        "failures": 164,
+        "explicitNoProfitOrRoute": 30,
+        "opaqueCustomErrors": 129,
+        "otherDocumentedFailures": 5
+      },
+      {
+        "slice": 10,
+        "failures": 121,
+        "explicitNoProfitOrRoute": 27,
+        "opaqueCustomErrors": 91,
+        "otherDocumentedFailures": 3
+      },
+      {
+        "slice": 11,
+        "failures": 78,
+        "explicitNoProfitOrRoute": 12,
+        "opaqueCustomErrors": 66,
+        "otherDocumentedFailures": 0
+      },
+      {
+        "slice": 12,
+        "failures": 138,
+        "explicitNoProfitOrRoute": 28,
+        "opaqueCustomErrors": 105,
+        "otherDocumentedFailures": 5
+      },
+      {
+        "slice": 13,
+        "failures": 186,
+        "explicitNoProfitOrRoute": 65,
+        "opaqueCustomErrors": 105,
+        "otherDocumentedFailures": 16
+      },
+      {
+        "slice": 14,
+        "failures": 111,
+        "explicitNoProfitOrRoute": 24,
+        "opaqueCustomErrors": 85,
+        "otherDocumentedFailures": 2
+      },
+      {
+        "slice": 15,
+        "failures": 134,
+        "explicitNoProfitOrRoute": 17,
+        "opaqueCustomErrors": 115,
+        "otherDocumentedFailures": 2
+      },
+      {
+        "slice": 16,
+        "failures": 97,
+        "explicitNoProfitOrRoute": 5,
+        "opaqueCustomErrors": 82,
+        "otherDocumentedFailures": 10
+      },
+      {
+        "slice": 17,
+        "failures": 131,
+        "explicitNoProfitOrRoute": 28,
+        "opaqueCustomErrors": 99,
+        "otherDocumentedFailures": 4
+      },
+      {
+        "slice": 18,
+        "failures": 72,
+        "explicitNoProfitOrRoute": 35,
+        "opaqueCustomErrors": 35,
+        "otherDocumentedFailures": 2
+      },
+      {
+        "slice": 19,
+        "failures": 77,
+        "explicitNoProfitOrRoute": 19,
+        "opaqueCustomErrors": 57,
+        "otherDocumentedFailures": 1
+      },
+      {
+        "slice": 20,
+        "failures": 50,
+        "explicitNoProfitOrRoute": 18,
+        "opaqueCustomErrors": 30,
+        "otherDocumentedFailures": 2
+      }
+    ],
+    "classes": [
+      {
+        "value": "opaque-custom-error",
+        "total": 1863
+      },
+      {
+        "value": "explicit-no-profit-or-route",
+        "total": 728
+      },
+      {
+        "value": "NoProfit",
+        "total": 79
+      },
+      {
+        "value": "BuySlippageBelowMinBaseAmountOut",
+        "total": 10
+      },
+      {
+        "value": "undocumented",
+        "total": 9
+      },
+      {
+        "value": "ExceededSlippage",
+        "total": 6
+      },
+      {
+        "value": "Overflow",
+        "total": 5
+      },
+      {
+        "value": "NotProfitable",
+        "total": 4
+      },
+      {
+        "value": "NonceAlreadyExists",
+        "total": 2
+      },
+      {
+        "value": "Unknown",
+        "total": 2
+      },
+      {
+        "value": "InsufficientLamports",
+        "total": 1
+      },
+      {
+        "value": "LessThanMinimumAmountOut",
+        "total": 1
+      },
+      {
+        "value": "BuyNotEnoughQuoteTokensToCoverFees",
+        "total": 1
+      }
+    ],
+    "noProfit": {
+      "observedCount": 728,
+      "observedPrimarySignerAddresses": 27,
+      "observedProgramIds": 3,
+      "top1PrimarySignerSharePercent": 22.4,
+      "top3PrimarySignerSharePercent": 41.1,
+      "top5PrimarySignerSharePercent": 54.7,
+      "programs": [
+        {
+          "value": "4Qv3mbzcq1bKmrhGG4voS3EemfPd7f838FLUU7wBHSyi",
+          "total": 472
+        },
+        {
+          "value": "Prism8hsRo6Ww5jiN5Zeh3YDPLZHqHduCPSAV7JF7qv",
+          "total": 230
+        },
+        {
+          "value": "HiPMPcYjLNPgjvdzBoavzMbCeHaXWkAuDxyuE9VoPrkf",
+          "total": 26
+        }
+      ]
+    }
+  },
+  "interpretation": {
+    "text": "New-to-the-sample primary signer addresses continued appearing and some returning addresses landed successful transactions. Successful execution was materially concentrated among a small address set. Explicit no-profit/no-route failures were concentrated among a smaller observed execution cohort rather than distributed market-wide.",
+    "evidence": "derived",
+    "limits": "Primary signer addresses are not proven users. This sample does not establish buyer intent, address coordination, causality, price impact, or that repeated activity is a retry."
+  }
+}

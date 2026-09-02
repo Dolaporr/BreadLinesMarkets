@@ -1,0 +1,362 @@
+{
+  "schema_version": 1,
+  "frozen_universe_size": 2508,
+  "selection": {
+    "input_field": "mint only",
+    "hash": "FNV-1a 32-bit over UTF-16 code units (all Solana base58 mint characters are single-byte ASCII)",
+    "order": "unsigned hash ascending; mint ascending only as collision tie-breaker",
+    "count": 50
+  },
+  "selected": [
+    {
+      "mint": "6W7yafQNHvTVe4sVEU7CUB8C1jp75eE13QoXG5mtpump",
+      "stable_hash_fnv1a_32": 357210,
+      "graduation_slot": 366470929,
+      "graduation_timestamp_utc": "2025-09-13T04:11:01.000Z",
+      "observation_end_utc": "2025-09-13T06:11:01.000Z"
+    },
+    {
+      "mint": "Cv34wV9exqDMGzyB3Az2Bu1FBhFq2jd8kihhNVKHpump",
+      "stable_hash_fnv1a_32": 2105054,
+      "graduation_slot": 364595137,
+      "graduation_timestamp_utc": "2025-09-04T11:45:31.000Z",
+      "observation_end_utc": "2025-09-04T13:45:31.000Z"
+    },
+    {
+      "mint": "7QsV99yRUfiourLZqiVXEcvDEfFJ98w1VXhxuF77pump",
+      "stable_hash_fnv1a_32": 6134894,
+      "graduation_slot": 367066902,
+      "graduation_timestamp_utc": "2025-09-15T21:28:47.000Z",
+      "observation_end_utc": "2025-09-15T23:28:47.000Z"
+    },
+    {
+      "mint": "9ujsPtkknRL8eFEMqm7dY9WjkLJfLaiEiGD2BmNYrf5C",
+      "stable_hash_fnv1a_32": 7836001,
+      "graduation_slot": 365798070,
+      "graduation_timestamp_utc": "2025-09-10T01:40:02.000Z",
+      "observation_end_utc": "2025-09-10T03:40:02.000Z"
+    },
+    {
+      "mint": "BgSGiwq2pe4X1Zz6nMUcpvtAso8GHvDapz1W4SRApump",
+      "stable_hash_fnv1a_32": 8552673,
+      "graduation_slot": 365077166,
+      "graduation_timestamp_utc": "2025-09-06T17:12:49.000Z",
+      "observation_end_utc": "2025-09-06T19:12:49.000Z"
+    },
+    {
+      "mint": "4HoaDiJLBHQ6vnutgfW3isNhR7a4LoVHX3dLe5wNpump",
+      "stable_hash_fnv1a_32": 9194676,
+      "graduation_slot": 366717724,
+      "graduation_timestamp_utc": "2025-09-14T07:13:14.000Z",
+      "observation_end_utc": "2025-09-14T09:13:14.000Z"
+    },
+    {
+      "mint": "BuQtVLGBUX8QNrCTVTsDjHuusYGJhFhFetAYZcHHpump",
+      "stable_hash_fnv1a_32": 14415233,
+      "graduation_slot": 365132685,
+      "graduation_timestamp_utc": "2025-09-06T23:24:51.000Z",
+      "observation_end_utc": "2025-09-07T01:24:51.000Z"
+    },
+    {
+      "mint": "2EoUm2gEJXyh6V5TcweKB9bYirpMBfyRYyX7uSCnuqET",
+      "stable_hash_fnv1a_32": 18398397,
+      "graduation_slot": 365604962,
+      "graduation_timestamp_utc": "2025-09-09T04:07:59.000Z",
+      "observation_end_utc": "2025-09-09T06:07:59.000Z"
+    },
+    {
+      "mint": "HqTgBjjaYkvyzysnWaA7LrDtgjNVDA4v3y1bQbMLqrLw",
+      "stable_hash_fnv1a_32": 20714374,
+      "graduation_slot": 366896838,
+      "graduation_timestamp_utc": "2025-09-15T02:50:03.000Z",
+      "observation_end_utc": "2025-09-15T04:50:03.000Z"
+    },
+    {
+      "mint": "zdV2H6ctGRHiuRYsavafUfM2Fc8VRwgty28ZrTzpump",
+      "stable_hash_fnv1a_32": 20767823,
+      "graduation_slot": 366635962,
+      "graduation_timestamp_utc": "2025-09-13T22:16:00.000Z",
+      "observation_end_utc": "2025-09-14T00:16:00.000Z"
+    },
+    {
+      "mint": "5gBMZ1bwUhYXBzoSTcxAcdp9CWjL2MvdjQQmkCtHpump",
+      "stable_hash_fnv1a_32": 21243010,
+      "graduation_slot": 364559827,
+      "graduation_timestamp_utc": "2025-09-04T07:51:56.000Z",
+      "observation_end_utc": "2025-09-04T09:51:56.000Z"
+    },
+    {
+      "mint": "B3RniShLDv478pYRHaet9Bf7f7324XCLLBbUwQ7cpump",
+      "stable_hash_fnv1a_32": 24224950,
+      "graduation_slot": 365742500,
+      "graduation_timestamp_utc": "2025-09-09T19:28:14.000Z",
+      "observation_end_utc": "2025-09-09T21:28:14.000Z"
+    },
+    {
+      "mint": "AmLodSijEM5zb1Rchaq3w9dmLvBBoXopA3caBXxxbYRN",
+      "stable_hash_fnv1a_32": 24599626,
+      "graduation_slot": 365682918,
+      "graduation_timestamp_utc": "2025-09-09T12:49:25.000Z",
+      "observation_end_utc": "2025-09-09T14:49:25.000Z"
+    },
+    {
+      "mint": "DCCAsm2eHypckgV6RUzuYL8embiuC259KSRhUYKyN2Kb",
+      "stable_hash_fnv1a_32": 24990254,
+      "graduation_slot": 367004316,
+      "graduation_timestamp_utc": "2025-09-15T14:36:50.000Z",
+      "observation_end_utc": "2025-09-15T16:36:50.000Z"
+    },
+    {
+      "mint": "7LpLi62b9ojEaabSQwqt2W6afqGVbc8nMefaqkFZpump",
+      "stable_hash_fnv1a_32": 28323438,
+      "graduation_slot": 365974366,
+      "graduation_timestamp_utc": "2025-09-10T21:18:52.000Z",
+      "observation_end_utc": "2025-09-10T23:18:52.000Z"
+    },
+    {
+      "mint": "BarT7myTrMcRX4qzuoJ7mryU2WLNT1YDL1RaSbrhpump",
+      "stable_hash_fnv1a_32": 28927010,
+      "graduation_slot": 366789248,
+      "graduation_timestamp_utc": "2025-09-14T15:03:41.000Z",
+      "observation_end_utc": "2025-09-14T17:03:41.000Z"
+    },
+    {
+      "mint": "AcNia1KNYeaDAuswtpJJZpPqzpuFNyvjd7LbxMXSShji",
+      "stable_hash_fnv1a_32": 33002922,
+      "graduation_slot": 365853277,
+      "graduation_timestamp_utc": "2025-09-10T07:48:49.000Z",
+      "observation_end_utc": "2025-09-10T09:48:49.000Z"
+    },
+    {
+      "mint": "GxSukK5hhSWVeJyuGX5QZLz6feim3nE4n3jCxcB5pump",
+      "stable_hash_fnv1a_32": 35903414,
+      "graduation_slot": 366430464,
+      "graduation_timestamp_utc": "2025-09-12T23:45:24.000Z",
+      "observation_end_utc": "2025-09-13T01:45:24.000Z"
+    },
+    {
+      "mint": "HGGwMbxV2Z8kMNBEUzD2d4XCWD8Kc5roEhVF9QjCKKWV",
+      "stable_hash_fnv1a_32": 36357098,
+      "graduation_slot": 365552407,
+      "graduation_timestamp_utc": "2025-09-08T22:15:31.000Z",
+      "observation_end_utc": "2025-09-09T00:15:31.000Z"
+    },
+    {
+      "mint": "HpoCrn1dwFg3FdE1QoLE5U3dMRhwZPuiMtcRNVSuaXPc",
+      "stable_hash_fnv1a_32": 39356601,
+      "graduation_slot": 364088833,
+      "graduation_timestamp_utc": "2025-09-02T04:04:35.000Z",
+      "observation_end_utc": "2025-09-02T06:04:35.000Z"
+    },
+    {
+      "mint": "KHuRPwe8gbhgwKeXisT9otKPJ5JWnmvFQUvbFJFpump",
+      "stable_hash_fnv1a_32": 40443888,
+      "graduation_slot": 365264001,
+      "graduation_timestamp_utc": "2025-09-07T14:03:23.000Z",
+      "observation_end_utc": "2025-09-07T16:03:23.000Z"
+    },
+    {
+      "mint": "691BubgVgGGJLwEwrYimekchnU749LuSbiYygcuMa2ie",
+      "stable_hash_fnv1a_32": 44538346,
+      "graduation_slot": 366025476,
+      "graduation_timestamp_utc": "2025-09-11T02:59:40.000Z",
+      "observation_end_utc": "2025-09-11T04:59:40.000Z"
+    },
+    {
+      "mint": "A9mthP91GvnrTpbXAjodBoM6YwmscnsAytCcxb9Kpump",
+      "stable_hash_fnv1a_32": 48292257,
+      "graduation_slot": 366848058,
+      "graduation_timestamp_utc": "2025-09-14T21:29:49.000Z",
+      "observation_end_utc": "2025-09-14T23:29:49.000Z"
+    },
+    {
+      "mint": "mEEFqby8dUNgCesPoNqZzc8t6mR4dfsd1MY3U9Wpump",
+      "stable_hash_fnv1a_32": 48846109,
+      "graduation_slot": 363926901,
+      "graduation_timestamp_utc": "2025-09-01T10:16:29.000Z",
+      "observation_end_utc": "2025-09-01T12:16:29.000Z"
+    },
+    {
+      "mint": "G3FoXHoQDuGkEG8ZqQd7riC9uB1N51bg7JuxJEPNpump",
+      "stable_hash_fnv1a_32": 48958369,
+      "graduation_slot": 364726492,
+      "graduation_timestamp_utc": "2025-09-05T02:14:57.000Z",
+      "observation_end_utc": "2025-09-05T04:14:57.000Z"
+    },
+    {
+      "mint": "B4qwwAtNFwcVuDfatzuriLEbkQEAwMJ6m1DKdTEtpump",
+      "stable_hash_fnv1a_32": 50550334,
+      "graduation_slot": 365463909,
+      "graduation_timestamp_utc": "2025-09-08T12:23:31.000Z",
+      "observation_end_utc": "2025-09-08T14:23:31.000Z"
+    },
+    {
+      "mint": "28ZWdmePAQjsEd54bcgm9BxRCLt2qy7Vsx65gWwgpump",
+      "stable_hash_fnv1a_32": 50609343,
+      "graduation_slot": 364932681,
+      "graduation_timestamp_utc": "2025-09-06T01:05:22.000Z",
+      "observation_end_utc": "2025-09-06T03:05:22.000Z"
+    },
+    {
+      "mint": "2oFymDJhPxzjPwLk4RBMpjosVoxaLFM8oj1K8rpepump",
+      "stable_hash_fnv1a_32": 52076910,
+      "graduation_slot": 366259360,
+      "graduation_timestamp_utc": "2025-09-12T04:57:22.000Z",
+      "observation_end_utc": "2025-09-12T06:57:22.000Z"
+    },
+    {
+      "mint": "GjSNRB7yCBe9bXDLDSUcTGuG99aYuWXSucUsaSsbpump",
+      "stable_hash_fnv1a_32": 52385870,
+      "graduation_slot": 366792203,
+      "graduation_timestamp_utc": "2025-09-14T15:23:05.000Z",
+      "observation_end_utc": "2025-09-14T17:23:05.000Z"
+    },
+    {
+      "mint": "9UQDs3YcRZ63Ai4LMYndwPMhD1MAswih3WoRmcrHpump",
+      "stable_hash_fnv1a_32": 53912834,
+      "graduation_slot": 365140002,
+      "graduation_timestamp_utc": "2025-09-07T00:13:54.000Z",
+      "observation_end_utc": "2025-09-07T02:13:54.000Z"
+    },
+    {
+      "mint": "BV3PUxYhLs1X859A8ev7QaGnQLESnqY7kTaak3Aepump",
+      "stable_hash_fnv1a_32": 55936663,
+      "graduation_slot": 365017449,
+      "graduation_timestamp_utc": "2025-09-06T10:32:12.000Z",
+      "observation_end_utc": "2025-09-06T12:32:12.000Z"
+    },
+    {
+      "mint": "5H3GsjxjzFPAo7xQFZ2qM25npd3vzJYUZT7kqgU1pump",
+      "stable_hash_fnv1a_32": 56180537,
+      "graduation_slot": 365951972,
+      "graduation_timestamp_utc": "2025-09-10T18:48:57.000Z",
+      "observation_end_utc": "2025-09-10T20:48:57.000Z"
+    },
+    {
+      "mint": "BMge7se4AqyTqEpcTSHURzA4YG9rNvmHscFEFJK9pump",
+      "stable_hash_fnv1a_32": 56466235,
+      "graduation_slot": 365747643,
+      "graduation_timestamp_utc": "2025-09-09T20:02:54.000Z",
+      "observation_end_utc": "2025-09-09T22:02:54.000Z"
+    },
+    {
+      "mint": "6C5TsUN95ZtEyb3NvaK6KoDKGMrqGnCUMtZysdpwpump",
+      "stable_hash_fnv1a_32": 57054847,
+      "graduation_slot": 364817776,
+      "graduation_timestamp_utc": "2025-09-05T12:19:18.000Z",
+      "observation_end_utc": "2025-09-05T14:19:18.000Z"
+    },
+    {
+      "mint": "FxVxbhxq4xqAjSjVCsYNFHgVr44hF5i5CnSTpgNvpump",
+      "stable_hash_fnv1a_32": 59775027,
+      "graduation_slot": 364275682,
+      "graduation_timestamp_utc": "2025-09-03T00:36:45.000Z",
+      "observation_end_utc": "2025-09-03T02:36:45.000Z"
+    },
+    {
+      "mint": "G8eQ2L3o4KcE7bWFmXkonXduP9GeHUx4w72GXBhapump",
+      "stable_hash_fnv1a_32": 59929005,
+      "graduation_slot": 366420472,
+      "graduation_timestamp_utc": "2025-09-12T22:39:40.000Z",
+      "observation_end_utc": "2025-09-13T00:39:40.000Z"
+    },
+    {
+      "mint": "D7NXw5B5pgeXdGBn5M51W3voLw3tMerVA6YWsW4ht6nh",
+      "stable_hash_fnv1a_32": 61743190,
+      "graduation_slot": 365800771,
+      "graduation_timestamp_utc": "2025-09-10T01:58:08.000Z",
+      "observation_end_utc": "2025-09-10T03:58:08.000Z"
+    },
+    {
+      "mint": "8QXszamtp4Egz85QgGCShm5vkS3zrpgGXTtKBdhspump",
+      "stable_hash_fnv1a_32": 64966420,
+      "graduation_slot": 364633869,
+      "graduation_timestamp_utc": "2025-09-04T16:01:43.000Z",
+      "observation_end_utc": "2025-09-04T18:01:43.000Z"
+    },
+    {
+      "mint": "5pwnF8xxNabH8EfktVVGJhPNqLRMAedLjS2sNYnpump",
+      "stable_hash_fnv1a_32": 66261454,
+      "graduation_slot": 365785571,
+      "graduation_timestamp_utc": "2025-09-10T00:16:33.000Z",
+      "observation_end_utc": "2025-09-10T02:16:33.000Z"
+    },
+    {
+      "mint": "AaFwmYwCd5aSWoNKsLJkyheXqUg23WE4ueLH75z829NA",
+      "stable_hash_fnv1a_32": 66273646,
+      "graduation_slot": 364543543,
+      "graduation_timestamp_utc": "2025-09-04T06:04:32.000Z",
+      "observation_end_utc": "2025-09-04T08:04:32.000Z"
+    },
+    {
+      "mint": "EnndMxKGySTzBR93cHgnk3EwSiwACWFtTEnGKneWpump",
+      "stable_hash_fnv1a_32": 66653078,
+      "graduation_slot": 365545459,
+      "graduation_timestamp_utc": "2025-09-08T21:29:04.000Z",
+      "observation_end_utc": "2025-09-08T23:29:04.000Z"
+    },
+    {
+      "mint": "HZco1hXj6hpxF9paAH5Dasj14mNTjqt8Xrp28fvopump",
+      "stable_hash_fnv1a_32": 67740456,
+      "graduation_slot": 365485601,
+      "graduation_timestamp_utc": "2025-09-08T14:49:00.000Z",
+      "observation_end_utc": "2025-09-08T16:49:00.000Z"
+    },
+    {
+      "mint": "AvcqQrneoh1RnoHwu446GxysioKKSsLLsMM12mMHpump",
+      "stable_hash_fnv1a_32": 73043026,
+      "graduation_slot": 366612602,
+      "graduation_timestamp_utc": "2025-09-13T19:42:14.000Z",
+      "observation_end_utc": "2025-09-13T21:42:14.000Z"
+    },
+    {
+      "mint": "H2cX6UXdUL23nsdFdixeFoUJxDvXnj1T7n54ox86pump",
+      "stable_hash_fnv1a_32": 73137558,
+      "graduation_slot": 366186884,
+      "graduation_timestamp_utc": "2025-09-11T20:57:29.000Z",
+      "observation_end_utc": "2025-09-11T22:57:29.000Z"
+    },
+    {
+      "mint": "VM6mqZ8TcY9AP36EJnjseUFL25anYsFQ23qJC25SuHU",
+      "stable_hash_fnv1a_32": 73485843,
+      "graduation_slot": 363865109,
+      "graduation_timestamp_utc": "2025-09-01T03:28:51.000Z",
+      "observation_end_utc": "2025-09-01T05:28:51.000Z"
+    },
+    {
+      "mint": "9KkCYyJjUamrpquXVgHYj5e2prpQ3w7cRLGXtHsvpump",
+      "stable_hash_fnv1a_32": 77300911,
+      "graduation_slot": 367003111,
+      "graduation_timestamp_utc": "2025-09-15T14:28:55.000Z",
+      "observation_end_utc": "2025-09-15T16:28:55.000Z"
+    },
+    {
+      "mint": "3FQDuy3ouBfEah58gpN4BkSY6QhnLtfK6NfsncHxpump",
+      "stable_hash_fnv1a_32": 79368695,
+      "graduation_slot": 366815372,
+      "graduation_timestamp_utc": "2025-09-14T17:54:55.000Z",
+      "observation_end_utc": "2025-09-14T19:54:55.000Z"
+    },
+    {
+      "mint": "7RJvpPeGNgn8PcWKyZ9uqSeXLuysp8V4d8za2QAGpump",
+      "stable_hash_fnv1a_32": 81718669,
+      "graduation_slot": 366185794,
+      "graduation_timestamp_utc": "2025-09-11T20:50:13.000Z",
+      "observation_end_utc": "2025-09-11T22:50:13.000Z"
+    },
+    {
+      "mint": "CZ2uqyFo8PuMcETuG3NT893h5i9m4YEm1eWf1VHfpump",
+      "stable_hash_fnv1a_32": 82947044,
+      "graduation_slot": 366220644,
+      "graduation_timestamp_utc": "2025-09-12T00:41:30.000Z",
+      "observation_end_utc": "2025-09-12T02:41:30.000Z"
+    },
+    {
+      "mint": "FyzjwiY1x2WMXtReLN25jBPHmktLafSvAxAi8w19pump",
+      "stable_hash_fnv1a_32": 83037014,
+      "graduation_slot": 365927589,
+      "graduation_timestamp_utc": "2025-09-10T16:06:02.000Z",
+      "observation_end_utc": "2025-09-10T18:06:02.000Z"
+    }
+  ]
+}
