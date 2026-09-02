@@ -3,7 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 const pageUrl = 'https://breadlinesmarkets.com/research/execution-evidence-boundaries'
-const socialImage = 'https://breadlinesmarkets.com/execution-evidence-boundaries-og.jpg'
+const socialImage = 'https://breadlinesmarkets.com/execution-evidence-boundaries-og-v2.png'
 const workedExampleSignature = '11AFoW5L6v7vgMoomdC23nDKTSYD66Qn7BxB7UgrS25Son7ABJZ174NVg8Qc64rR4osEWGHhBWb98NKSAeueRSP'
 const workedExampleExplorerUrl = `https://explorer.solana.com/tx/${workedExampleSignature}?cluster=mainnet-beta`
 
@@ -87,7 +87,7 @@ export default function ExecutionEvidenceBoundariesPage() {
 
         <figure className="mt-10 overflow-hidden rounded-xl border border-border bg-card">
           <Image
-            src="/execution-evidence-boundaries-og.jpg"
+            src="/execution-evidence-boundaries-og-v2.png"
             alt="Breadlines visual identity: a breadline joining an execution path, with the words What landed, what failed, what it cost."
             width={1280}
             height={720}
