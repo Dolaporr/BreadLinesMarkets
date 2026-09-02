@@ -1,12 +1,14 @@
 # Execution Evidence Boundaries on Solana
 
-**Breadlines research note — v0**  
+**Breadlines research note — v0.1**  
 **Date:** 2026-09-02  
 **Status:** Public discussion draft; not a product specification or performance claim.
 
 ![Illustrative execution evidence boundary](assets/execution-evidence-boundaries-cover-v1.png)
 
 *Illustrative cover only. All factual claims in this note are supported by the cited sources below.*
+
+**v0.1 revision:** adds Raiku as a source-specific deterministic-inclusion layer, restores the five open technical questions in the public presentation, and adds a worked public receipt example.
 
 ## Summary
 
@@ -52,6 +54,14 @@ Jito describes BAM as a layer for transparent, verifiable sequencing, with crypt
 
 Breadlines does not claim to reproduce BAM, make ordering decisions, or infer BAM participation merely from a generic Solana transaction.
 
+### Raiku
+
+Raiku describes Ahead-of-Time reservations, Just-in-Time execution, and signed pre-confirmations as a deterministic-inclusion layer. [Raiku: Determinism for Payments](https://raiku.com/blog/raiku-determinism-for-payments)
+
+**Breadlines’ complementary question:** How can source-specific reservation or pre-confirmation evidence be joined to a final ledger receipt so an application distinguishes “a reservation was issued” from “the transaction finally landed and executed”?
+
+Breadlines does not claim a generic Solana ledger signature proves that Raiku reserved, scheduled, guaranteed, or delivered that transaction. Those facts require Raiku-issued evidence joined to the final receipt.
+
 ### Triton / Cascade
 
 Triton describes Cascade as a SWQoS-backed transaction-delivery network and publishes client-side guidance covering retries, compute budgets, and priority fees. [Cascade](https://docs.triton.one/chains/solana/cascade) · [Transaction sending advice](https://docs.triton.one/chains/solana/cascade/sending-txs)
@@ -78,6 +88,18 @@ An evidence-bounded receipt should distinguish:
 4. **Unknown** — facts requiring missing telemetry: submission time, ingress, unlanded attempts, arrival order, identity, and causal counterfactuals.
 
 The objective is not to say more than an explorer. It is to prevent a receipt from silently turning an inference into a fact.
+
+## 3.1 Worked example: a real failed transaction
+
+**Public signature:** [`11AFoW5L6v7vgMoomdC23nDKTSYD66Qn7BxB7UgrS25Son7ABJZ174NVg8Qc64rR4osEWGHhBWb98NKSAeueRSP`](https://explorer.solana.com/tx/11AFoW5L6v7vgMoomdC23nDKTSYD66Qn7BxB7UgrS25Son7ABJZ174NVg8Qc64rR4osEWGHhBWb98NKSAeueRSP?cluster=mainnet-beta)
+
+**Chain-proven:** The transaction landed in slot `438137374` and failed. Its final program logs identify `NA247a7YE9S3p9CdKmMyETx8TTwbSdVbVYHHxpnHTUV` returning custom error `60 (0x3c)`. The receipt records an 8,234-lamport fee and 93,689 compute units consumed.
+
+**Directly observed:** A declared target-slot-only context was acquired through a full public `getBlock` response: 1,247 transactions including the target. Forty of the other records shared at least one writable account with it; nine public signer addresses recurred among those overlapping records.
+
+**Unknown:** The available logs do not decode custom error 60. The evidence does not establish submission time, delivery provider, leader arrival order, identity, a state change, causal responsibility by an overlapping transaction, or a counterfactual result under another fee, route, provider, or scheduler.
+
+This example demonstrates a context layer, not a causal “why you lost” engine.
 
 ## 4. What Breadlines is not proposing
 
@@ -111,6 +133,7 @@ The goal is a shared vocabulary in which protocol teams, execution providers, ap
 - [Anza26 — Brennan Watt, CEO](https://www.anza.xyz/blog/anza26)
 - [Anza: Solana Constellation](https://www.anza.xyz/blog/constellation)
 - [Jito BAM overview](https://www.jito.network/bam/)
+- [Raiku: Determinism for Payments](https://raiku.com/blog/raiku-determinism-for-payments)
 - [Triton Cascade](https://docs.triton.one/chains/solana/cascade)
 - [Triton transaction-sending advice](https://docs.triton.one/chains/solana/cascade/sending-txs)
 - [Helius Sender API](https://www.helius.dev/docs/api-reference/sender/sendtransaction)
