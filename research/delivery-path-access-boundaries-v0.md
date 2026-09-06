@@ -14,7 +14,7 @@ Three findings matter:
 
 1. **Axiom:** the public Axiom materials we could locate document trading-product settings, but do not document an external raw-transaction submission endpoint, authentication method, rate limit, or developer pricing surface for this experiment.
 2. **Nozomi:** its public submission service requires every transaction to include a minimum 0.001 SOL System Program tip. A comparison in which only the Nozomi arm contains that instruction is not a transaction-shape-controlled path comparison.
-3. **Direct TPU and BAM:** BAM’s own documentation says direct-TPU flow to a BAM-connected validator is processed through BAM before execution. Direct TPU is therefore not a clean, independent non-BAM control.
+3. **BAM and generic ingress:** BAM documents a specialised Maker Priority Plugin sender for statically enrolled market makers. Separately, it says both RPC and Direct-TPU flow are routed through BAM on a connected leader. The plugin is not a general research sender surface, and generic ingress does not provide a clean non-BAM control there.
 
 This is a negative access result, not evidence that any path is better or worse. It is exactly the kind of result a preregistration should surface before a measurement creates a misleading chart.
 
@@ -53,7 +53,7 @@ If only the Nozomi arm contained that transfer, any observed difference would co
 
 A later two-arm design could, in principle, put the identical Nozomi tip instruction into both the Nozomi and Direct-TPU arms. That would make the transaction shape comparable between those two arms, but it would be a study of **Nozomi submission versus a self-operated direct-TPU submission for the same tipped transaction**—not a general “normal transaction” benchmark. That is a different design and would need a separately reviewed preregistration.
 
-## 4. Finding: Direct TPU is not a clean non-BAM control
+## 4. Finding: RPC and Direct TPU are not clean non-BAM controls on a BAM-connected leader
 
 Solana distinguishes submission through an RPC server from direct submission to leaders through a TPU client. In the direct case, client software owns leader forwarding and rebroadcast behavior. [Solana: Retrying Transactions](https://solana.com/developers/cookbook/transactions/retry)
 
@@ -61,24 +61,31 @@ Direct TPU is therefore not a hosted vendor endpoint that Breadlines can simply 
 
 More importantly, BAM’s public documentation states:
 
+> “RPC flow: If your validator is connected to BAM and scheduled to be a leader soon, transactions submitted via RPC are routed through BAM.”
+>
 > “Direct TPU flow: Transactions sent directly to your TPU port are processed through BAM before execution.” [BAM Documentation](https://bam.dev/docs/bam/bam-overview/)
 
-That statement applies when the receiving validator is connected to BAM. It means a direct-TPU attempt is not a reliable non-BAM control: depending on the leader, it may enter BAM’s processing path anyway.
+Those statements apply when the receiving validator is connected to BAM. They mean neither an RPC attempt nor a Direct-TPU attempt is a reliable non-BAM control on such a leader: both may enter BAM’s processing path before execution.
 
-This does not make Direct TPU invalid. It makes the originally proposed **BAM versus Direct TPU** contrast ambiguous. A valid future BAM study would need access to a documented BAM submission/attestation interface and an explicit plan for determining what execution environment each trial actually reached.
+This does not make RPC or Direct TPU invalid. It makes the originally proposed **BAM versus Direct TPU** contrast ambiguous. A valid future BAM study would need an explicit plan for determining what execution environment each trial actually reached, not an assumption based on the client’s ingress choice.
 
-## 5. What we did not find for BAM
+## 5. Finding: BAM documents an enrolled Maker Priority Plugin, not a general research sender
 
-Jito describes BAM as an execution layer with programmable interfaces connected to its scheduler and says developers can apply for early access. [Jito BAM](https://www.jito.network/bam/) The public documentation explains the BAM Node and Validator architecture, but it does not publish an external Breadlines-ready sender endpoint, authentication method, pricing, or rate-limit contract for the proposed experiment. [BAM Documentation](https://bam.dev/docs/bam/bam-overview/)
+The BAM Maker Priority Plugin is a documented transaction ingress path for **enrolled market makers**. Its Plugin TPU accepts raw wire-format Solana transactions as UDP datagrams on default port `5012` (with the operator asked to confirm the port). The documentation specifies a canonical transaction structure, including an enrolled signing key, Compute Budget instructions, an enrolled market-update program, a writable enrolled market account, and a configured 8-byte sequence number. [BAM Maker Plugin: Getting Started](https://bam.dev/docs/bam/maker-plugin/getting-started/)
 
-Breadlines therefore has no basis to label BAM as a presently accessible independent submission arm. Early access or a documented partner interface could change that fact. It has not been requested as part of this note.
+This is not an open sender interface. The BAM node operator configures enrollment before the node starts; authorised signers, programs, markets, sequence-number offsets, and fee floors are static. BAM explicitly says there is no runtime registration API. [BAM Maker Plugin: How It Works](https://bam.dev/docs/bam/maker-plugin/how-it-works/)
+
+Breadlines is not an enrolled market maker with an enrolled market-update program and market account. Its proposed harmless study transaction therefore cannot satisfy the documented plugin transaction and validation rules. That—not an absence of documentation—is the reason BAM cannot currently be a study arm.
+
+The distinction matters because the plugin is structurally different from ordinary traffic. BAM says Phase 1 drains enrolled maker-plugin transactions before bundles and regular transactions, and that this ordering cannot be changed by higher fees or tips. The correct future question is whether enrollment is strictly market-maker scoped or whether BAM supports a deliberately bounded research-sender path; it is not whether BAM has documented a sender interface at all.
 
 ## 6. What this note establishes—and what it does not
 
 ### Established by public documentation
 
 - Nozomi has a documented API-keyed `sendTransaction` service and a minimum-tip requirement.
-- BAM documents early-access developer interfaces and documents that Direct TPU flow through a BAM-connected validator is processed through BAM before execution.
+- BAM documents a UDP Maker Priority Plugin with static market-maker enrollment and strict transaction validation rules.
+- BAM documents that both RPC and Direct-TPU flow through a BAM-connected validator are processed through BAM before execution.
 - Solana documents Direct TPU as client-managed leader submission and forwarding, rather than a single hosted sender product.
 - Breadlines did not find a documented public Axiom sender integration for this exact experiment.
 
@@ -99,7 +106,7 @@ A credible later study needs one of two routes:
 1. **A documented, equivalent public interface:** each included arm accepts the same signed transaction shape, with published auth, cost, and rate-limit terms; or
 2. **A declared two-arm mechanism study:** for example, Nozomi versus self-operated Direct TPU, with the mandatory Nozomi tip transfer deliberately included in both arms and all remaining client behavior fixed in advance.
 
-BAM would require early-access or partner documentation that specifies how a trial enters its scheduler and how any resulting attestation can be joined to a final ledger receipt. Axiom would require a documented external submission interface, if it intends to be a separately measurable arm.
+BAM would require a market-maker enrollment that genuinely fits the study, or a separately documented research-sender enrollment path, plus a way to join scheduler evidence to a final ledger receipt. Axiom would require a documented external submission interface, if it intends to be a separately measurable arm.
 
 Until then, the honest result is that the original four-path comparison is **not runnable as a controlled study**.
 
@@ -118,4 +125,6 @@ Stopping before collection preserves the useful question for later. It also draw
 - [Nozomi: Tipping & FAQ](https://use.temporal.xyz/nozomi/tipping-and-faq)
 - [Jito BAM](https://www.jito.network/bam/)
 - [BAM Documentation](https://bam.dev/docs/bam/bam-overview/)
+- [BAM Maker Priority Plugin: Getting Started](https://bam.dev/docs/bam/maker-plugin/getting-started/)
+- [BAM Maker Priority Plugin: How It Works](https://bam.dev/docs/bam/maker-plugin/how-it-works/)
 - [Solana: Retrying Transactions](https://solana.com/developers/cookbook/transactions/retry)
