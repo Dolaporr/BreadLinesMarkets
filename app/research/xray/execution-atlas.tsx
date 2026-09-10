@@ -36,6 +36,6 @@ export default function ExecutionAtlas({ current, selected, onSelect }: { curren
       <div className={styles.atlasControls}><label>Rotate depth view<input type="range" min="-40" max="40" value={rotation} disabled={!spatial} onChange={e => setRotation(Number(e.target.value))} aria-label="Rotate depth view" /></label>
         {current.execution.failurePath.length > 0 && <button className={styles.secondary} onClick={() => { onSelect(current.execution.failurePath[step % current.execution.failurePath.length]); setStep(s => s + 1) }}>Step through failure path →</button>}</div>
     </>}
-    <p className={styles.caption}>Geometry shows log order and call depth—not time, arrival order or causal competition. {current.execution.logsComplete ? 'Closed log frames.' : 'Incomplete logs: graph may omit calls.'} {frames.length > 80 ? `First 80 of ${frames.length} calls shown; the list below retains all calls.` : `${frames.length} recorded calls.`} Select any node to read its logs below.</p>
+    <p className={styles.caption}>{current.state === 'LANDED_FAILED' ? 'A call marked SUCCESS returned success and was still rolled back: this transaction committed nothing. ' : ''}Geometry shows log order and call depth—not time, arrival order or causal competition. {current.execution.logsComplete ? 'Closed log frames.' : 'Incomplete logs: graph may omit calls.'} {frames.length > 80 ? `First 80 of ${frames.length} calls shown; the list below retains all calls.` : `${frames.length} recorded calls.`} Select any node to read its logs below.</p>
   </section>
 }

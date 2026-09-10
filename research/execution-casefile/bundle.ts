@@ -29,10 +29,11 @@ export async function openEvidence(value: unknown): Promise<{ caseFile: CaseFile
     const c = buildCaseFile(raw as CaseFile['receipt'], { source: 'Local receipt import (unverified RPC origin)', sha256: await receiptHash(raw) })
     return { caseFile: c, trace: null }
   }
-  // Versioned bundles and the original unversioned v1.0 export are supported.
+  // Versioned bundles and the original unversioned v1.0 export are supported. Earlier case files are
+  // recomputed from their retained receipt, so a reopened v1.0/v1.1 export gains the commitment fields.
   if ('format' in data && (data.format !== 'breadlines-evidence-bundle' || data.version !== 1)) throw new Error('Unsupported evidence bundle version.')
   const saved = data.caseFile as CaseFile
-  if (!saved || !['breadlines-casefile-v1.0.0', 'breadlines-casefile-v1.1.0'].includes(saved.schemaVersion)) throw new Error('Unsupported case-file schema.')
+  if (!saved || !['breadlines-casefile-v1.0.0', 'breadlines-casefile-v1.1.0', 'breadlines-casefile-v1.2.0'].includes(saved.schemaVersion)) throw new Error('Unsupported case-file schema.')
   const hash = await receiptHash(saved.receipt)
   if (saved.provenance?.sha256 !== hash) throw new Error('Receipt checksum does not match. Reopen the original receipt to investigate changed evidence.')
   if (typeof saved.provenance.source !== 'string' || saved.provenance.source.length > 3000) throw new Error('Source provenance is missing or invalid.')
