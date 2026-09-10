@@ -1,7 +1,7 @@
 import { collectComputeBudget, derivePriorityFeeLamports, findExplicitProgramError, type ReceiptRpcTransaction, type ReceiptRpcInstruction } from './receipt-parser.ts'
 import type { buildExecutionEpisode } from '../../scripts/execution-episode-core.ts'
 
-export const CASEFILE_VERSION = 'breadlines-casefile-v1.1.0'
+export const CASEFILE_VERSION = 'breadlines-casefile-v1.2.0'
 export type Episode = ReturnType<typeof buildExecutionEpisode>
 export type Receipt = ReceiptRpcTransaction & {
   version?: 'legacy' | number
@@ -33,7 +33,10 @@ export const programName = (s: string) => names[s] ?? short(s)
 export function normalizeReceipt(value: unknown): Receipt {
   const tx = structuredClone(value) as Receipt
   if (!tx || !Number.isSafeInteger(tx.slot) || tx.slot < 0 || !tx.transaction?.signatures?.[0]) throw new Error('A receipt requires a landed slot and signature.')
-  if (tx.version !== undefined && tx.version !== 'legacy' && tx.version !== 0) throw new Error('Unsupported transaction version. This preview supports legacy and v0 JSON; v1 resource configuration is not decoded yet.')
+  // Transaction v1 is modelled as one atomic unit that may commit more than one state root.
+  // Neither its resource configuration nor its cross-root commitment has a representation here,
+  // so it fails closed. Decoding the configuration alone does not lift this gate.
+  if (tx.version !== undefined && tx.version !== 'legacy' && tx.version !== 0) throw new Error('Unsupported transaction version. This preview supports legacy and v0 JSON. Transaction v1 is not decoded: neither its resource configuration nor the multiple state-root transitions it may commit atomically has a representation in this model.')
   if (!tx.meta || !Object.hasOwn(tx.meta, 'err') || tx.meta.err === undefined) throw new Error('Execution metadata (meta.err) is missing. Success cannot be assumed.')
   const message = tx.transaction.message
   if (!message || !Array.isArray(message.accountKeys) || !Array.isArray(message.instructions)) throw new Error('JSON account keys and instructions are required. Encoded transactions are not supported.')
@@ -98,7 +101,15 @@ export function buildCaseFile(raw: Receipt, provenance: { source: string; sha256
   const outers = receipt.transaction!.message!.instructions!.map((ix, index) => {
     const key = keys[ix.programIdIndex ?? -1]
     const programId = ix.programId ?? (typeof key === 'string' ? key : key?.pubkey) ?? 'UNKNOWN'
-    return { index, programId, state: error == null ? 'COMPLETED' : failedIndex == null ? 'UNKNOWN' : index > failedIndex ? 'NOT_REACHED' : index === failedIndex ? 'FAILED' : 'COMPLETED' }
+    // `state` is how far the runtime got. `commitment` is what the ledger kept. In a failed
+    // transaction nothing commits, so an earlier position is EXECUTED_NOT_COMMITTED, never
+    // "completed". Do not let a position in the route imply a partially committed state transition.
+    const state = error == null ? 'COMMITTED'
+      : failedIndex == null ? 'UNKNOWN'
+      : index > failedIndex ? 'NOT_REACHED'
+      : index === failedIndex ? 'FAILED'
+      : 'EXECUTED_NOT_COMMITTED'
+    return { index, programId, state, commitment: error == null ? 'COMMITTED' as const : 'NOT_COMMITTED' as const }
   })
   const roots = frames.filter(f => f.parentId === null)
   const last = roots.at(-1)
@@ -175,7 +186,16 @@ export function buildCaseFile(raw: Receipt, provenance: { source: string; sha256
       customError: custom ? { decimal: parseInt(custom[1], 16), hex: custom[1].toLowerCase() } : null,
       semantic: semanticNamed, failedOuterIndex: failedIndex,
       explanationEvidence: failure ? failure.ownLogIndices : [],
-      attributionBoundary: 'The path locates the observed rejection. It does not establish provider fault, intent or an external cause.' },
+      attributionBoundary: 'The path locates the observed rejection inside one atomic transaction. It does not establish provider fault, intent, an external cause, or that any frame before the rejection committed state. A rejection late in the route is not evidence that the transaction reached a program late or was ordered behind another transaction.',
+      stateCommitment: {
+        unit: 'ATOMIC_TRANSACTION',
+        outcome: error == null ? 'ALL_COMMITTED' as const : 'NONE_COMMITTED' as const,
+        statement: error == null
+          ? 'The transaction committed as one unit. Every instruction it executed committed together.'
+          : 'The transaction committed nothing. Every instruction it executed was rolled back as one unit; the fee was still charged.',
+        basis: 'The runtime commits a landed transaction all-or-nothing. This applies that rule to the observed meta.err; it is not a separate per-instruction observation and does not enumerate state roots, markets or programs that committed individually.',
+        boundary: 'The transaction is the commitment unit recorded here. A route through several programs is one commitment, not one commitment per program. This model does not decode transactions that carry more than one state root, and it does not report a per-root commitment.',
+      } },
     metrics: { feeLamports: receipt.meta?.fee ?? null, consumedCU: receipt.meta?.computeUnitsConsumed ?? null,
       computeBudget, priority, writableAccounts: writable,
       signerAddresses: writableComplete ? keys.filter(k => typeof k !== 'string' && k.signer).map(k => (k as { pubkey: string }).pubkey) : null },
@@ -197,6 +217,8 @@ export type CaseFile = ReturnType<typeof buildCaseFile>
 export function caseReport(c: CaseFile) {
   return [`# Breadlines execution case file`, `Signature: ${c.signature}`, `Slot: ${c.slot}`, `State: ${c.state}`,
     '', c.explanation, `Observed failure path: ${c.execution.failurePath.map(id => programName(c.execution.frames[id].programId)).join(' → ') || 'Unavailable'}`,
+    `State commitment: ${c.execution.stateCommitment.outcome}. ${c.execution.stateCommitment.statement}`,
+    c.execution.attributionBoundary,
     `Context: ${c.context.coverage}; ${c.context.examined ?? 'unknown'} neighboring transactions examined; ${c.context.count ?? 'unknown'} observed overlaps.`,
     c.context.limitation, '', '## Exact evidence', ...c.execution.explanationEvidence.map(i => `Log ${i + 1}: ${c.execution.logs[i]}`),
     '', '## Missing telemetry', ...c.missingTelemetry.map(t => `${t.question} ${t.required}`), '',

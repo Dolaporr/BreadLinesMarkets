@@ -33,6 +33,8 @@ That is narrower than “what happened around you?” but it is real. The target
 - “Bot A,” “competitor,” “front-runner,” “liquidity changed,” or “someone took your opportunity.”
 - “The shared account activity caused your transaction to fail.”
 - “Your transaction would have landed through another provider, fee, scheduler, or route.”
+- “The route completed these hops before failing at that one.” A landed transaction is one atomic commitment unit: a failed one commits nothing but its fee, so a partially executed route is never a partially committed state transition.
+- “It reached that market too late” or “it was ordered behind another transaction.” A rejection late in a route is a position in the execution trace, not a delivery-timing or sequencing fact.
 - A priority percentile, a landing probability, an avoidability verdict, or a recommendation to execute.
 
 ## Why this is the first build
@@ -50,6 +52,7 @@ For a public demo, the report must label its context population honestly:
 | Proposed future claim | What would be required |
 | --- | --- |
 | A particular pool/account state changed | Deterministic program-specific account-role decoding plus observed before/after state evidence. |
+| What each market or state root in a route committed | Program-specific state-root decoding plus observed pre/post root evidence per root. The receipt records one commitment for the whole transaction and does not decompose it. See [the atomic cross-root note](../transaction-v1-atomic-cross-root-v0.md). |
 | A transaction was submitted earlier/later | Opt-in sender/provider trace with clock discipline. |
 | Another transaction caused the target outcome | A concrete transaction-level state dependency established by program evidence or a controlled replay; shared writable accounts alone are insufficient. |
 | A different route/fee/provider would have changed the outcome | Pre-registered controlled delivery experiments or a validated model with uncertainty. |

@@ -271,6 +271,7 @@ export function buildExecutionXray(
           'The context addresses are bots, competitors, or a coordinated group.',
           'The target transaction arrived before or after another transaction at a particular millisecond.',
           'A transaction-list position proves serial execution time.',
+          'The target reached a program, market, or state root late, or was ordered behind another transaction.',
           'The target result would have changed under a different RPC, route, fee, or scheduler.',
         ],
       },
@@ -295,6 +296,9 @@ export function buildExecutionXray(
       'Same-slot block transaction-list position is not a wall-clock timestamp and is not presented as proof of execution order.',
       'A shared writable account is an observed account overlap, not proof of state change, contention causality, or an avoidable failure.',
       'Outer program IDs do not identify an address, organisation, trading strategy, or transaction intent.',
+      'A landed transaction is one atomic commitment unit. Outer program IDs record which programs the transaction routed through; they do not establish that any program, market, or state root committed a change independently of the others.',
+      'A failure located in one program frame does not establish that earlier frames committed. A failed transaction commits nothing but its fee, so a partially executed route is never a partially committed state transition.',
+      'A rejection late in a route is a location in the execution trace, not a delivery-timing or sequencing fact. The receipt does not establish that the transaction was late or ordered behind anything.',
     ],
   }
 }
