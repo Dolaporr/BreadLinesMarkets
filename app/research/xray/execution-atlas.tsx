@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { RotateCcw, Layers3, ListTree } from 'lucide-react'
-import { programName, type CaseFile } from '../../../research/execution-casefile/core'
+import { frameStatusLabel, programName, type CaseFile } from '../../../research/execution-casefile/core'
 import { projectFrames } from '../../../research/execution-casefile/inspection'
 import styles from './workspace.module.css'
 
@@ -25,8 +25,8 @@ export default function ExecutionAtlas({ current, selected, onSelect }: { curren
           const p = position.get(f.id)!, parent = f.parentId == null ? null : position.get(f.parentId)
           return parent ? <path key={f.id} d={`M${parent.x},${parent.y} Q${parent.x},${p.y} ${p.x},${p.y}`} fill="none" stroke={failed.has(f.id) && failed.has(f.parentId!) ? '#f5a394' : '#59909a'} strokeOpacity={failed.has(f.id) ? .85 : .45} strokeWidth={failed.has(f.id) ? 2 : 1} /> : null
         })}
-        {shown.map(f => { const p = position.get(f.id)!, active = selected === f.id, color = f.status === 'FAILED' ? '#f5a394' : f.status === 'INCOMPLETE' ? '#e6cb89' : '#83d8d3'; return <g key={f.id} role="button" tabIndex={0} aria-label={`Call ${f.id + 1}: ${programName(f.programId)}, depth ${f.depth}, ${f.status}. Open logs.`} aria-pressed={active} onClick={() => onSelect(f.id)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(f.id) } }} className={styles.atlasNode}>
-          <title>{f.programId} · {f.instruction ?? 'Instruction name unavailable'} · {f.status}</title>
+        {shown.map(f => { const p = position.get(f.id)!, active = selected === f.id, color = f.status === 'FAILED' ? '#f5a394' : f.status === 'INCOMPLETE' ? '#e6cb89' : '#83d8d3'; return <g key={f.id} role="button" tabIndex={0} aria-label={`Call ${f.id + 1}: ${programName(f.programId)}, depth ${f.depth}, ${frameStatusLabel(f.status, current.state)}. Open logs.`} aria-pressed={active} onClick={() => onSelect(f.id)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(f.id) } }} className={styles.atlasNode}>
+          <title>{f.programId} · {f.instruction ?? 'Instruction name unavailable'} · {frameStatusLabel(f.status, current.state)}</title>
           <circle cx={p.x} cy={p.y} r={active ? 22 : 14} fill={color} fillOpacity={active ? .16 : .06} stroke={color} strokeOpacity={active ? .9 : .25} />
           <circle cx={p.x} cy={p.y} r={active ? 7 : 5} fill={color} />
           <text x={p.x} y={p.y - 29} textAnchor="middle" fill={color} fontSize="12">{f.id + 1}</text>

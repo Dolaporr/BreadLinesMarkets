@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, ArrowUpRight, Check, ChevronRight, Copy, Download, FileJson, Fingerprint, Search, ShieldCheck, Upload, X } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { caseReport, programName, short, type CaseFile } from '../../../research/execution-casefile/core'
+import { caseReport, frameStatusLabel, programName, short, type CaseFile } from '../../../research/execution-casefile/core'
 import { evidenceBundle, openEvidence } from '../../../research/execution-casefile/bundle'
 import { inspectAccounts } from '../../../research/execution-casefile/inspection'
 import ExecutionAtlas from './execution-atlas'
@@ -116,6 +116,7 @@ export default function Workspace({ initial, cases, selection }: { initial: Case
           <div className={styles.verdictTop}><span className={styles.failureBadge}>{current.state.replaceAll('_', ' ')}</span><span className={styles.sourceGrade}><ShieldCheck size={14} /> RECEIPT EVIDENCE</span></div>
           <h2>{current.execution.semantic?.quantities ? 'The transfer stopped here.' : current.execution.semantic?.name ?? (current.execution.customError ? `Custom error ${current.execution.customError.decimal}` : current.state === 'LANDED_SUCCESS' ? 'Execution completed.' : 'Execution stopped.')}</h2>
           <p>{current.explanation}</p>
+          <p className={styles.boundary}>{current.execution.stateCommitment.statement}</p>
           {current.execution.failurePath.length > 0 && <button className={styles.pathLink} onClick={() => { setTab('execution'); setFrame(current.execution.failureFrameId) }}>{current.execution.failurePath.map(id => programName(current.execution.frames[id].programId)).join(' → ')} <ChevronRight size={15} /><span>Inspect evidence</span></button>}
           <div className={styles.numbers}><Metric label="Landed slot" value={number(current.slot)} /><Metric label="Transaction fee · lamports" value={number(current.metrics.feeLamports)} /><Metric label="Compute used" value={number(current.metrics.consumedCU)} /><Metric label="Compute limit · observed" value={number(current.metrics.computeBudget.computeUnitLimit)} /></div>
         </section>
@@ -125,9 +126,9 @@ export default function Workspace({ initial, cases, selection }: { initial: Case
             <ExecutionAtlas key={current.signature} current={current} selected={frame} onSelect={setFrame} />
             <div className={styles.evidenceGrid}>
               <section className={styles.panel}><div className={styles.panelTitle}><h3>Invocation path</h3><span>{current.execution.logsComplete ? 'Closed log frames' : 'Incomplete logs'}</span></div>
-                <p className={styles.caption}>Select an invocation to inspect its exact log range.</p>
+                <p className={styles.caption}>Select an invocation to inspect its exact log range. {current.execution.stateCommitment.statement}</p>
                 {current.execution.frames.map(f => <button key={f.id} className={`${styles.frame} ${frame === f.id ? styles.activeFrame : ''}`} style={{ marginLeft: `${Math.min(f.depth - 1, 5) * 12}px` }} onClick={() => setFrame(f.id)} aria-pressed={frame === f.id}>
-                  <span className={f.status === 'FAILED' ? styles.redDot : styles.dot} /><span><strong>{programName(f.programId)}</strong><small>{f.instruction ?? 'Instruction name unavailable'} · depth {f.depth}</small></span><span className={styles.frameStatus}>{f.status.toLowerCase()}</span>
+                  <span className={f.status === 'FAILED' ? styles.redDot : styles.dot} /><span><strong>{programName(f.programId)}</strong><small>{f.instruction ?? 'Instruction name unavailable'} · depth {f.depth}</small></span><span className={styles.frameStatus}>{frameStatusLabel(f.status, current.state)}</span>
                 </button>)}
                 {!current.execution.frames.length && <p className={styles.empty}>No invocation frames can be recovered from these logs.</p>}
                 <div className={styles.divider} /><h3>Outer instruction positions</h3><p className={styles.caption}>Receipt positions, starting at 1. {current.execution.stateCommitment.statement} A position reached before the rejection is execution, not commitment.</p>
