@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
-import { buildCaseFile, normalizeReceipt, parseFrames, type Receipt } from '../research/execution-casefile/core.ts'
+import { buildCaseFile, caseReport, normalizeReceipt, parseFrames, type Receipt } from '../research/execution-casefile/core.ts'
 import { createTraceRecorder, demoTrace, summarizeTrace, traceMatchesReceipt, validateTrace } from '../research/execution-casefile/trace.ts'
 
 const P = 'JTXJTXfr1wVRMEzqiPhXUr69zJtfGuLh5qEiXG772Zj', S = '11111111111111111111111111111111'
@@ -115,4 +115,29 @@ test('send instrumentation calls the existing sender once, preserves response an
   const classified = await r.observeSend({ type: 'SEND_STARTED', revisionId: 'r', sendId: 's4', providerLabel: 'rpc' }, async () => result, () => { throw new Error('unsafe-response') })
   assert.equal(classified.result, result); assert.equal(classified.telemetryError, 'SEND_RESPONSE_NOT_RECORDED')
   assert.equal(JSON.stringify(r.snapshot()).includes('unsafe-response'), false)
+})
+
+test('a failed transaction reports no committed state and never labels a reached position completed', () => {
+  const c = buildCaseFile(receipt([`Program ${S} invoke [1]`, `Program ${S} success`, `Program ${P} invoke [1]`, `Program ${P} failed: custom program error: 0x1`],
+    { InstructionError: [1, { Custom: 1 }] }), provenance)
+  assert.equal(c.state, 'LANDED_FAILED')
+  assert.equal(c.execution.stateCommitment.outcome, 'NONE_COMMITTED')
+  assert.equal(c.execution.stateCommitment.unit, 'ATOMIC_TRANSACTION')
+  // Position 0 executed and its frame logged success. It still committed nothing.
+  assert.equal(c.execution.outers[0].state, 'EXECUTED_NOT_COMMITTED')
+  assert.equal(c.execution.frames[0].status, 'SUCCESS')
+  assert.deepEqual(c.execution.outers.map(o => o.commitment), ['NOT_COMMITTED', 'NOT_COMMITTED'])
+  assert.equal(JSON.stringify(c.execution.outers).includes('COMPLETED'), false)
+  assert.match(c.execution.attributionBoundary, /not evidence that the transaction reached a program late/)
+})
+
+test('a successful transaction commits as one unit and the report states the commitment', () => {
+  const c = buildCaseFile(receipt([`Program ${P} invoke [1]`, `Program ${P} success`], null), provenance)
+  assert.equal(c.execution.stateCommitment.outcome, 'ALL_COMMITTED')
+  assert.deepEqual(c.execution.outers.map(o => o.state), ['COMMITTED', 'COMMITTED'])
+  assert.match(caseReport(c), /State commitment: ALL_COMMITTED/)
+})
+
+test('transaction v1 fails closed for cross-root commitment, not only resource configuration', () => {
+  assert.throws(() => buildCaseFile({ ...receipt([]), version: 1 } as Receipt, provenance), /state-root transitions it may commit atomically/)
 })

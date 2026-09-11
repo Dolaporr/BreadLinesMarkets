@@ -1,5 +1,58 @@
 # X-Ray v1 validation — 2026-09-09
 
+## v1.2.0 adversarial semantic audit — 2026-09-11
+
+- Built a nine-case synthetic corpus and probed every surface independently: case-file JSON, the
+  Markdown report, Episode JSON, and the viewer's verdict, invocation-path, outer-position, atlas,
+  case-list, accounts and missing-telemetry panels. Findings and fixes are in
+  [`audit/README.md`](audit/README.md). Five real gaps were found (F1-F5); all are fixed and the
+  audit now reports 0 violations.
+- Two of the five were viewer-only: the verdict panel never stated what committed on a failed
+  transaction, and the invocation-path frame list rendered bare `success` inside failed
+  transactions. The JSON, report and Episode surfaces passed from the start.
+- Two were representational: the per-root commitment question never reached the viewer, and its
+  trigger counted outer instructions only — missing CPI routes, which is the shape it was written
+  for. Both surfaces now count programs observed to be invoked and agree on all nine cases.
+- One was in the bot: the v1.2.0 claim guards leaked six unsupported claims from this corpus. They
+  were rebuilt as a two-tier, clause-aware check in the bot repo.
+- 70/70 tests pass, production build passes. The two pre-existing `structuredEvidence` typecheck
+  errors in the JTX and 0x study scripts remain and are untouched; no new error was introduced.
+- The generated library was re-derived again (23 cases, all recomputed from their retained
+  receipts, all agreeing on identity, outcome, explanation and failure path). 14 of the 23 now
+  carry the per-root commitment question. No collection, reselection or RPC call.
+- All audit fixtures are synthetic and are not part of the calibration corpus.
+- Outstanding, unchanged: browser click-through, accessibility and mobile QA, and independent
+  held-out engineer review. The audit is a semantic check on rendered strings, not a browser or
+  comprehension study — it establishes that no surface *states* a partial commitment, not that no
+  reader ever infers one.
+
+
+## v1.2 atomic cross-root update — 2026-09-10
+
+- 64/64 automated tests passed across the full `test/` suite, including new coverage for: a failed
+  transaction reporting `NONE_COMMITTED` with no outer position labelled completed while its frame
+  still logs `SUCCESS`; a successful transaction committing as one unit and stating so in the
+  exported report; the v1 guard failing closed for cross-root commitment rather than resource
+  configuration alone; a multi-program route raising `PER_ROOT_STATE_COMMITMENT` while a
+  single-program transaction does not; and an assertion that no Episode claim statement asserts
+  lateness or ordering.
+- TypeScript compilation is unchanged: the same two pre-existing `structuredEvidence` errors in
+  `scripts/jtx-execution-study.ts` and `scripts/zerox-settler-study.ts` remain, and no new error was
+  introduced. Those files were not edited. The production build passed.
+- The generated library was re-derived by `scripts/execution-casefile-relibrary.ts`, not regenerated
+  from the corpus: the corpus source artifacts are not retained in this repository. Each case was
+  recomputed from its own retained raw receipt, aborting on any disagreement in identity, outcome,
+  explanation, or failure path; all 23 agreed. Saved neighbouring context was re-attached unchanged
+  because it came from the Episode artifact and is not recomputable from a receipt. Selection was not
+  changed and no data was collected. All 23 cases are landed-failed, so all now report
+  `NONE_COMMITTED`, and none retains a `COMPLETED` outer label.
+- Case-file schema moved to `breadlines-casefile-v1.2.0`. Bundle import accepts v1.0.0, v1.1.0 and
+  v1.2.0; because import recomputes from the retained receipt, older exports gain the commitment
+  fields when reopened rather than breaking.
+- Outstanding, unchanged: browser click-through, accessibility and mobile QA, and independent
+  held-out engineer review. No deployment, paid RPC call, send or outreach occurred.
+
+
 ## v1.1 workflow update — 2026-09-09
 
 - 51/51 automated tests passed across case-file workflow, case-file core, receipt, X-Ray and trace suites. The additional workflow tests cover version guards, exact balances, incomplete token rows, conservative priority derivation, all 23 export/import round trips, forged saved narratives, checksum mismatches, inconsistent context, trace opt-in and deterministic graph projection.

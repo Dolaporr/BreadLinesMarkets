@@ -1,3 +1,4 @@
+import { COMPUTE_BUDGET_PROGRAM_ID } from '../lib/receipt-evidence.ts'
 import {
   buildExecutionXray,
   EXECUTION_XRAY_SCHEMA_VERSION,
@@ -33,6 +34,7 @@ export type TelemetryRequirement = {
     | 'PROGRAM_SPECIFIC_STATE'
     | 'ERROR_SEMANTICS'
     | 'CONTROLLED_COUNTERFACTUAL'
+    | 'PER_ROOT_STATE_COMMITMENT'
   neededToAnswer: string
   minimumEvidence: string
 }
@@ -70,12 +72,20 @@ export function buildExecutionEpisode(input: ExecutionEpisodeInput) {
         : 'A landed success does not establish that a provider, route, fee, or timing choice caused the success.',
     },
   ]
+  chainProven.push({
+    grade: 'A_CHAIN_PROVEN',
+    statement: xray.target.executionState === 'landed'
+      ? 'The transaction committed as one atomic unit. Every instruction it executed committed together.'
+      : 'The transaction committed nothing. Every instruction it executed was rolled back as one atomic unit; the fee was still charged.',
+    basis: ['Landed RPC receipt', xray.target.executionState, 'All-or-nothing commitment of a landed transaction'],
+    prohibitedExpansion: 'This is the commitment of one transaction, not of each program it routed through. Do not read it as a per-program, per-market, or per-state-root commitment, and do not report a partially executed route as a partially committed state transition.',
+  })
   if (xray.target.executionError) {
     chainProven.push({
       grade: 'A_CHAIN_PROVEN',
       statement: `The final receipt identifies ${xray.target.executionError.program}${xray.target.executionError.code == null ? '' : ` error ${xray.target.executionError.code}`}.`,
       basis: [xray.target.executionError.log],
-      prohibitedExpansion: 'A failing invocation frame does not by itself establish user intent, a root cause outside that frame, or fault by an outer integrator.',
+      prohibitedExpansion: 'A failing invocation frame does not by itself establish user intent, a root cause outside that frame, or fault by an outer integrator. It locates a rejection in the execution trace; it does not establish that frames before it committed, nor that the transaction reached that program late or was ordered behind another transaction.',
     })
   }
 
@@ -150,6 +160,23 @@ export function buildExecutionEpisode(input: ExecutionEpisodeInput) {
       minimumEvidence: 'Pre-registered controlled delivery experiment or a validated model with disclosed uncertainty.',
     },
   ]
+  // Several routed programs invite a per-program commitment reading the receipt cannot support.
+  // A route reaches most of its markets through CPI rather than through separate outer
+  // instructions, so counting outer program IDs alone misses exactly the shape that tempts it.
+  const invokedPrograms = (input.xray.target.receipt.meta?.logMessages ?? [])
+    .map((log) => /^Program ([1-9A-HJ-NP-Za-km-z]+) invoke \[\d+\]$/.exec(log)?.[1])
+    .filter((id): id is string => Boolean(id))
+  // Logs lead, declared outer programs are the fallback: a program the transaction never reached
+  // is not part of its route. This mirrors the case file so the two surfaces cannot disagree.
+  const routedPrograms = [...new Set(invokedPrograms.length ? invokedPrograms : xray.target.outerProgramIds)]
+    .filter((id) => id !== COMPUTE_BUDGET_PROGRAM_ID)
+  if (routedPrograms.length > 1) {
+    telemetryRequirements.push({
+      id: 'PER_ROOT_STATE_COMMITMENT',
+      neededToAnswer: 'What each program, market, or state root the transaction routed through committed, as distinct from the single all-or-nothing commitment of the transaction.',
+      minimumEvidence: 'Program-specific state-root decoding plus observed pre/post root evidence for each root. The receipt records one atomic commitment for the whole transaction and does not decompose it.',
+    })
+  }
   if (xray.context.coverage !== 'COMPLETE') {
     telemetryRequirements.push({
       id: 'COMPLETE_BLOCK_CONTEXT',

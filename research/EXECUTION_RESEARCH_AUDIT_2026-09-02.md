@@ -144,6 +144,26 @@ The associated `BL-XR-v0` fingerprint is a comparison primitive, not a predictiv
 - [X-Ray readme](execution-xray/README.md)
 - [20–30 receipt calibration corpus protocol](execution-xray/corpus-protocol-v0.md)
 
+### H. Transaction v1 atomic cross-root assumption update
+
+**Status:** Assumption revised and the evidence model audited against it, 2026-09-10.
+
+Transaction v1 research assumptions were corrected after a public clarification: multiple ZKP roots
+in one v1 transaction are **one atomic state transition across those roots**, not independent
+updates batched into fewer transactions. Under that assumption a route through several
+programs/markets is one commitment, and a mid-route failure commits nothing.
+
+The audit found the model's layering already correct — execution trace, failure location, and
+account context were separate and bounded, and v1 receipts already fail closed. What was missing was
+any representation of *commitment*, and in that gap the outer-instruction label `COMPLETED` was
+asserting that positions before a failure had taken effect on transactions that committed nothing.
+Commitment is now an explicit transaction-scoped fact, execution reach and commitment are separate
+fields, and the generated case library was re-derived from its retained receipts. No “late” or
+ordering inference was found; explicit guards were added so the route-position framing does not
+introduce one.
+
+- [Transaction v1 atomic cross-root note](transaction-v1-atomic-cross-root-v0.md)
+
 ## 2. Paused or incomplete work
 
 ### Full 2,508-token Episode collection
