@@ -1,4 +1,4 @@
-import { collectComputeBudget, derivePriorityFeeLamports, findExplicitProgramError, type ReceiptRpcTransaction, type ReceiptRpcInstruction } from './receipt-parser.ts'
+import { COMPUTE_BUDGET_PROGRAM_ID, collectComputeBudget, derivePriorityFeeLamports, findExplicitProgramError, type ReceiptRpcTransaction, type ReceiptRpcInstruction } from './receipt-parser.ts'
 import type { buildExecutionEpisode } from '../../scripts/execution-episode-core.ts'
 
 export const CASEFILE_VERSION = 'breadlines-casefile-v1.2.0'
@@ -89,6 +89,16 @@ export function parseFrames(logs: string[]) {
   return { frames, complete: complete && stack.length === 0 && frames.length > 0 }
 }
 
+/**
+ * The log verb a frame returned, qualified by what the transaction actually kept.
+ * A frame inside a failed transaction can return success and still commit nothing, so its status
+ * is reported as what it returned rather than as an outcome.
+ */
+export function frameStatusLabel(status: Frame['status'], state: 'LANDED_SUCCESS' | 'LANDED_FAILED') {
+  if (state === 'LANDED_FAILED' && status === 'SUCCESS') return 'returned success · rolled back'
+  return status.toLowerCase()
+}
+
 export function buildCaseFile(raw: Receipt, provenance: { source: string; sha256: string | null }, episode?: Episode) {
   const receipt = normalizeReceipt(raw), signature = receipt.transaction!.signatures![0]
   if (episode && (episode.target.signature !== signature || episode.target.slot !== receipt.slot)) throw new Error('Episode and receipt do not match.')
@@ -172,6 +182,13 @@ export function buildCaseFile(raw: Receipt, provenance: { source: string; sha256
   const priority = priorityUsable ? candidatePriority : { amountLamports: null, derivation: null }
   const writableComplete = keys.length > 0 && keys.every(k => typeof k !== 'string' && typeof k.writable === 'boolean' && !!k.pubkey)
   const writable = writableComplete ? keys.filter(k => typeof k !== 'string' && k.writable).map(k => (k as { pubkey: string }).pubkey) : null
+  // Distinct non-ComputeBudget programs this transaction was observed to invoke, outer or via CPI.
+  // Invocation is the direct evidence of reach, so logs lead; declared outer programs are the
+  // fallback when no frame could be recovered. A program the transaction never reached is not
+  // part of its route. This counts programs, and deliberately does not classify any of them as a
+  // market: the receipt does not establish that, and guessing it is the inference being avoided.
+  const invoked = frames.length ? frames.map(f => f.programId) : outers.map(o => o.programId)
+  const routedPrograms = [...new Set(invoked)].filter(id => id !== COMPUTE_BUDGET_PROGRAM_ID && id !== 'UNKNOWN')
   const context = episode?.context ?? null
   const contextComplete = context?.coverage === 'COMPLETE' && context.contextTransactionsWithoutWritableMetadata === 0 && writableComplete
   const overlapAvailable = !!context && context.coverage !== 'UNAVAILABLE' && writableComplete
@@ -180,7 +197,7 @@ export function buildCaseFile(raw: Receipt, provenance: { source: string; sha256
     signatures: overlaps.filter(r => r.sharedWritableAccounts.includes(address)).map(r => r.signature) }))
   return {
     schemaVersion: CASEFILE_VERSION, signature, slot: receipt.slot, blockTime: receipt.blockTime ?? null,
-    state: error == null ? 'LANDED_SUCCESS' : 'LANDED_FAILED', explanation,
+    state: error == null ? 'LANDED_SUCCESS' as const : 'LANDED_FAILED' as const, explanation,
     provenance: { ...provenance, parserVersion: CASEFILE_VERSION, verification: 'Source-supplied RPC evidence; no independent consensus verification in this viewer.' },
     receipt: structuredClone(raw), execution: { frames, logs, logsComplete: complete, outers, failurePath: path.map(f => f.id), failureFrameId: failure?.id ?? null, systemTransfer,
       customError: custom ? { decimal: parseInt(custom[1], 16), hex: custom[1].toLowerCase() } : null,
@@ -210,6 +227,10 @@ export function buildCaseFile(raw: Receipt, provenance: { source: string; sha256
       { question: 'Did nearby activity cause the failure?', required: 'Program-specific state evidence and a validated causal reconstruction. Account overlap alone is insufficient.' },
       { question: 'Would another path or fee have helped?', required: 'A controlled experiment or validated model with disclosed assumptions.' },
       ...(!semanticNamed && error != null ? [{ question: 'What does the opaque error mean?', required: 'Semantic logs or an error table matched to the exact program and applicable version.' }] : []),
+      // Several routed programs invite a per-program reading the receipt cannot support. A route
+      // reaches most of its markets through CPI, so outer instructions alone do not count it.
+      ...(routedPrograms.length > 1 ? [{ question: 'What did each market or state root in this route commit?',
+        required: 'Program-specific state-root decoding and observed pre/post root evidence for each root. This transaction is one commitment; the receipt records that single outcome and does not decompose it per program, market or root.' }] : []),
     ],
   }
 }

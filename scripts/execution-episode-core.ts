@@ -161,7 +161,15 @@ export function buildExecutionEpisode(input: ExecutionEpisodeInput) {
     },
   ]
   // Several routed programs invite a per-program commitment reading the receipt cannot support.
-  const routedPrograms = xray.target.outerProgramIds.filter((id) => id !== COMPUTE_BUDGET_PROGRAM_ID)
+  // A route reaches most of its markets through CPI rather than through separate outer
+  // instructions, so counting outer program IDs alone misses exactly the shape that tempts it.
+  const invokedPrograms = (input.xray.target.receipt.meta?.logMessages ?? [])
+    .map((log) => /^Program ([1-9A-HJ-NP-Za-km-z]+) invoke \[\d+\]$/.exec(log)?.[1])
+    .filter((id): id is string => Boolean(id))
+  // Logs lead, declared outer programs are the fallback: a program the transaction never reached
+  // is not part of its route. This mirrors the case file so the two surfaces cannot disagree.
+  const routedPrograms = [...new Set(invokedPrograms.length ? invokedPrograms : xray.target.outerProgramIds)]
+    .filter((id) => id !== COMPUTE_BUDGET_PROGRAM_ID)
   if (routedPrograms.length > 1) {
     telemetryRequirements.push({
       id: 'PER_ROOT_STATE_COMMITMENT',
