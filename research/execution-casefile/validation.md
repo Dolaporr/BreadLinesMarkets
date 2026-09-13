@@ -20,6 +20,14 @@
 - Outstanding, unchanged: browser click-through, accessibility and mobile QA. The pre-inclusion
   section has not been exercised in a browser, and no attestation signature is verified anywhere —
   `VALIDATOR_ATTESTED` is reachable only by a caller that verifies one itself.
+- Reconciled against `main` after PR #1 merged. `main` carried the pre-rename commits of the same
+  first two changes, so the two conflicts were duplicated history rather than divergent work:
+  `main`'s tree at that merge is byte-identical to this branch's equivalent commit. In
+  `xray-ui-contract.test.ts` the merged file is a strict superset — `main`'s four commitment-and-
+  rolled-back assertions are unchanged and the three pre-inclusion assertions are appended — and in
+  this file the v1.2.0 section `main` also carries survives once, with the BAM section above it.
+  All eleven of `main`'s test files are present. The suite total stays at 97 because `main`
+  contributed no test this branch did not already have.
 
 
 ## v1.2.0 adversarial semantic audit — 2026-09-11
