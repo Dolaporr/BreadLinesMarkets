@@ -1,0 +1,47 @@
+{
+  "generatedAt": "2026-09-11T23:24:23.201Z",
+  "protocol": "research/v1-budget-source/preregistration.md — Phase 1, read-only",
+  "endpoint": "https://api.devnet.solana.com",
+  "selection": "Every transaction served with a version other than legacy/0, walking back from the finalized devnet tip. Slot position only; no program, signer, fee or success state influenced inclusion.",
+  "coverage": {
+    "tipSlot": 496894744,
+    "blocksAttempted": 500,
+    "blocksRead": 500,
+    "blocksAbsent": 0,
+    "blocksRefused": 0,
+    "readShare": 1,
+    "minimumForNullResult": 0.6,
+    "transactionsSeen": 11351,
+    "sampled": 1,
+    "cap": {
+      "MAX_BLOCKS": 500,
+      "MAX_SAMPLE": 200
+    },
+    "refusalExamples": [],
+    "note": "blocksRefused counts nodes declining to answer (rate limiting, transport). Those are not evidence that a block held no V1 traffic."
+  },
+  "h1": {
+    "statement": "A V1 receipt that passes both guards and still yields a budget read from Compute Budget instructions.",
+    "triggeredCount": 0,
+    "verdict": "H1_NOT_OBSERVED_IN_DECLARED_WINDOW",
+    "reportableNullResult": true
+  },
+  "distinctServedShapes": [
+    "1 · config=[transactionConfig] · REJECTED_VERSION"
+  ],
+  "rows": [
+    {
+      "signature": "4Yo8X2HiMCTaCue1xuBy7EGJD2BgKuc6wKxYwJ8p62fXkmGGhWFzeAeQc3q7L2uwDtAqWkxfhuRDQmBAdgYbv55G",
+      "slot": 496894408,
+      "servedVersion": "1",
+      "configKeys": [
+        "transactionConfig"
+      ],
+      "computeBudgetIxCount": 0,
+      "parserDisposition": "REJECTED_VERSION",
+      "rejectionMessage": "Unsupported transaction version. This preview supports legacy and v0 JSON. Transaction v1 is not decoded: neither its resource configuration nor the multiple state-root transitions it may commit atomically has a representation in this model.",
+      "budgetIfAccepted": null,
+      "h1Triggered": false
+    }
+  ]
+}

@@ -31,3 +31,28 @@ test('the atlas qualifies frame status in its labels and caption', () => {
   assert.match(atlas, /returned success and was still rolled back/)
   assert.equal(/\$\{f\.status\}/.test(atlas), false)
 })
+
+const preinclusion = readFileSync(new URL('../app/research/xray/preinclusion-evidence.tsx', import.meta.url), 'utf8')
+
+test('the pre-inclusion section is a distinct tab in the viewer', () => {
+  assert.match(workspace, /<TabsTrigger value="preinclusion">05 \/ Pre-inclusion evidence<\/TabsTrigger>/)
+  assert.match(workspace, /<PreInclusionEvidence key=\{current\.signature\} current=\{current\} trace=\{trace\} \/>/)
+})
+
+test('all four attestation rungs are rendered and visually distinct', () => {
+  for (const rung of ['CLIENT_OBSERVED', 'PROVIDER_REPORTED', 'VALIDATOR_ATTESTED', 'CHAIN_PROVEN']) {
+    assert.match(preinclusion, new RegExp(`${rung}:\\s*\\{`), `${rung} rung missing`)
+  }
+  const css = readFileSync(new URL('../app/research/xray/workspace.module.css', import.meta.url), 'utf8')
+  for (const cls of ['clientObserved', 'providerReported', 'validatorAttested', 'chainProven']) {
+    assert.match(css, new RegExp(`\\.${cls}\\{border-left-color:`), `${cls} needs its own colour`)
+  }
+})
+
+test('the pre-inclusion section states that absence proves nothing and never infers from timing', () => {
+  assert.match(preinclusion, /Its absence says nothing/)
+  assert.match(preinclusion, /not evidence that no preconfirmation was issued/)
+  // A duration is only ever shown when the readings share a clock.
+  assert.match(preinclusion, /comparable \? `\$\{result\.timing\.senderToProviderDuration\.ms\} ms on one clock`/)
+  assert.match(preinclusion, /PRECONFIRMATION_PROHIBITED_READINGS/)
+})

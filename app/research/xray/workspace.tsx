@@ -9,6 +9,7 @@ import { evidenceBundle, openEvidence } from '../../../research/execution-casefi
 import { inspectAccounts } from '../../../research/execution-casefile/inspection'
 import ExecutionAtlas from './execution-atlas'
 import AccountInspector from './account-inspector'
+import PreInclusionEvidence from './preinclusion-evidence'
 import { demoTrace, summarizeTrace, traceMatchesReceipt, validateTrace, type AttemptTrace } from '../../../research/execution-casefile/trace'
 import styles from './workspace.module.css'
 
@@ -121,7 +122,7 @@ export default function Workspace({ initial, cases, selection }: { initial: Case
           <div className={styles.numbers}><Metric label="Landed slot" value={number(current.slot)} /><Metric label="Transaction fee · lamports" value={number(current.metrics.feeLamports)} /><Metric label="Compute used" value={number(current.metrics.consumedCU)} /><Metric label="Compute limit · observed" value={number(current.metrics.computeBudget.computeUnitLimit)} /></div>
         </section>
         <Tabs value={tab} onValueChange={setTab} className={styles.tabs}>
-          <TabsList className={styles.tabList} aria-label="Investigation views"><TabsTrigger value="execution">01 / Execution</TabsTrigger><TabsTrigger value="balances">02 / Accounts & balances</TabsTrigger><TabsTrigger value="context">03 / Neighbors</TabsTrigger><TabsTrigger value="trace">04 / Attempt history</TabsTrigger></TabsList>
+          <TabsList className={styles.tabList} aria-label="Investigation views"><TabsTrigger value="execution">01 / Execution</TabsTrigger><TabsTrigger value="balances">02 / Accounts & balances</TabsTrigger><TabsTrigger value="context">03 / Neighbors</TabsTrigger><TabsTrigger value="trace">04 / Attempt history</TabsTrigger><TabsTrigger value="preinclusion">05 / Pre-inclusion evidence</TabsTrigger></TabsList>
           <TabsContent value="execution">
             <ExecutionAtlas key={current.signature} current={current} selected={frame} onSelect={setFrame} />
             <div className={styles.evidenceGrid}>
@@ -170,6 +171,9 @@ export default function Workspace({ initial, cases, selection }: { initial: Case
                 <button className={styles.secondary} onClick={() => download(fixture ? 'illustrative-trace.json' : 'application-trace.json', JSON.stringify(shownTrace, null, 2))}><FileJson size={16} /> Export {fixture ? 'fixture' : 'trace'}</button>
               </>}
             </section>
+          </TabsContent>
+          <TabsContent value="preinclusion">
+            <PreInclusionEvidence key={current.signature} current={current} trace={trace} />
           </TabsContent>
         </Tabs>
         <section className={styles.unknowns}><div><span className={styles.eyebrow}>THE NEXT EVIDENCE</span><h3>What would we need to know?</h3></div><div>{current.missingTelemetry.map(m => <details key={m.question}><summary>{m.question}<ChevronRight size={16} /></summary><p>{m.required}</p></details>)}</div></section>

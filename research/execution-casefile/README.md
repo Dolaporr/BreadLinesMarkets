@@ -41,7 +41,7 @@ npx tsc --noEmit
 The current tabs are **Execution**, **Accounts & balances**, **Neighbors**, and **Attempt history**. The real insufficient-lamports example remains the opening case. Select the failed System call in the atlas or list, inspect outer positions 3/4/6, then expand recovered transfer accounts. Its neighbor context and application trace remain unavailable.
 
 - All 22 saved adversarial X-Ray cases, unchanged in selection and context window.
-- The lexically first signature from the completed JTX insufficient-lamports anatomy, as a separate demonstration. Its neighboring context is unavailable; it is never presented as zero overlap.
+- The lexically first signature from the finished JTX insufficient-lamports anatomy, as a separate demonstration. Its neighboring context is unavailable; it is never presented as zero overlap.
 - Per-invocation logs, named instructions when emitted, exact error codes and a terminal failure path. Parent and child error propagation is distinguished from caught earlier failures.
 - One-based displayed outer positions and not-reached status derived from `meta.err.InstructionError`. Outer positions report how far execution got (`EXECUTED_NOT_COMMITTED`, `FAILED`, `NOT_REACHED`, `UNKNOWN`, or `COMMITTED`) separately from a `commitment` field, and every case carries a transaction-level `stateCommitment`. A failed transaction commits nothing but its fee, so a position reached before the rejection is never reported as completed. See [the atomic cross-root note](../transaction-v1-atomic-cross-root-v0.md).
 - System transfer source/destination only when complete inner instructions align with log invocation frames by program/depth and the decoded amount agrees with the quantified rejection.
