@@ -11,3 +11,21 @@
 @media(min-width:1500px){.evidenceGrid{grid-template-columns:minmax(290px,.95fr) minmax(350px,1.05fr)}}
 @media(max-width:1100px){.tabList{overflow-x:auto;gap:20px!important}.atlasHeader{flex-wrap:wrap}.actions{gap:6px}.actions button{font-size:13px}.sourceGrade{font-size:12px}.verdictTop{flex-wrap:wrap}.accountTable{font-size:13px}}
 @media(max-width:720px){.sidebar h1{font-size:24px}.atlasHeader{padding:18px 18px 0}.atlasHeader h3{font-size:18px}.atlasControls{padding:0 18px}.atlasControls label{width:100%;justify-content:space-between}.atlas>.caption{padding:0 18px 8px}.atlasSvg{min-height:180px}.caseList{max-height:160px}.tabList button{font-size:14px!important}.main{padding:18px 12px}.numbers strong{font-size:19px}.verdict{padding-left:18px;padding-right:18px}.accountFilters>.search{min-width:180px}}
+
+.ladder{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:20px 0 6px}
+.rung{border:1px solid #293846;border-left-width:3px;border-radius:8px;padding:13px 15px;background:#111a25}
+.rung strong{display:block;font:11px monospace;letter-spacing:.09em;font-weight:400;margin-bottom:7px}
+.rung span{font-size:12px;color:#9fb3c0;line-height:1.55}
+.clientObserved{border-left-color:#8e9aa4}.clientObserved strong{color:#aab6c0}
+.providerReported{border-left-color:#ecc796}.providerReported strong{color:#ecc796}
+.validatorAttested{border-left-color:#88d9dc}.validatorAttested strong{color:#88d9dc}
+.chainProven{border-left-color:#b9de9b}.chainProven strong{color:#b9de9b}
+.classTag{font:10px monospace;letter-spacing:.08em;padding:3px 7px;border-radius:4px;border:1px solid currentColor;white-space:nowrap}
+.discrepancy{border:1px solid #3a4756;border-left:3px solid #ecc796;border-radius:8px;padding:14px 16px;margin:12px 0;background:#131d28}
+.discrepancy strong{display:block;font:11px monospace;letter-spacing:.07em;color:#ecc796;font-weight:400;margin-bottom:8px}
+.discrepancy p{font-size:14px;margin:0 0 9px}
+.discrepancy em{font-style:normal;font-size:13px;color:#a8bac6;display:block;border-left:2px solid #4a6472;padding-left:12px}
+.unknowableList{list-style:none;padding:0;margin:14px 0 0}
+.unknowableList li{font-size:13px;color:#a8bac6;padding:9px 0 9px 18px;border-bottom:1px solid #1e2b38;position:relative}
+.unknowableList li::before{content:"—";position:absolute;left:0;color:#5d7684}
+.syntheticBanner{color:#ecc796;border:1px solid #78603d;background:#1e1a12;border-radius:8px;padding:13px 16px;margin:16px 0;font-size:14px}

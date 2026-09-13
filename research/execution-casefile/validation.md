@@ -1,5 +1,27 @@
 # X-Ray v1 validation — 2026-09-09
 
+## BAM / preconfirmation evidence study — 2026-09-13
+
+- 97/97 tests pass. New suites: 15 BAM adversarial cases, 5 synthetic-separation guards, 4
+  research-prose claim gates, plus 3 added UI-contract assertions for the pre-inclusion section.
+- Typecheck unchanged: the same two pre-existing `structuredEvidence` errors in the JTX and 0x
+  study scripts, untouched. Production build passes.
+- No preconfirmation data was collected. Every fixture is synthetic and labelled; the
+  reconciliation module marks any result derived from one as synthetic and that marking propagates
+  to the viewer and the exported worked example. A test asserts no fixture signature or synthetic
+  provenance appears in the generated case library, and that fixture modules are imported only by
+  tests.
+- `scripts/claim-lint.ts` holds research prose to the same assertion tests the adversarial audit
+  applies to rendered surfaces. Baseline across 17 research documents plus the memo: 0 findings,
+  with a recall test asserting it still catches lateness, causation, partnership and guarantee
+  claims so it cannot be loosened until it passes.
+- The memo's evidence matrix is generated from `evidence-matrix.ts`, and a test fails if the
+  rendered table drifts from the module the viewer and reconciler read.
+- Outstanding, unchanged: browser click-through, accessibility and mobile QA. The pre-inclusion
+  section has not been exercised in a browser, and no attestation signature is verified anywhere —
+  `VALIDATOR_ATTESTED` is reachable only by a caller that verifies one itself.
+
+
 ## v1.2.0 adversarial semantic audit — 2026-09-11
 
 - Built a nine-case synthetic corpus and probed every surface independently: case-file JSON, the

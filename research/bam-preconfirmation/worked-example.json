@@ -1,0 +1,111 @@
+{
+  "generatedBy": "scripts regenerate via research/execution-casefile/audit/bam-cases.ts",
+  "warning": "SYNTHETIC. Every input is an invented fixture. No real provider, preconfirmation or transaction is described. Not product evidence.",
+  "reconciliation": {
+    "schemaVersion": "breadlines-reconciliation-v1",
+    "synthetic": true,
+    "syntheticReason": "At least one input is a fixture. This reconciliation is illustrative only and must not be presented as product evidence.",
+    "inputsSupplied": {
+      "preconfirmation": true,
+      "attemptTrace": true,
+      "receipt": true
+    },
+    "identity": {
+      "match": "MATCHED_VIA_REBUILT_REVISION",
+      "preconfirmationSignature": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+      "receiptSignature": "2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+      "traceSignatureCount": 2
+    },
+    "timing": {
+      "clockDomains": [
+        "fixture-sender-clock",
+        "fixture-provider-clock"
+      ],
+      "distinctClockDomainCount": 2,
+      "senderLocalObservedAt": "2026-09-13T00:00:00.000Z",
+      "providerObservedAt": "2026-09-13T00:00:00.200Z",
+      "providerIssuedAt": null,
+      "blockTime": 1789000000,
+      "senderToProviderDuration": {
+        "ms": null,
+        "comparable": false,
+        "reason": "Readings are on different clock domains (fixture-sender-clock vs fixture-provider-clock). The offset between them is unknown and is not recoverable from the readings, so no duration is reported."
+      },
+      "boundary": "Timestamps are recorded per clock domain. A duration is reported only between readings on the same domain; across domains the offset is unknown and unrecoverable, so none is computed. No duration here measures network latency, provider delay, or leader ingress."
+    },
+    "preconfirmationState": {
+      "assertedLevel": "preconfirmed",
+      "assertedLevelIsVerbatim": true,
+      "schedulingStatus": null,
+      "targetSlot": 4999,
+      "provider": "fixture-sequencer",
+      "effectiveAttestation": "PROVIDER_REPORTED",
+      "attestationProofSupplied": false,
+      "attestationVerification": "NONE_SUPPLIED",
+      "boundary": "The asserted level is the issuer's own word, kept verbatim. It is not mapped onto Solana commitment levels, and it is not evidence the transaction landed."
+    },
+    "execution": {
+      "landedSlot": 5000,
+      "outcome": "LANDED_FAILED",
+      "reach": {
+        "framesObserved": 3,
+        "rejectionLocated": true,
+        "failurePath": [
+          "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4"
+        ],
+        "boundary": "The path locates the observed rejection inside one atomic transaction. It does not establish provider fault, intent, an external cause, or that any frame before the rejection committed state. A rejection late in the route is not evidence that the transaction reached a program late or was ordered behind another transaction."
+      },
+      "stateCommitment": {
+        "unit": "ATOMIC_TRANSACTION",
+        "outcome": "NONE_COMMITTED",
+        "statement": "The transaction committed nothing. Every instruction it executed was rolled back as one unit; the fee was still charged.",
+        "basis": "The runtime commits a landed transaction all-or-nothing. This applies that rule to the observed meta.err; it is not a separate per-instruction observation and does not enumerate state roots, markets or programs that committed individually.",
+        "boundary": "The transaction is the commitment unit recorded here. A route through several programs is one commitment, not one commitment per program. This model does not decode transactions that carry more than one state root, and it does not report a per-root commitment."
+      },
+      "readAtCommitment": "confirmed",
+      "finality": "NOT_ESTABLISHED_AS_FINAL"
+    },
+    "attemptSummary": {
+      "revisions": 2,
+      "sends": 2,
+      "repeatedSends": 0,
+      "captureIssuesReported": false,
+      "boundary": "Times measure this application’s observations in one clock domain. Responses do not attest leader arrival. Missing final receipts do not prove a drop. Multiple finalized signatures may belong to one attempt; do not collapse them into one result."
+    },
+    "discrepancies": [
+      {
+        "code": "PRECONFIRMATION_FOR_SUPERSEDED_REVISION",
+        "statement": "The preconfirmation is for 1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111, which the sender replaced; 2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222 is what landed.",
+        "boundary": "The assertion was about a message that did not land. That is not a failure by the issuer: the sender rebuilt."
+      },
+      {
+        "code": "SLOT_ASSERTION_NOT_MET",
+        "statement": "The issuer named slot 4999; the transaction landed in 5000.",
+        "boundary": "The slot claim was not met. Nothing here establishes why, whose decision moved it, or whether the issuer controlled that outcome."
+      },
+      {
+        "code": "RECEIPT_NOT_FINALIZED",
+        "statement": "The receipt was read at confirmed commitment.",
+        "boundary": "A result below finalized can still be reorganised. This is a limit on the receipt, not a discrepancy with the preconfirmation."
+      },
+      {
+        "code": "MULTIPLE_CLOCK_DOMAINS",
+        "statement": "Timestamps span 2 clock domains: fixture-sender-clock, fixture-provider-clock.",
+        "boundary": "Readings across domains are not comparable and no duration between them is computed. This is a property of the evidence, not a fault of any party."
+      }
+    ],
+    "unknowable": [
+      "When the transaction was submitted, and when any leader received it.",
+      "The transaction's position in any scheduler or queue, relative to any other transaction.",
+      "Whether any provider delayed, dropped, reordered, or deprioritised it.",
+      "Whether a different fee, route, provider or reservation would have changed the outcome.",
+      "Whether nearby transactions sharing writable accounts contended with this one.",
+      "Whether the issuer of a preconfirmation had the ability to keep it."
+    ],
+    "limitations": [
+      "This module compares records. It does not verify signatures, contact any node, or establish that a supplied record is authentic.",
+      "A preconfirmation and a receipt agreeing proves that a statement was made and an outcome occurred. It does not prove the statement caused the outcome.",
+      "Nothing here grades a provider. Establishing execution quality needs a pre-registered population and a controlled comparison, neither of which one reconciliation provides."
+    ]
+  }
+}
