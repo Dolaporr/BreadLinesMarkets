@@ -9,7 +9,7 @@
  * The provider label is a deliberately fictional stand-in. Naming a real product on invented data
  * would misrepresent that product.
  */
-import { PRECONFIRMATION_VERSION, type PreconfirmationRecord } from '../preconfirmation.ts'
+import { PRECONFIRMATION_VERSION, deriveSourceFromStatus, type PreconfirmationRecord } from '../preconfirmation.ts'
 import { TRACE_VERSION, type AttemptTrace } from '../trace.ts'
 import type { Receipt } from '../core.ts'
 
@@ -38,6 +38,11 @@ export function preconfirmation(options: {
   level?: string
   proofVerification?: 'NOT_VERIFIED' | 'VERIFIED' | 'VERIFICATION_FAILED'
   attemptId?: string
+  /** Supply a status to exercise the Helius derivation path. */
+  statusCode?: number | null
+  /** Override attribution entirely, to exercise explicit-source and contradiction cases. */
+  attribution?: PreconfirmationRecord['sourceAttribution']
+  expiresAt?: string
 } = {}): PreconfirmationRecord {
   const record: PreconfirmationRecord = {
     schemaVersion: PRECONFIRMATION_VERSION,
@@ -45,7 +50,12 @@ export function preconfirmation(options: {
     signature: { value: options.signature ?? SIG_A, provenance: prov('PROVIDER_REPORTED') },
     provider: { label: PROVIDER, productName: 'Fixture Preconfirmation Service', provenance: prov('PROVIDER_REPORTED') },
     assertedLevel: { value: options.level ?? 'preconfirmed', provenance: prov('PROVIDER_REPORTED') },
+    sourceAttribution: options.attribution ?? deriveSourceFromStatus(options.statusCode ?? null, PROVIDER),
     unmodelledFields: [],
+  }
+  if (options.statusCode != null) record.statusCode = { value: options.statusCode, provenance: prov('PROVIDER_REPORTED') }
+  if (options.expiresAt) {
+    record.expiresAt = { value: options.expiresAt, clockDomain: 'fixture-provider-clock', provenance: prov('PROVIDER_REPORTED') }
   }
   if (options.attemptId) record.attemptId = { value: options.attemptId, provenance: prov('CLIENT_OBSERVED', 'LOCAL_MEASUREMENT') }
   if (options.targetSlot != null) record.targetSlot = { value: options.targetSlot, provenance: prov('PROVIDER_REPORTED') }

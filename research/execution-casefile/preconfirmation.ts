@@ -23,6 +23,26 @@ export const PRECONFIRMATION_VERSION = 'breadlines-preconfirmation-v1' as const
 export const ATTESTATION_CLASSES = ['CLIENT_OBSERVED', 'PROVIDER_REPORTED', 'VALIDATOR_ATTESTED', 'CHAIN_PROVEN'] as const
 export type AttestationClass = (typeof ATTESTATION_CLASSES)[number]
 
+/**
+ * Which system emitted a preconfirmation. A single stream can merge issuers whose semantics differ
+ * in kind — one emitted after execution carrying a result, another committing to execute — so a
+ * record that keeps only `preconfirmed: true` has already destroyed the distinction that decides
+ * what the record is worth.
+ */
+export const PRECONFIRMATION_SOURCES = ['HELIUS', 'BAM', 'UNKNOWN'] as const
+export type PreconfirmationSource = (typeof PRECONFIRMATION_SOURCES)[number]
+
+/**
+ * How the source was established.
+ *
+ *  EXPLICIT — the payload carried a field naming its own source.
+ *  DERIVED  — inferred from other semantics (a status value, a shape). Weaker: it depends on an
+ *             inference rule that can change without the payload changing.
+ *  UNKNOWN  — not established. Not a synonym for "the other one".
+ */
+export const SOURCE_BASES = ['EXPLICIT', 'DERIVED', 'UNKNOWN'] as const
+export type SourceBasis = (typeof SOURCE_BASES)[number]
+
 const id = z.string().regex(/^[a-zA-Z0-9_.:\-]{1,100}$/)
 const signature = z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{64,90}$/)
 const attestationClass = z.enum(ATTESTATION_CLASSES)
@@ -74,6 +94,20 @@ const attestationProof = z.object({
   provenance,
 }).strict()
 
+/**
+ * Source attribution, kept separate from the provider label a caller happens to type in. The
+ * label says who a caller believes sent it; this says how strongly that belief is evidenced.
+ */
+const sourceAttribution = z.object({
+  source: z.enum(PRECONFIRMATION_SOURCES),
+  basis: z.enum(SOURCE_BASES),
+  /** How the source was established. Required whenever the basis is not UNKNOWN. */
+  rationale: z.string().min(1).max(600),
+  /** The payload field that named the source. Required for EXPLICIT, forbidden otherwise. */
+  explicitField: z.object({ key: id, value: z.string().min(1).max(200) }).strict().optional(),
+  provenance,
+}).strict()
+
 const preconfirmationSchema = z.object({
   schemaVersion: z.literal(PRECONFIRMATION_VERSION),
   /** True marks a fixture. Fixtures are for tests and demonstrations and are never product evidence. */
@@ -94,6 +128,15 @@ const preconfirmationSchema = z.object({
     productName: z.string().max(200).optional(),
     provenance,
   }).strict(),
+
+  /** Which system emitted this, and how firmly that is established. */
+  sourceAttribution,
+
+  /**
+   * A status value carried by the payload, verbatim. Some streams use it to distinguish issuers.
+   * Recorded as an observation; any inference drawn from it belongs in `sourceAttribution`.
+   */
+  statusCode: field(z.number().int()).optional(),
 
   // --- when, on whose clock -------------------------------------------------------------------
   senderLocalObservedAt: timestamp.optional(),
@@ -140,6 +183,23 @@ export function effectiveAttestation(record: PreconfirmationRecord): Attestation
 
 export function validatePreconfirmation(value: unknown): PreconfirmationRecord {
   const record = preconfirmationSchema.parse(value)
+
+  // --- source attribution rules --------------------------------------------------------------
+  const attribution = record.sourceAttribution
+  if (attribution.basis === 'EXPLICIT' && !attribution.explicitField) {
+    throw new Error('EXPLICIT source basis requires the payload field that named the source. Without it the attribution is derived, not explicit.')
+  }
+  if (attribution.basis !== 'EXPLICIT' && attribution.explicitField) {
+    throw new Error('An explicitField may only accompany an EXPLICIT source basis.')
+  }
+  if (attribution.source !== 'UNKNOWN' && attribution.basis === 'UNKNOWN') {
+    throw new Error('A named source requires a basis. Claiming a source while recording its basis as UNKNOWN asserts more than the record establishes.')
+  }
+  // Attribution is a statement about a payload, never a chain fact, and never lifted by a proof
+  // that covers something else.
+  if (attribution.provenance.attestation === 'VALIDATOR_ATTESTED' || attribution.provenance.attestation === 'CHAIN_PROVEN') {
+    throw new Error('Source attribution cannot be VALIDATOR_ATTESTED or CHAIN_PROVEN. It describes how a payload was read, not something a validator signed or the ledger recorded.')
+  }
 
   // A record may not claim chain-proven status. Nothing pre-inclusion is on the ledger.
   const declared = [
@@ -195,6 +255,50 @@ export function durationBetween(
   return { ms: new Date(to.value).getTime() - new Date(from.value).getTime(), comparable: true }
 }
 
+/**
+ * Helius confirmed (Ichigo, 2026-09) that its own preconfirmations are emitted POST-EXECUTION and
+ * carry a status, and that status 0/1 currently identifies the Helius path. The payload carries no
+ * per-message source field today, so this is an inference rule over status semantics — DERIVED,
+ * never EXPLICIT.
+ *
+ * The asymmetry is deliberate and load-bearing: a status of 0/1 identifies Helius, but the ABSENCE
+ * of that status identifies nothing. Helius said nothing establishing that a message without it is
+ * from BAM, so this returns UNKNOWN rather than completing the dichotomy. Helius has an open
+ * documentation PR on exactly this ambiguity.
+ */
+export const HELIUS_EXECUTED_STATUS_CODES = [0, 1] as const
+
+export function deriveSourceFromStatus(
+  statusCode: number | null | undefined,
+  source = 'helius-preconfirmation-stream',
+): z.infer<typeof sourceAttribution> {
+  const provenance = { attestation: 'PROVIDER_REPORTED' as const, source, method: 'PROVIDER_API_RESPONSE' as const }
+  if (statusCode != null && (HELIUS_EXECUTED_STATUS_CODES as readonly number[]).includes(statusCode)) {
+    return {
+      source: 'HELIUS',
+      basis: 'DERIVED',
+      rationale: `Status ${statusCode} identifies the Helius post-execution path under the status semantics Helius described. The payload carries no source field, so this is inferred from status rather than stated by the message.`,
+      provenance,
+    }
+  }
+  return {
+    source: 'UNKNOWN',
+    basis: 'UNKNOWN',
+    rationale: statusCode == null
+      ? 'No status was present. Absence of the Helius status does not identify the issuer: nothing establishes that a message without it comes from BAM, so the source is not determined.'
+      : `Status ${statusCode} is outside the values Helius described for its own path. That does not identify a different issuer; the source is not determined.`,
+    provenance,
+  }
+}
+
+/** Display-safe wording for an attribution, so UI copy cannot upgrade a derived reading. */
+export function describeAttribution(attribution: z.infer<typeof sourceAttribution>) {
+  if (attribution.source === 'UNKNOWN') return 'Source not established'
+  return attribution.basis === 'EXPLICIT'
+    ? `${attribution.source} — stated by the payload`
+    : `${attribution.source} — derived from status semantics, not stated by the payload`
+}
+
 /** What a preconfirmation record may never be read as, regardless of what it contains. */
 export const PRECONFIRMATION_PROHIBITED_READINGS = [
   'The transaction landed. A preconfirmation is an assertion about the future, and only a receipt shows a result.',
@@ -205,4 +309,7 @@ export const PRECONFIRMATION_PROHIBITED_READINGS = [
   'A supplied attestation signature has been verified, or that the named signer produced it.',
   'The absence of a preconfirmation means the transaction was dropped, delayed, or deprioritised.',
   'A scheduling status names a position in any queue relative to other transactions.',
+  'A derived source attribution was stated by the payload. Derived means inferred from other semantics, and the inference rule can change without the message changing.',
+  'A message lacking the Helius status came from BAM, or from any other named issuer. Absence identifies nothing.',
+  'A post-execution preconfirmation carrying an execution result is the same kind of evidence as a commit-to-execute preconfirmation. They differ in what they promise and when.',
 ] as const

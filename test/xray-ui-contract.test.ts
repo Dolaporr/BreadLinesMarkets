@@ -56,3 +56,32 @@ test('the pre-inclusion section states that absence proves nothing and never inf
   assert.match(preinclusion, /comparable \? `\$\{result\.timing\.senderToProviderDuration\.ms\} ms on one clock`/)
   assert.match(preinclusion, /PRECONFIRMATION_PROHIBITED_READINGS/)
 })
+
+test('the pre-inclusion section renders issuer, basis and the lifecycle map', () => {
+  assert.match(preinclusion, /result\.preconfirmationState\?\.sourceDescription/)
+  assert.match(preinclusion, /result\.preconfirmationState\?\.sourceBasis/)
+  assert.match(preinclusion, /result\.preconfirmationState\?\.sourceRationale/)
+  assert.match(preinclusion, /result\.reconciliation\.state/)
+  assert.match(preinclusion, /result\.evidenceMap/)
+  // Each stage must render its own evidence class and its own not-established line.
+  assert.match(preinclusion, /stage\.evidenceLabel/)
+  assert.match(preinclusion, /Not established: \{stage\.notEstablished\}/)
+  assert.match(preinclusion, /MAP_BOUNDARY/)
+})
+
+test('UNKNOWN stages are visually marked rather than hidden', () => {
+  assert.match(preinclusion, /stage\.evidence === 'UNKNOWN' \? styles\.stageUnknown/)
+  assert.match(preinclusion, /unknownStageCount\} of \{result\.evidenceMap\.stages\.length\} stages not established/)
+  const css = readFileSync(new URL('../app/research/xray/workspace.module.css', import.meta.url), 'utf8')
+  assert.match(css, /\.stageUnknown\{/)
+  for (const tone of ['evUnknown', 'evClient', 'evProvider', 'evValidator', 'evChain']) {
+    assert.match(css, new RegExp(`\\.${tone}\\{color:`), `${tone} needs its own colour`)
+  }
+})
+
+test('each reconciliation state has a distinct chip colour', () => {
+  const css = readFileSync(new URL('../app/research/xray/workspace.module.css', import.meta.url), 'utf8')
+  for (const state of ['PENDING', 'MATCHED', 'UNRESOLVED', 'MISMATCH']) {
+    assert.match(css, new RegExp(`\\.state${state}\\{color:`), `${state} needs its own colour`)
+  }
+})

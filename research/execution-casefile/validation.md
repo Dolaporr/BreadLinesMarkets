@@ -1,5 +1,31 @@
 # X-Ray v1 validation — 2026-09-09
 
+## Preconfirmation Evidence Map v0 — 2026-09-14
+
+- 111/111 tests pass, up from 97. The 14 added: 11 source-provenance regressions
+  (`preconfirmation-source.test.ts`) and 3 UI-contract assertions for the lifecycle section. No
+  existing test was modified or removed.
+- Typecheck unchanged: the same two pre-existing `structuredEvidence` errors in the JTX and 0x
+  study scripts, untouched. Production build passes. Claim linter: 0 findings across 19 documents.
+- Source provenance is now a required field. `PreconfirmationSource` is HELIUS/BAM/UNKNOWN and
+  `SourceBasis` is EXPLICIT/DERIVED/UNKNOWN. A record cannot exist without them, so a stream
+  merging post-execution and commit-to-execute issuers can no longer be flattened to one state.
+- Helius clarified (Ichigo, 2026-09) that its preconfirmations are post-execution, carry a status,
+  and that status 0/1 identifies the Helius path — with no per-message source field today.
+  Attribution is therefore DERIVED and is rendered as derived, never as stated by the payload. The
+  rule is one-directional: absence of that status identifies nothing, and never resolves to BAM by
+  elimination.
+- BAM's evidence properties are recorded as UNKNOWN at five of seven stages. Nothing was inferred
+  about what its preconfirmation commits to, whether it is authenticated, where a TEE ordering
+  attestation sits, or whether sequencing is third-party verifiable.
+- Reconciliation gained PENDING / MATCHED / UNRESOLVED / MISMATCH. MISMATCH requires a VERIFIED
+  commitment contradicted by chain evidence; an unverified slot assertion that differs from the
+  landed slot stays a discrepancy, and a lapsed deadline with no receipt stays UNRESOLVED.
+- Outstanding, unchanged: browser click-through, accessibility and mobile QA. No preconfirmation
+  data has been collected, no signature is verified anywhere, and the BAM path has not been
+  observed — it is a record of what is not established, not a description of the system.
+
+
 ## BAM / preconfirmation evidence study — 2026-09-13
 
 - 97/97 tests pass. New suites: 15 BAM adversarial cases, 5 synthetic-separation guards, 4

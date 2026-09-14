@@ -1,5 +1,6 @@
 import { buildCaseFile, type CaseFile, type Receipt } from './core.ts'
-import { effectiveAttestation, durationBetween, validatePreconfirmation, type PreconfirmationRecord } from './preconfirmation.ts'
+import { describeAttribution, effectiveAttestation, durationBetween, validatePreconfirmation, type PreconfirmationRecord } from './preconfirmation.ts'
+import { evidenceLabel, pathFor, unknownStageCount } from './preconfirmation-map.ts'
 import { summarizeTrace, validateTrace, type AttemptTrace, type TracePayload } from './trace.ts'
 
 /**
@@ -9,6 +10,18 @@ import { summarizeTrace, validateTrace, type AttemptTrace, type TracePayload } f
  * happened and, just as importantly, enumerates what the combination still cannot answer.
  */
 export const RECONCILIATION_VERSION = 'breadlines-reconciliation-v1' as const
+
+/**
+ * How a preconfirmation stands against the ledger.
+ *
+ *  PENDING    — no receipt yet, and the issuer's own deadline has not passed. Still in flight.
+ *  MATCHED    — a receipt was found for the message the preconfirmation named.
+ *  UNRESOLVED — no receipt, and nothing establishes what that means. The default.
+ *  MISMATCH   — the evidence establishes a contradiction. Reserved, and rare: it requires a
+ *               VERIFIED commitment and chain evidence contradicting it. A slot that differs from
+ *               an unverified assertion is a discrepancy, not a contradiction.
+ */
+export type ReconciliationState = 'PENDING' | 'MATCHED' | 'UNRESOLVED' | 'MISMATCH'
 
 export type IdentityMatch =
   | 'MATCHED'
@@ -97,6 +110,11 @@ export function reconcile(input: ReconciliationInput) {
 
   // --- what was asserted, and what happened ---------------------------------------------------
   const preconfirmationState = preconfirmation && {
+    source: preconfirmation.sourceAttribution.source,
+    sourceBasis: preconfirmation.sourceAttribution.basis,
+    sourceRationale: preconfirmation.sourceAttribution.rationale,
+    sourceDescription: describeAttribution(preconfirmation.sourceAttribution),
+    statusCode: preconfirmation.statusCode?.value ?? null,
     assertedLevel: preconfirmation.assertedLevel.value,
     assertedLevelIsVerbatim: true,
     schedulingStatus: preconfirmation.schedulingStatus?.value ?? null,
@@ -180,6 +198,46 @@ export function reconcile(input: ReconciliationInput) {
 
   const traceSummary = trace ? summarizeTrace(trace) : null
 
+  // --- reconciliation state --------------------------------------------------------------------
+  // MISMATCH is deliberately hard to reach. A preconfirmation is a statement; only a VERIFIED
+  // commitment contradicted by chain evidence is a contradiction rather than a difference.
+  const verifiedCommitment = preconfirmation?.attestationProof?.verification === 'VERIFIED'
+  const slotContradicted = verifiedCommitment
+    && preconfirmation?.targetSlot?.value != null
+    && caseFile != null
+    && preconfirmation.targetSlot.value !== caseFile.slot
+
+  const deadlinePassed = preconfirmation?.expiresAt != null
+    && Date.parse(preconfirmation.expiresAt.value) < Date.now()
+
+  let reconciliationState: ReconciliationState
+  let reconciliationBasis: string
+  if (!preconfirmation) {
+    reconciliationState = 'UNRESOLVED'
+    reconciliationBasis = 'No preconfirmation was supplied, so there is nothing to reconcile against the receipt.'
+  } else if (slotContradicted) {
+    reconciliationState = 'MISMATCH'
+    reconciliationBasis = `A verified commitment named slot ${preconfirmation.targetSlot!.value} and the ledger recorded ${caseFile!.slot}. The commitment was authenticated, so this is a contradiction rather than a difference between a claim and an outcome.`
+  } else if (caseFile && (identity === 'MATCHED' || identity === 'MATCHED_VIA_REBUILT_REVISION')) {
+    reconciliationState = 'MATCHED'
+    reconciliationBasis = identity === 'MATCHED'
+      ? 'A receipt was found for the message the preconfirmation named.'
+      : 'A receipt was found for a later revision of the same attempt. The preconfirmation named a message the sender replaced.'
+  } else if (caseFile) {
+    reconciliationState = 'UNRESOLVED'
+    reconciliationBasis = 'A receipt was supplied but nothing links it to the preconfirmation. Two unrelated records are not a contradiction.'
+  } else if (preconfirmation.expiresAt && !deadlinePassed) {
+    reconciliationState = 'PENDING'
+    reconciliationBasis = `No receipt yet, and the issuer's own deadline (${preconfirmation.expiresAt.value}) has not passed. Still in flight.`
+  } else {
+    reconciliationState = 'UNRESOLVED'
+    reconciliationBasis = deadlinePassed
+      ? 'The issuer\'s deadline passed with no receipt supplied. A lapsed deadline is not proof the transaction failed to land — it may have landed unobserved, and nothing here establishes that the issuer defaulted.'
+      : 'No receipt was supplied and no deadline semantics are available. No receipt in hand is not evidence the transaction failed to land.'
+  }
+
+  const path = preconfirmation ? pathFor(preconfirmation.sourceAttribution.source) : null
+
   return {
     schemaVersion: RECONCILIATION_VERSION,
     synthetic,
@@ -206,6 +264,21 @@ export function reconcile(input: ReconciliationInput) {
       repeatedSends: traceSummary.retries,
       captureIssuesReported: traceSummary.captureIssuesReported,
       boundary: traceSummary.boundary,
+    },
+    reconciliation: {
+      state: reconciliationState,
+      basis: reconciliationBasis,
+      boundary: 'MISMATCH requires a verified commitment contradicted by chain evidence. Everything weaker is a difference between a statement and an outcome, not a broken promise.',
+    },
+    evidenceMap: path && {
+      source: path.source,
+      name: path.name,
+      character: path.character,
+      emission: path.emission,
+      basisToday: path.basisToday,
+      stages: path.stages.map((entry) => ({ ...entry, evidenceLabel: evidenceLabel[entry.evidence] })),
+      unknownStageCount: unknownStageCount(path),
+      openQuestions: path.openQuestions,
     },
     discrepancies,
     unknowable: UNKNOWABLE,

@@ -5,6 +5,7 @@ import { Upload, X } from 'lucide-react'
 import type { CaseFile } from '../../../research/execution-casefile/core'
 import { reconcile, type Reconciliation } from '../../../research/execution-casefile/reconciliation'
 import { ATTESTATION_CLASSES, PRECONFIRMATION_PROHIBITED_READINGS, validatePreconfirmation } from '../../../research/execution-casefile/preconfirmation'
+import { MAP_BOUNDARY, type StageEvidence } from '../../../research/execution-casefile/preconfirmation-map'
 import type { AttemptTrace } from '../../../research/execution-casefile/trace'
 import styles from './workspace.module.css'
 
@@ -13,6 +14,14 @@ const RUNG: Record<(typeof ATTESTATION_CLASSES)[number], { className: string; la
   PROVIDER_REPORTED: { className: styles.providerReported, label: 'PROVIDER REPORTED', blurb: 'A named party asserted it. An assertion, not an authenticated fact.' },
   VALIDATOR_ATTESTED: { className: styles.validatorAttested, label: 'VALIDATOR ATTESTED', blurb: 'A signature over a described payload was verified against a named key. Only a verified signature reaches this rung.' },
   CHAIN_PROVEN: { className: styles.chainProven, label: 'CHAIN PROVEN', blurb: 'Recorded in the ledger. The only rung a receipt can occupy.' },
+}
+
+const EVIDENCE_TONE: Record<StageEvidence, string> = {
+  UNKNOWN: styles.evUnknown,
+  CLIENT_OBSERVED: styles.evClient,
+  PROVIDER_REPORTED: styles.evProvider,
+  VALIDATOR_ATTESTED: styles.evValidator,
+  CHAIN_PROVEN: styles.evChain,
 }
 
 export default function PreInclusionEvidence({ current, trace }: { current: CaseFile; trace: AttemptTrace | null }) {
@@ -70,6 +79,22 @@ export default function PreInclusionEvidence({ current, trace }: { current: Case
       {result.synthetic && <p className={styles.syntheticBanner}>{result.syntheticReason}</p>}
 
       <dl className={styles.data}>
+        <dt>Issuer</dt>
+        <dd>{result.preconfirmationState?.sourceDescription ?? 'Source not established'}</dd>
+        <dt>Source basis</dt>
+        <dd>
+          <span className={`${styles.classTag} ${result.preconfirmationState?.sourceBasis === 'EXPLICIT' ? styles.evValidator : styles.evProvider}`}>
+            {result.preconfirmationState?.sourceBasis ?? 'UNKNOWN'}
+          </span>{' '}
+          {result.preconfirmationState?.sourceRationale}
+        </dd>
+        <dt>Status code</dt>
+        <dd>{result.preconfirmationState?.statusCode ?? 'None carried'}</dd>
+        <dt>Ledger reconciliation</dt>
+        <dd>
+          <span className={`${styles.stateChip} ${styles[`state${result.reconciliation.state}`]}`}>{result.reconciliation.state}</span>{' '}
+          {result.reconciliation.basis}
+        </dd>
         <dt>Identity</dt><dd>{result.identity.match.replaceAll('_', ' ').toLowerCase()}</dd>
         <dt>Asserted level</dt>
         <dd>{result.preconfirmationState?.assertedLevel ?? 'Unavailable'} <span className={`${styles.classTag} ${RUNG[result.preconfirmationState?.effectiveAttestation ?? 'PROVIDER_REPORTED'].className}`}>{result.preconfirmationState?.effectiveAttestation}</span></dd>
@@ -80,6 +105,34 @@ export default function PreInclusionEvidence({ current, trace }: { current: Case
         <dt>State commitment</dt>
         <dd>{result.execution ? <><span className={`${styles.classTag} ${styles.chainProven}`}>{result.execution.stateCommitment.outcome}</span> {result.execution.stateCommitment.statement}</> : 'No receipt supplied'}</dd>
       </dl>
+
+      {result.evidenceMap && <>
+        <div className={styles.divider} />
+        <div className={styles.pathHead}>
+          <h4>{result.evidenceMap.name}</h4>
+          <span className={styles.classTag}>{result.evidenceMap.emission.replaceAll('_', ' ').toLowerCase()}</span>
+          <span className={styles.caption}>{result.evidenceMap.unknownStageCount} of {result.evidenceMap.stages.length} stages not established</span>
+        </div>
+        <p className={styles.caption}>{result.evidenceMap.character}</p>
+        <p className={styles.basisNote}>{result.evidenceMap.basisToday}</p>
+        <div className={styles.lifecycle}>
+          {result.evidenceMap.stages.map((stage) => (
+            <div key={stage.stage} className={`${styles.stage} ${stage.evidence === 'UNKNOWN' ? styles.stageUnknown : ''}`}>
+              <strong>{stage.label}</strong>
+              <small className={EVIDENCE_TONE[stage.evidence as StageEvidence]}>{stage.evidenceLabel}</small>
+              <span>
+                <small>{stage.known}</small>
+                <em>Not established: {stage.notEstablished}</em>
+              </span>
+            </div>
+          ))}
+        </div>
+        <p className={styles.boundary}>{MAP_BOUNDARY}</p>
+        {result.evidenceMap.openQuestions.length > 0 && <>
+          <h3 style={{ marginTop: 22 }}>Open with this issuer</h3>
+          <ul className={styles.openQ}>{result.evidenceMap.openQuestions.map((q) => <li key={q}>{q}</li>)}</ul>
+        </>}
+      </>}
 
       <div className={styles.divider} />
       <h3>Timing fields</h3>
