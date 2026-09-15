@@ -258,3 +258,97 @@ test('no surface describes BAM ordering with attestation vocabulary', async () =
     assert.equal(pattern.test(memo), false, `memo must not contain ${pattern}`)
   }
 })
+
+// --- an unattributed record must not inherit any issuer's semantics ----------------------------
+
+test('an UNKNOWN source never renders BAM-specific lifecycle semantics', async () => {
+  const { UNATTRIBUTED_PATH, pathFor } = await import('../research/execution-casefile/preconfirmation-map.ts')
+  const path = pathFor('UNKNOWN')
+  assert.equal(path, UNATTRIBUTED_PATH)
+
+  // Everything the unattributed path would render, as one blob.
+  const rendered = JSON.stringify(path)
+  const bamSpecific = [
+    /BAM node/i,
+    /commit[- ]to[- ]execute/i,
+    /sequence_id/i,
+    /bundle metadata/i,
+    /bundle position/i,
+    /atomically bundled/i,
+    /dispatch order/i,
+    /ascending/i,
+    /scheduler to leader/i,
+    /\bBAM\b/,
+  ]
+  for (const pattern of bamSpecific) {
+    assert.equal(pattern.test(rendered), false, `unattributed path must not contain ${pattern}`)
+  }
+  // And it carries no ordering evidence, since none is established for it.
+  assert.equal(path.ordering, undefined)
+})
+
+test('the unattributed path shares no stage prose with the BAM path', async () => {
+  const { BAM_PATH, UNATTRIBUTED_PATH } = await import('../research/execution-casefile/preconfirmation-map.ts')
+  // Guards against the original defect: deriving the unattributed stages from BAM_PATH and
+  // overriding only the evidence class, which left BAM's wording behind.
+  //
+  // Only the issuer-SPECIFIC stages must differ. Submission, block inclusion and the ledger receipt
+  // are issuer-neutral — "that any packet left the machine" is equally true whoever issued the
+  // message — so identical wording there is correct rather than inherited. The exemption is
+  // checked below rather than assumed, so it cannot become a hiding place.
+  const ISSUER_SPECIFIC = ['SCHEDULER', 'LEADER_COMMITMENT', 'PRECONFIRMATION_EMISSION', 'EXECUTION'] as const
+  for (const stage of UNATTRIBUTED_PATH.stages) {
+    const bam = BAM_PATH.stages.find((entry) => entry.stage === stage.stage)
+    if (!bam) continue
+    if ((ISSUER_SPECIFIC as readonly string[]).includes(stage.stage)) {
+      assert.notEqual(stage.known, bam.known, `${stage.stage} known text is inherited from BAM`)
+      assert.notEqual(stage.notEstablished, bam.notEstablished, `${stage.stage} notEstablished is inherited from BAM`)
+    } else {
+      // Exempt stages may match, but only because they name no issuer and no mechanism.
+      const text = `${stage.known} ${stage.notEstablished}`
+      for (const pattern of [/\bBAM\b/, /sequence_id/i, /bundle/i, /dispatch/i, /commit[- ]to[- ]execute/i, /post[- ]execution/i]) {
+        assert.equal(pattern.test(text), false, `${stage.stage} is exempt but contains issuer vocabulary ${pattern}`)
+      }
+    }
+  }
+})
+
+test('each unattributed stage states what is not established rather than describing a mechanism', async () => {
+  const { UNATTRIBUTED_PATH } = await import('../research/execution-casefile/preconfirmation-map.ts')
+  const byStage = Object.fromEntries(UNATTRIBUTED_PATH.stages.map((s) => [s.stage, s]))
+
+  assert.match(byStage.SCHEDULER.known, /No scheduling semantics are established/i)
+  assert.match(byStage.SCHEDULER.known, /do not identify an issuer or prove ordering/i)
+  assert.match(byStage.LEADER_COMMITMENT.known, /No leader commitment is established/i)
+  assert.match(byStage.PRECONFIRMATION_EMISSION.known, /issuer, emission boundary and cryptographic commitment semantics are not established/i)
+  assert.match(byStage.EXECUTION.known, /relationship between this message and transaction execution is not established/i)
+  assert.match(byStage.BLOCK_INCLUSION.known, /until reconciled against a receipt/i)
+
+  // The ledger stage stays chain-proven; the client's own submission stays client-observed.
+  assert.equal(byStage.LEDGER_RECEIPT.evidence, 'CHAIN_PROVEN')
+  assert.equal(byStage.SUBMISSION.evidence, 'CLIENT_OBSERVED')
+  for (const stage of ['SCHEDULER', 'LEADER_COMMITMENT', 'PRECONFIRMATION_EMISSION', 'EXECUTION', 'BLOCK_INCLUSION'] as const) {
+    assert.equal(byStage[stage].evidence, 'UNKNOWN', `${stage} must be UNKNOWN on an unattributed record`)
+  }
+})
+
+test('Eric\'s BAM semantics remain available on the positively identified BAM path', async () => {
+  const { BAM_PATH, pathFor } = await import('../research/execution-casefile/preconfirmation-map.ts')
+  assert.equal(pathFor('BAM'), BAM_PATH)
+  const scheduler = BAM_PATH.stages.find((s) => s.stage === 'SCHEDULER')!
+  assert.match(scheduler.known, /BAM node's dispatch ordering/i)
+  assert.equal(scheduler.evidence, 'PROVIDER_REPORTED')
+  assert.ok(BAM_PATH.ordering, 'ordering evidence stays attached to the identified BAM path')
+})
+
+test('the Helius path is unchanged by the unattributed fix', async () => {
+  const { HELIUS_PATH, pathFor } = await import('../research/execution-casefile/preconfirmation-map.ts')
+  assert.equal(pathFor('HELIUS'), HELIUS_PATH)
+  assert.equal(HELIUS_PATH.emission, 'POST_EXECUTION')
+  const byStage = Object.fromEntries(HELIUS_PATH.stages.map((s) => [s.stage, s]))
+  assert.equal(byStage.EXECUTION.evidence, 'PROVIDER_REPORTED')
+  assert.equal(byStage.PRECONFIRMATION_EMISSION.evidence, 'PROVIDER_REPORTED')
+  assert.equal(byStage.SCHEDULER.evidence, 'UNKNOWN')
+  assert.equal(byStage.LEDGER_RECEIPT.evidence, 'CHAIN_PROVEN')
+  assert.equal(HELIUS_PATH.ordering, undefined)
+})

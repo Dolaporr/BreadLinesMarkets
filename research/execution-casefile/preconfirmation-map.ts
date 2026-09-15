@@ -245,15 +245,62 @@ export const BAM_PATH: PathMap = {
   ],
 }
 
-/** A path with no established issuer. Not a third product — the absence of an attribution. */
+/**
+ * A path with no established issuer. Not a third product — the absence of an attribution.
+ *
+ * Its stages are written out in full, deliberately. An earlier version derived them from
+ * BAM_PATH and overrode only the evidence class, which left BAM's prose in place: an unattributed
+ * record described its own scheduling in terms of "the BAM node's dispatch ordering" purely
+ * because sequencing-shaped fields were present. That is attribution by field-name resemblance,
+ * which is the exact inference this model exists to refuse — so there is now no structural
+ * relationship between this path and BAM_PATH at all, and a test asserts none is reintroduced.
+ *
+ * Nothing here describes an issuer, a scheduler, an emission boundary, or a commitment. Every
+ * stage says what is not established, because that is the whole content of an unattributed record.
+ */
 export const UNATTRIBUTED_PATH: PathMap = {
   source: 'UNKNOWN',
   name: 'Unattributed preconfirmation',
-  character: 'A message whose issuer is not established. It is not assigned to an issuer by elimination.',
+  character: 'A message whose issuer is not established. It is not assigned to an issuer by elimination, and no issuer\'s semantics are applied to it.',
   emission: 'UNKNOWN',
-  basisToday: 'No attribution rule matched. Absence of a known marker identifies nothing.',
-  stages: BAM_PATH.stages.map((entry) =>
-    entry.stage === 'LEDGER_RECEIPT' ? entry : { ...entry, evidence: 'UNKNOWN' as const }),
+  basisToday: 'No attribution rule matched. Absence of a known marker identifies nothing, and sequencing-shaped fields do not identify an issuer.',
+  stages: [
+    {
+      stage: 'SUBMISSION', label: 'Submission', evidence: 'CLIENT_OBSERVED',
+      known: 'This application built, signed and attempted to send a message, on its own clock.',
+      notEstablished: 'That any packet left the machine, or reached a provider or leader.',
+    },
+    {
+      stage: 'SCHEDULER', label: 'Scheduling', evidence: 'UNKNOWN',
+      known: 'No scheduling semantics are established for this message. Sequencing-shaped fields are retained as uninterpreted data and do not identify an issuer or prove ordering.',
+      notEstablished: 'Whether any scheduler was involved, what any retained field means, and whether any ordering claim exists at all.',
+    },
+    {
+      stage: 'LEADER_COMMITMENT', label: 'Leader commitment', evidence: 'UNKNOWN',
+      known: 'No leader commitment is established for this message.',
+      notEstablished: 'Whether any leader committed to this transaction, when, or on what terms.',
+    },
+    {
+      stage: 'PRECONFIRMATION_EMISSION', label: 'Preconfirmation emitted', evidence: 'UNKNOWN',
+      known: 'The message was observed, but its issuer, emission boundary and cryptographic commitment semantics are not established.',
+      notEstablished: 'Who emitted it, whether it precedes or follows execution, what it commits to, and whether it is authenticated.',
+    },
+    {
+      stage: 'EXECUTION', label: 'Execution', evidence: 'UNKNOWN',
+      known: 'The relationship between this message and transaction execution is not established.',
+      notEstablished: 'Whether the message reports an execution outcome, precedes execution, or bears on execution at all.',
+    },
+    {
+      stage: 'BLOCK_INCLUSION', label: 'Block inclusion', evidence: 'UNKNOWN',
+      known: 'Nothing is established until reconciled against a receipt.',
+      notEstablished: 'Which slot the transaction appears in, or that it appears at all.',
+    },
+    {
+      stage: 'LEDGER_RECEIPT', label: 'Ledger receipt', evidence: 'CHAIN_PROVEN',
+      known: 'Inclusion in a specific slot, the execution outcome, the fee, and that the transaction committed atomically or committed nothing but its fee.',
+      notEstablished: 'Submission time, leader ingress, scheduler position, ordering, or contention. A receipt read below finalized can still be reorganised.',
+    },
+  ],
   openQuestions: ['Which issuer emitted this message, and what field would establish that?'],
 }
 
