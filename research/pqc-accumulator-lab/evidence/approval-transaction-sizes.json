@@ -1,0 +1,50 @@
+[
+  {
+    "scheme": "ML-DSA-44",
+    "signature_bytes": 2420,
+    "approval_instruction_bytes": 2500,
+    "approval_transaction_bytes": 2748,
+    "fits_v1_4096": true,
+    "native_fee_payer_signature_verified_on_host": true,
+    "kit_v1_round_trip": true,
+    "config_mask": 12,
+    "host_submit_verify_ms": 2.867300000000114,
+    "host_signature_created_ms": 144.57079999999996,
+    "submitted_to_chain": false,
+    "onchain_verify": "NOT_RUN_SBF_TOOLCHAIN_UNAVAILABLE",
+    "compute_units_consumed": null,
+    "approval_bitmap_after_single_submit": 1
+  },
+  {
+    "scheme": "ML-DSA-65",
+    "signature_bytes": 3309,
+    "approval_instruction_bytes": 3389,
+    "approval_transaction_bytes": 3637,
+    "fits_v1_4096": true,
+    "native_fee_payer_signature_verified_on_host": true,
+    "kit_v1_round_trip": true,
+    "config_mask": 12,
+    "host_submit_verify_ms": 67.88010000000008,
+    "host_signature_created_ms": 134.73289999999997,
+    "submitted_to_chain": false,
+    "onchain_verify": "NOT_RUN_SBF_TOOLCHAIN_UNAVAILABLE",
+    "compute_units_consumed": null,
+    "approval_bitmap_after_single_submit": 2
+  },
+  {
+    "scheme": "ML-DSA-44",
+    "signature_bytes": 2420,
+    "approval_instruction_bytes": 2500,
+    "approval_transaction_bytes": 2748,
+    "fits_v1_4096": true,
+    "native_fee_payer_signature_verified_on_host": true,
+    "kit_v1_round_trip": true,
+    "config_mask": 12,
+    "host_submit_verify_ms": 1.141800000000103,
+    "host_signature_created_ms": 18.408999999999878,
+    "submitted_to_chain": false,
+    "onchain_verify": "NOT_RUN_SBF_TOOLCHAIN_UNAVAILABLE",
+    "compute_units_consumed": null,
+    "approval_bitmap_after_single_submit": 4
+  }
+]

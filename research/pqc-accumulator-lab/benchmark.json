@@ -1,0 +1,116 @@
+{
+  "schema": "breadlines-pqc-accumulator-lab-v1",
+  "generated_at_utc": "2026-09-15T19:08:17.800Z",
+  "scope": "SYNTHETIC_OFFLINE_REAL_ML_DSA_HOST_CRYPTO_AND_KIT_V1_SERIALIZATION_NO_ONCHAIN_EXECUTION",
+  "architecture": "2-of-3 registered ML-DSA signer slots -> separate approval transactions -> compact pending-action accumulator -> execute once",
+  "prior_inline_comparison": {
+    "source": "../pqc-v1-wallet-lab/benchmark.json",
+    "ml_dsa_44_plus_65_inline_transaction_bytes": 6252,
+    "v1_limit_bytes": 4096,
+    "inline_pair_fits_v1": false,
+    "interpretation": "The pair is byte-blocked when carried together; accumulator approvals isolate one PQ signature per transaction."
+  },
+  "canonical_binding": {
+    "action_encoding": "BL-PQC-AUTH-v1 canonical intent from prior lab: wallet, domain, nonce, policy revision, program, ordered account metas and action data.",
+    "action_hash": "004cf8e1fb4edf7979b0e133880cff91808ab5656c6c74b1b4b59da1bbc8e524",
+    "canonical_action_bytes": 208,
+    "approval_message_bytes": 179,
+    "approval_message": "BL-PQC-ACCUMULATOR-v1 + wallet + domain + nonce + policy revision + SHA-256(canonical action) + signer slot + scheme/version + generation + key fingerprint"
+  },
+  "threshold": {
+    "required": 2,
+    "slots": [
+      {
+        "signer_slot": 0,
+        "scheme": "ML-DSA-44",
+        "scheme_version": 1
+      },
+      {
+        "signer_slot": 1,
+        "scheme": "ML-DSA-65",
+        "scheme_version": 1
+      },
+      {
+        "signer_slot": 2,
+        "scheme": "ML-DSA-44",
+        "scheme_version": 1
+      }
+    ],
+    "approval_bitmap_after_A": 1,
+    "approval_bitmap_after_B": 3,
+    "executed_after_two": true,
+    "wallet_nonce_after_execution": "1"
+  },
+  "approval_transactions": [
+    {
+      "scheme": "ML-DSA-44",
+      "signature_bytes": 2420,
+      "approval_instruction_bytes": 2500,
+      "approval_transaction_bytes": 2748,
+      "fits_v1_4096": true,
+      "native_fee_payer_signature_verified_on_host": true,
+      "kit_v1_round_trip": true,
+      "config_mask": 12,
+      "host_submit_verify_ms": 2.867300000000114,
+      "host_signature_created_ms": 144.57079999999996,
+      "submitted_to_chain": false,
+      "onchain_verify": "NOT_RUN_SBF_TOOLCHAIN_UNAVAILABLE",
+      "compute_units_consumed": null,
+      "approval_bitmap_after_single_submit": 1
+    },
+    {
+      "scheme": "ML-DSA-65",
+      "signature_bytes": 3309,
+      "approval_instruction_bytes": 3389,
+      "approval_transaction_bytes": 3637,
+      "fits_v1_4096": true,
+      "native_fee_payer_signature_verified_on_host": true,
+      "kit_v1_round_trip": true,
+      "config_mask": 12,
+      "host_submit_verify_ms": 67.88010000000008,
+      "host_signature_created_ms": 134.73289999999997,
+      "submitted_to_chain": false,
+      "onchain_verify": "NOT_RUN_SBF_TOOLCHAIN_UNAVAILABLE",
+      "compute_units_consumed": null,
+      "approval_bitmap_after_single_submit": 2
+    },
+    {
+      "scheme": "ML-DSA-44",
+      "signature_bytes": 2420,
+      "approval_instruction_bytes": 2500,
+      "approval_transaction_bytes": 2748,
+      "fits_v1_4096": true,
+      "native_fee_payer_signature_verified_on_host": true,
+      "kit_v1_round_trip": true,
+      "config_mask": 12,
+      "host_submit_verify_ms": 1.141800000000103,
+      "host_signature_created_ms": 18.408999999999878,
+      "submitted_to_chain": false,
+      "onchain_verify": "NOT_RUN_SBF_TOOLCHAIN_UNAVAILABLE",
+      "compute_units_consumed": null,
+      "approval_bitmap_after_single_submit": 4
+    }
+  ],
+  "account_state": {
+    "pending_action_bytes": 91,
+    "pending_layout": "8 discriminator + 32 wallet + 32 actionHash + 8 nonce + 8 policyRevision + 1 approvalBitmap + 1 executed + 1 bump",
+    "wallet_bytes_for_44_65_44_slots": 4755,
+    "wallet_layout": "8 discriminator + threshold/nonce/policy revision/vector prefix + each slot metadata, fingerprint and raw registered public key",
+    "pq_signature_bytes_not_retained_in_pending_state": true
+  },
+  "onchain": {
+    "sbf_compile": "NOT_RUN_RUST_TOOLCHAIN_INCOMPLETE",
+    "local_validator": "NOT_RUN_SOLANA_CLI_ABSENT",
+    "real_onchain_verification": "NOT_DEMONSTRATED",
+    "compute_units_consumed": null,
+    "stack_heap_runtime_blockers": "UNMEASURED; rustup stable toolchain repair stalled after a partial install, and no Solana/SBF binaries were present."
+  },
+  "safety": {
+    "deployed": false,
+    "transactions_sent": 0,
+    "transfers": 0,
+    "real_funds_used": false,
+    "hardware_signers_tested": false,
+    "parameter_set_note": "ML-DSA-44 and ML-DSA-65 are parameter sets of ML-DSA, not independent cryptographic families."
+  }
+}
