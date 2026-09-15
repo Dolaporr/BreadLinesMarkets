@@ -1,0 +1,509 @@
+{
+  "schema": "breadlines-pqc-v1-lab-v0",
+  "generated_at_utc": "2026-09-15T16:17:24.609Z",
+  "scope": "SYNTHETIC_OFFLINE_PAYLOADS_REAL_HOST_CRYPTOGRAPHY_NO_ONCHAIN_VERIFICATION",
+  "thresholds": [
+    {
+      "policy": "1-of-3",
+      "threshold": 1,
+      "registered_slots": 3,
+      "exact_threshold_subsets": [
+        {
+          "combination": "A",
+          "fits_v1": true
+        },
+        {
+          "combination": "B",
+          "fits_v1": true
+        },
+        {
+          "combination": "C",
+          "fits_v1": false
+        }
+      ],
+      "fitting_subsets": [
+        "A",
+        "B"
+      ],
+      "every_threshold_subset_fits": false,
+      "any_threshold_subset_fits": true,
+      "onchain_feasibility": "NOT_DEMONSTRATED"
+    },
+    {
+      "policy": "2-of-3",
+      "threshold": 2,
+      "registered_slots": 3,
+      "exact_threshold_subsets": [
+        {
+          "combination": "A+B",
+          "fits_v1": false
+        },
+        {
+          "combination": "A+C",
+          "fits_v1": false
+        },
+        {
+          "combination": "B+C",
+          "fits_v1": false
+        }
+      ],
+      "fitting_subsets": [],
+      "every_threshold_subset_fits": false,
+      "any_threshold_subset_fits": false,
+      "onchain_feasibility": "NOT_DEMONSTRATED"
+    },
+    {
+      "policy": "3-of-3",
+      "threshold": 3,
+      "registered_slots": 3,
+      "exact_threshold_subsets": [
+        {
+          "combination": "A+B+C",
+          "fits_v1": false
+        }
+      ],
+      "fitting_subsets": [],
+      "every_threshold_subset_fits": false,
+      "any_threshold_subset_fits": false,
+      "onchain_feasibility": "NOT_DEMONSTRATED"
+    }
+  ],
+  "schemes": [
+    {
+      "scheme": "ML-DSA-44",
+      "status": "HOST_ONLY",
+      "public_key_bytes": 1312,
+      "public_key_spki_der_bytes": 1334,
+      "signature_bytes": 2420,
+      "canonical_authorization_message_bytes": 253,
+      "valid_signature_accepted": true,
+      "altered_message_rejected": true,
+      "altered_signature_rejected": true,
+      "wrong_public_key_rejected": true,
+      "host_sign_ms": 3.5190999999995256,
+      "host_verify_ms": 0.8796000000002095,
+      "timing_sample_size": 1,
+      "compute_units_consumed": null,
+      "evidence": "evidence/ml-dsa-44-host.json"
+    },
+    {
+      "scheme": "ML-DSA-65",
+      "status": "HOST_ONLY",
+      "public_key_bytes": 1952,
+      "public_key_spki_der_bytes": 1974,
+      "signature_bytes": 3309,
+      "canonical_authorization_message_bytes": 253,
+      "valid_signature_accepted": true,
+      "altered_message_rejected": true,
+      "altered_signature_rejected": true,
+      "wrong_public_key_rejected": true,
+      "host_sign_ms": 1.1566000000002532,
+      "host_verify_ms": 0.9685999999992418,
+      "timing_sample_size": 1,
+      "compute_units_consumed": null,
+      "evidence": "evidence/ml-dsa-65-host.json"
+    },
+    {
+      "scheme": "SLH-DSA-SHA2-128s",
+      "status": "HOST_ONLY",
+      "public_key_bytes": 32,
+      "public_key_spki_der_bytes": 50,
+      "signature_bytes": 7856,
+      "canonical_authorization_message_bytes": 253,
+      "valid_signature_accepted": true,
+      "altered_message_rejected": true,
+      "altered_signature_rejected": true,
+      "wrong_public_key_rejected": true,
+      "host_sign_ms": 1615.4337000000005,
+      "host_verify_ms": 1.7352000000000771,
+      "timing_sample_size": 1,
+      "compute_units_consumed": null,
+      "evidence": "evidence/slh-dsa-sha2-128s-host.json"
+    }
+  ],
+  "combinations": [
+    {
+      "combination": "A",
+      "schemes": [
+        "ML-DSA-44"
+      ],
+      "selected_signatures": 1,
+      "registered_signer_slots": 3,
+      "public_key_bytes": 1312,
+      "public_key_bytes_carried": 0,
+      "signature_bytes": 2420,
+      "canonical_authorization_message_bytes_per_signer": 253,
+      "authorization_payload_bytes": 2647,
+      "transaction_bytes": 2928,
+      "bytes_remaining_under_4096": 1168,
+      "fits_v1": true,
+      "fits_legacy_1232": false,
+      "fits_v0_1232": false,
+      "encodings": {
+        "0": {
+          "bytes": 2966,
+          "bare_envelope_bytes": 2918,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        },
+        "1": {
+          "bytes": 2928,
+          "bare_envelope_bytes": 2920,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        },
+        "legacy": {
+          "bytes": 2964,
+          "bare_envelope_bytes": 2916,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        }
+      },
+      "inline_key_v1_bytes": 4240,
+      "inline_key_fits_v1": false,
+      "inline_key_evidence": "SIZE_ONLY_ZERO_PLACEHOLDER_RAW_KEYS; not cryptographically verified inline-key execution",
+      "onchain_verify": "NOT_RUN_TOOLCHAIN_BLOCKED",
+      "compute_units_consumed": null,
+      "loaded_accounts_data_size": null,
+      "result": "HOST_ONLY_ONCHAIN_TOOLCHAIN_BLOCKED"
+    },
+    {
+      "combination": "B",
+      "schemes": [
+        "ML-DSA-65"
+      ],
+      "selected_signatures": 1,
+      "registered_signer_slots": 3,
+      "public_key_bytes": 1952,
+      "public_key_bytes_carried": 0,
+      "signature_bytes": 3309,
+      "canonical_authorization_message_bytes_per_signer": 253,
+      "authorization_payload_bytes": 3536,
+      "transaction_bytes": 3817,
+      "bytes_remaining_under_4096": 279,
+      "fits_v1": true,
+      "fits_legacy_1232": false,
+      "fits_v0_1232": false,
+      "encodings": {
+        "0": {
+          "bytes": 3855,
+          "bare_envelope_bytes": 3807,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        },
+        "1": {
+          "bytes": 3817,
+          "bare_envelope_bytes": 3809,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        },
+        "legacy": {
+          "bytes": 3853,
+          "bare_envelope_bytes": 3805,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        }
+      },
+      "inline_key_v1_bytes": 5769,
+      "inline_key_fits_v1": false,
+      "inline_key_evidence": "SIZE_ONLY_ZERO_PLACEHOLDER_RAW_KEYS; not cryptographically verified inline-key execution",
+      "onchain_verify": "NOT_RUN_TOOLCHAIN_BLOCKED",
+      "compute_units_consumed": null,
+      "loaded_accounts_data_size": null,
+      "result": "HOST_ONLY_ONCHAIN_TOOLCHAIN_BLOCKED"
+    },
+    {
+      "combination": "A+B",
+      "schemes": [
+        "ML-DSA-44",
+        "ML-DSA-65"
+      ],
+      "selected_signatures": 2,
+      "registered_signer_slots": 3,
+      "public_key_bytes": 3264,
+      "public_key_bytes_carried": 0,
+      "signature_bytes": 5729,
+      "canonical_authorization_message_bytes_per_signer": 253,
+      "authorization_payload_bytes": 5971,
+      "transaction_bytes": 6252,
+      "bytes_remaining_under_4096": -2156,
+      "fits_v1": false,
+      "fits_legacy_1232": false,
+      "fits_v0_1232": false,
+      "encodings": {
+        "0": {
+          "bytes": 6290,
+          "bare_envelope_bytes": 6242,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        },
+        "1": {
+          "bytes": 6252,
+          "bare_envelope_bytes": 6244,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        },
+        "legacy": {
+          "bytes": 6288,
+          "bare_envelope_bytes": 6240,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        }
+      },
+      "inline_key_v1_bytes": 9516,
+      "inline_key_fits_v1": false,
+      "inline_key_evidence": "SIZE_ONLY_ZERO_PLACEHOLDER_RAW_KEYS; not cryptographically verified inline-key execution",
+      "onchain_verify": "NOT_RUN_TOOLCHAIN_BLOCKED",
+      "compute_units_consumed": null,
+      "loaded_accounts_data_size": null,
+      "result": "SIZE_BLOCKED"
+    },
+    {
+      "combination": "C",
+      "schemes": [
+        "SLH-DSA-SHA2-128s"
+      ],
+      "selected_signatures": 1,
+      "registered_signer_slots": 3,
+      "public_key_bytes": 32,
+      "public_key_bytes_carried": 0,
+      "signature_bytes": 7856,
+      "canonical_authorization_message_bytes_per_signer": 253,
+      "authorization_payload_bytes": 8083,
+      "transaction_bytes": 8364,
+      "bytes_remaining_under_4096": -4268,
+      "fits_v1": false,
+      "fits_legacy_1232": false,
+      "fits_v0_1232": false,
+      "encodings": {
+        "0": {
+          "bytes": 8402,
+          "bare_envelope_bytes": 8354,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        },
+        "1": {
+          "bytes": 8364,
+          "bare_envelope_bytes": 8356,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        },
+        "legacy": {
+          "bytes": 8400,
+          "bare_envelope_bytes": 8352,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        }
+      },
+      "inline_key_v1_bytes": 8396,
+      "inline_key_fits_v1": false,
+      "inline_key_evidence": "SIZE_ONLY_ZERO_PLACEHOLDER_RAW_KEYS; not cryptographically verified inline-key execution",
+      "onchain_verify": "NOT_RUN_TOOLCHAIN_BLOCKED",
+      "compute_units_consumed": null,
+      "loaded_accounts_data_size": null,
+      "result": "SIZE_BLOCKED"
+    },
+    {
+      "combination": "A+C",
+      "schemes": [
+        "ML-DSA-44",
+        "SLH-DSA-SHA2-128s"
+      ],
+      "selected_signatures": 2,
+      "registered_signer_slots": 3,
+      "public_key_bytes": 1344,
+      "public_key_bytes_carried": 0,
+      "signature_bytes": 10276,
+      "canonical_authorization_message_bytes_per_signer": 253,
+      "authorization_payload_bytes": 10518,
+      "transaction_bytes": 10799,
+      "bytes_remaining_under_4096": -6703,
+      "fits_v1": false,
+      "fits_legacy_1232": false,
+      "fits_v0_1232": false,
+      "encodings": {
+        "0": {
+          "bytes": 10837,
+          "bare_envelope_bytes": 10789,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        },
+        "1": {
+          "bytes": 10799,
+          "bare_envelope_bytes": 10791,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        },
+        "legacy": {
+          "bytes": 10835,
+          "bare_envelope_bytes": 10787,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        }
+      },
+      "inline_key_v1_bytes": 12143,
+      "inline_key_fits_v1": false,
+      "inline_key_evidence": "SIZE_ONLY_ZERO_PLACEHOLDER_RAW_KEYS; not cryptographically verified inline-key execution",
+      "onchain_verify": "NOT_RUN_TOOLCHAIN_BLOCKED",
+      "compute_units_consumed": null,
+      "loaded_accounts_data_size": null,
+      "result": "SIZE_BLOCKED"
+    },
+    {
+      "combination": "B+C",
+      "schemes": [
+        "ML-DSA-65",
+        "SLH-DSA-SHA2-128s"
+      ],
+      "selected_signatures": 2,
+      "registered_signer_slots": 3,
+      "public_key_bytes": 1984,
+      "public_key_bytes_carried": 0,
+      "signature_bytes": 11165,
+      "canonical_authorization_message_bytes_per_signer": 253,
+      "authorization_payload_bytes": 11407,
+      "transaction_bytes": 11688,
+      "bytes_remaining_under_4096": -7592,
+      "fits_v1": false,
+      "fits_legacy_1232": false,
+      "fits_v0_1232": false,
+      "encodings": {
+        "0": {
+          "bytes": 11726,
+          "bare_envelope_bytes": 11678,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        },
+        "1": {
+          "bytes": 11688,
+          "bare_envelope_bytes": 11680,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        },
+        "legacy": {
+          "bytes": 11724,
+          "bare_envelope_bytes": 11676,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        }
+      },
+      "inline_key_v1_bytes": 13672,
+      "inline_key_fits_v1": false,
+      "inline_key_evidence": "SIZE_ONLY_ZERO_PLACEHOLDER_RAW_KEYS; not cryptographically verified inline-key execution",
+      "onchain_verify": "NOT_RUN_TOOLCHAIN_BLOCKED",
+      "compute_units_consumed": null,
+      "loaded_accounts_data_size": null,
+      "result": "SIZE_BLOCKED"
+    },
+    {
+      "combination": "A+B+C",
+      "schemes": [
+        "ML-DSA-44",
+        "ML-DSA-65",
+        "SLH-DSA-SHA2-128s"
+      ],
+      "selected_signatures": 3,
+      "registered_signer_slots": 3,
+      "public_key_bytes": 3296,
+      "public_key_bytes_carried": 0,
+      "signature_bytes": 13585,
+      "canonical_authorization_message_bytes_per_signer": 253,
+      "authorization_payload_bytes": 13842,
+      "transaction_bytes": 14123,
+      "bytes_remaining_under_4096": -10027,
+      "fits_v1": false,
+      "fits_legacy_1232": false,
+      "fits_v0_1232": false,
+      "encodings": {
+        "0": {
+          "bytes": 14161,
+          "bare_envelope_bytes": 14113,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        },
+        "1": {
+          "bytes": 14123,
+          "bare_envelope_bytes": 14115,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        },
+        "legacy": {
+          "bytes": 14159,
+          "bare_envelope_bytes": 14111,
+          "encoder_succeeded": true,
+          "native_signature_verified_on_host": true,
+          "round_trip": true
+        }
+      },
+      "inline_key_v1_bytes": 17419,
+      "inline_key_fits_v1": false,
+      "inline_key_evidence": "SIZE_ONLY_ZERO_PLACEHOLDER_RAW_KEYS; not cryptographically verified inline-key execution",
+      "onchain_verify": "NOT_RUN_TOOLCHAIN_BLOCKED",
+      "compute_units_consumed": null,
+      "loaded_accounts_data_size": null,
+      "result": "SIZE_BLOCKED"
+    }
+  ],
+  "resources": {
+    "computeUnitLimit": 1400000,
+    "loadedAccountsDataSizeLimit": 65536,
+    "heapRequested": null,
+    "defaultHeapBytes": 32768,
+    "priorityFeeLamports": 0
+  },
+  "sdk": {
+    "kit": "8.3.0",
+    "v1_serialization": "OBSERVED",
+    "independent_size_formula_matches": true,
+    "web3_version": "1.99.0",
+    "web3": {
+      "read": true,
+      "serialize": false,
+      "error": "Serialization of version 1 transaction messages is not supported"
+    }
+  },
+  "mainnet_feature_status": "ACTIVE_ACCOUNT_OBSERVED",
+  "feature_activation_slot": "447120000",
+  "registered_raw_public_keys_bytes": 3296,
+  "negative_control": {
+    "scheme": "ML-DSA-87",
+    "public_key_bytes": 2592,
+    "signature_bytes": 4627,
+    "evidence": "FIPS_204_SIZE_ONLY",
+    "fits_v1_signature_alone": false,
+    "onchain_verify": null,
+    "compute_units_consumed": null
+  },
+  "onchain": {
+    "status": "TOOLCHAIN_BLOCKED",
+    "transactions_sent": 0,
+    "deploys": 0,
+    "transfers": 0,
+    "simulation": "NOT_RUN",
+    "compute_units_consumed": null,
+    "logs": null,
+    "failure_frame": null,
+    "heap_stack_issues": "UNKNOWN_NOT_COMPILED",
+    "smart_account_program": "DEFERRED_COMPUTE_GATE_NOT_REACHED"
+  }
+}
