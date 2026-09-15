@@ -98,3 +98,70 @@ test('the viewer renders ordering evidence without attestation vocabulary', () =
     assert.equal(pattern.test(preinclusion), false, `UI must not contain ${pattern}`)
   }
 })
+
+// --- mobile: summary first, detail on demand ---------------------------------------------------
+
+test('the summary card leads with source, basis, emission, evidence class and unknown count', () => {
+  assert.match(preinclusion, /styles\.summaryCard/)
+  assert.match(preinclusion, /SOURCE NOT ESTABLISHED/)
+  assert.match(preinclusion, /Source basis<\/dt>/)
+  assert.match(preinclusion, /Emission<\/dt>/)
+  assert.match(preinclusion, /Evidence class<\/dt>/)
+  assert.match(preinclusion, /Reconciliation<\/dt>/)
+  assert.match(preinclusion, /unknownStageCount\} \/ \{result\.evidenceMap\.stages\.length\} stages unknown/)
+  // Status appears only when the payload carried one.
+  assert.match(preinclusion, /statusCode != null && <div className=\{styles\.summaryItem\}><dt>Status<\/dt>/)
+})
+
+test('an unattributed record reads as not established and never implies BAM', () => {
+  // The headline is the explicit phrase, not a bare UNKNOWN that could read as a named issuer.
+  assert.match(preinclusion, /source === 'UNKNOWN' \? 'SOURCE NOT ESTABLISHED'/)
+  assert.match(preinclusion, /styles\.sourceUnknown/)
+  // No BAM literal may appear in the component at all: the path name comes from the model.
+  assert.equal(/\bBAM\b/.test(preinclusion), false, 'the component must not hardcode a BAM label')
+})
+
+test('an unknown stage is labelled NOT ESTABLISHED rather than left blank', () => {
+  assert.match(preinclusion, /stage\.evidence === 'UNKNOWN' \? 'NOT ESTABLISHED' : stage\.evidenceLabel/)
+  assert.match(preinclusion, /stage\.evidence === 'UNKNOWN' \? styles\.stageCardUnknown/)
+})
+
+test('long rationales and raw provenance sit behind expandable controls', () => {
+  assert.match(preinclusion, /<summary>Evidence details<\/summary>/)
+  assert.match(preinclusion, /<summary>Raw provenance<\/summary>/)
+  // Per-stage detail is collapsed too.
+  assert.match(preinclusion, /styles\.stageDetails/)
+})
+
+test('uninterpreted fields are labelled and stated to be unauthenticated', () => {
+  assert.match(preinclusion, /<h4>Uninterpreted fields<\/h4>/)
+  assert.match(preinclusion, /does not interpret them/i)
+  assert.match(preinclusion, /not established as authenticated ordering evidence/i)
+  assert.match(preinclusion, /record\.unmodelledFields\.map/)
+})
+
+test('multiple clock domains warn concisely and no duration is calculated', () => {
+  assert.match(preinclusion, /MULTIPLE CLOCKS/)
+  assert.match(preinclusion, /no duration between them is calculated/i)
+  assert.match(preinclusion, /Not calculated — readings are on different clocks/)
+  // A duration string may only be produced on the comparable branch.
+  assert.match(preinclusion, /comparable \? `\$\{result\.timing\.senderToProviderDuration\.ms\} ms on one clock`/)
+})
+
+test('the mobile breakpoint swaps the wide lifecycle for stacked cards', () => {
+  const css = readFileSync(new URL('../app/research/xray/workspace.module.css', import.meta.url), 'utf8')
+  assert.match(css, /@media\(max-width:768px\)\{[^}]*\.lifecycle\{display:none\}/)
+  assert.match(css, /\.stageCards\{display:none\}/, 'stacked cards are mobile-only by default')
+  assert.match(css, /\.stageCards\{display:block/, 'and are shown at the breakpoint')
+  for (const cls of ['summaryCard', 'summaryGrid', 'stageCard', 'opaqueFields', 'clockWarn']) {
+    assert.match(css, new RegExp(`\\.${cls}\\{`), `${cls} needs styling`)
+  }
+})
+
+test('the synthetic banner stays above everything else in the attached view', () => {
+  const attached = preinclusion.slice(preinclusion.indexOf('</div> : <>'))
+  const banner = attached.indexOf('syntheticBanner')
+  const summary = attached.indexOf('summaryCard')
+  assert.ok(banner > -1 && summary > -1)
+  assert.ok(banner < summary, 'the synthetic warning must precede the summary card')
+})
