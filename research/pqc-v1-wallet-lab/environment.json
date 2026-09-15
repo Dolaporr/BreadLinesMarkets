@@ -1,0 +1,172 @@
+{
+  "checked_at_utc": "2026-09-15T16:17:18.188Z",
+  "node": "v24.15.0",
+  "openssl": "3.5.5",
+  "platform": "win32",
+  "architecture": "x64",
+  "toolchain": {
+    "rustc": {
+      "available": false,
+      "version": null,
+      "error": "ENOENT"
+    },
+    "cargo": {
+      "available": false,
+      "version": null,
+      "error": "ENOENT"
+    },
+    "solana": {
+      "available": false,
+      "version": null,
+      "error": "ENOENT"
+    },
+    "agave-validator": {
+      "available": false,
+      "version": null,
+      "error": "ENOENT"
+    },
+    "solana-test-validator": {
+      "available": false,
+      "version": null,
+      "error": "ENOENT"
+    },
+    "cargo-build-sbf": {
+      "available": false,
+      "version": null,
+      "error": "ENOENT"
+    }
+  },
+  "sdk": {
+    "@solana/kit": {
+      "version": "8.3.0"
+    },
+    "@solana/web3.js": {
+      "version": "1.99.0"
+    },
+    "kit_v1_message_creation": {
+      "result": {
+        "instructions": [],
+        "version": 1
+      },
+      "warning": "Construction alone does not establish serialization support."
+    }
+  },
+  "onchain_compile": "TOOLCHAIN_BLOCKED",
+  "onchain_execution": "NOT_RUN",
+  "transactions_sent": 0,
+  "rpc": {
+    "status": "ACTIVE_ACCOUNT_OBSERVED",
+    "calls": [
+      {
+        "requested_at_utc": "2026-09-15T16:11:01.930Z",
+        "request": {
+          "jsonrpc": "2.0",
+          "id": 1,
+          "method": "getVersion",
+          "params": []
+        },
+        "http_status": 200,
+        "response": {
+          "jsonrpc": "2.0",
+          "result": {
+            "feature-set": 2409014235,
+            "solana-core": "4.3.0-rc.0"
+          },
+          "id": 1
+        }
+      },
+      {
+        "requested_at_utc": "2026-09-15T16:11:02.183Z",
+        "request": {
+          "jsonrpc": "2.0",
+          "id": 2,
+          "method": "getEpochInfo",
+          "params": [
+            {
+              "commitment": "finalized"
+            }
+          ]
+        },
+        "http_status": 200,
+        "response": {
+          "jsonrpc": "2.0",
+          "result": {
+            "absoluteSlot": 447292243,
+            "blockHeight": 425334063,
+            "epoch": 1035,
+            "slotIndex": 172243,
+            "slotsInEpoch": 432000,
+            "transactionCount": 548741444400
+          },
+          "id": 2
+        }
+      },
+      {
+        "requested_at_utc": "2026-09-15T16:11:02.385Z",
+        "request": {
+          "jsonrpc": "2.0",
+          "id": 3,
+          "method": "getAccountInfo",
+          "params": [
+            "txv1aq4pp281K9um3tnPgkfX8UqtFT6wcVW3hNezGLL",
+            {
+              "encoding": "base64",
+              "commitment": "finalized"
+            }
+          ]
+        },
+        "http_status": 200,
+        "response": {
+          "jsonrpc": "2.0",
+          "result": {
+            "context": {
+              "apiVersion": "4.3.0-rc.0",
+              "slot": 447292244
+            },
+            "value": {
+              "data": [
+                "AYCCphoAAAAA",
+                "base64"
+              ],
+              "executable": false,
+              "lamports": 10695960,
+              "owner": "Feature111111111111111111111111111111111111",
+              "rentEpoch": 18446744073709552000,
+              "space": 9
+            }
+          },
+          "id": 3
+        }
+      },
+      {
+        "requested_at_utc": "2026-09-15T16:11:02.789Z",
+        "request": {
+          "jsonrpc": "2.0",
+          "id": 4,
+          "method": "getBlockTime",
+          "params": [
+            447120000
+          ]
+        },
+        "http_status": 200,
+        "response": {
+          "jsonrpc": "2.0",
+          "result": 1789434263,
+          "id": 4
+        }
+      }
+    ],
+    "endpoint": "https://api.mainnet-beta.solana.com",
+    "feature": "txv1aq4pp281K9um3tnPgkfX8UqtFT6wcVW3hNezGLL",
+    "epoch_info": {
+      "absoluteSlot": 447292243,
+      "blockHeight": 425334063,
+      "epoch": 1035,
+      "slotIndex": 172243,
+      "slotsInEpoch": 432000,
+      "transactionCount": 548741444400
+    },
+    "activation_slot": "447120000",
+    "activation_block_time": 1789434263
+  }
+}
