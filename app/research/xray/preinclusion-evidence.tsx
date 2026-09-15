@@ -127,6 +127,16 @@ export default function PreInclusionEvidence({ current, trace }: { current: Case
             </div>
           ))}
         </div>
+        {result.evidenceMap.ordering && <div className={styles.discrepancy}>
+          <strong>ORDERING EVIDENCE · {result.evidenceMap.ordering.authentication.replaceAll('_', ' ')}</strong>
+          <p>{result.evidenceMap.ordering.headline}</p>
+          <p className={styles.caption}>Claim ({result.evidenceMap.ordering.claim.fields.join(', ')}): {result.evidenceMap.ordering.claim.describes}</p>
+          <p className={styles.caption}>Check: {result.evidenceMap.ordering.check.method} {result.evidenceMap.ordering.check.direction}</p>
+          <p className={styles.caption}>Scope: {result.evidenceMap.ordering.check.scope}</p>
+          <em>{result.evidenceMap.ordering.boundary}</em>
+          <ul className={styles.unknowableList}>{result.evidenceMap.ordering.doesNotEstablish.map((line) => <li key={line}>{line}</li>)}</ul>
+          <p className={styles.caption}>Source: {result.evidenceMap.ordering.source}</p>
+        </div>}
         <p className={styles.boundary}>{MAP_BOUNDARY}</p>
         {result.evidenceMap.openQuestions.length > 0 && <>
           <h3 style={{ marginTop: 22 }}>Open with this issuer</h3>

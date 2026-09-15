@@ -85,3 +85,16 @@ test('each reconciliation state has a distinct chip colour', () => {
     assert.match(css, new RegExp(`\\.state${state}\\{color:`), `${state} needs its own colour`)
   }
 })
+
+test('the viewer renders ordering evidence without attestation vocabulary', () => {
+  assert.match(preinclusion, /result\.evidenceMap\.ordering/)
+  assert.match(preinclusion, /ordering\.authentication/)
+  assert.match(preinclusion, /ordering\.doesNotEstablish/)
+  assert.match(preinclusion, /ordering\.check\.scope/)
+  // The claim and the check are rendered as separate things, never merged.
+  assert.match(preinclusion, /ordering\.claim\.describes/)
+  assert.match(preinclusion, /ordering\.check\.method/)
+  for (const pattern of [/cryptographically attested ordering/i, /ordering is proven/i, /signed sequence/i]) {
+    assert.equal(pattern.test(preinclusion), false, `UI must not contain ${pattern}`)
+  }
+})

@@ -71,14 +71,18 @@ test('a Helius preconfirmation is never chain-proven, finalized or ledger-confir
 })
 
 // 5. BAM ordering and attestation semantics remain UNKNOWN.
-test('BAM scheduler, leader commitment and attestation semantics stay UNKNOWN', () => {
-  for (const stage of ['SCHEDULER', 'LEADER_COMMITMENT', 'PRECONFIRMATION_EMISSION'] as const) {
+test('BAM leader commitment and attestation semantics stay UNKNOWN', () => {
+  // SCHEDULER moved off UNKNOWN when Eric described what sequence_id means — but only to
+  // PROVIDER_REPORTED, and its authentication is still unestablished (asserted separately below).
+  // Everything he did not speak to stays UNKNOWN.
+  for (const stage of ['LEADER_COMMITMENT', 'PRECONFIRMATION_EMISSION'] as const) {
     assert.equal(BAM_PATH.stages.find((s) => s.stage === stage)!.evidence, 'UNKNOWN', `${stage} must stay UNKNOWN`)
   }
+  assert.equal(BAM_PATH.stages.find((s) => s.stage === 'SCHEDULER')!.evidence, 'PROVIDER_REPORTED')
   const emission = BAM_PATH.stages.find((s) => s.stage === 'PRECONFIRMATION_EMISSION')!
   assert.match(emission.notEstablished, /TEE ordering attestation/i)
   assert.match(emission.notEstablished, /clock domain/i)
-  assert.ok(unknownStageCount(BAM_PATH) >= 5)
+  assert.ok(unknownStageCount(BAM_PATH) >= 4, 'most of the BAM path is still not established')
   // The open questions must be asked, not answered.
   assert.ok(BAM_PATH.openQuestions.length >= 8)
   for (const question of BAM_PATH.openQuestions) assert.match(question, /\?$/)
@@ -171,4 +175,86 @@ test('the evidence classes are not presented as a confidence ranking', async () 
   const { MAP_BOUNDARY } = await import('../research/execution-casefile/preconfirmation-map.ts')
   assert.match(MAP_BOUNDARY, /provenance, not a confidence ranking/i)
   assert.match(MAP_BOUNDARY, /UNKNOWN means not established/i)
+})
+
+// --- Eric (@gzalz_sol) ordering clarification, 2026-09 ------------------------------------------
+// He established what sequence_id describes and a block constraint it implies. He did NOT
+// establish that any of it is authenticated. These tests exist to keep those apart.
+
+test('BAM ordering is modelled as dispatch ordering with an ex-post block constraint', async () => {
+  const { BAM_ORDERING_EVIDENCE, BAM_PATH } = await import('../research/execution-casefile/preconfirmation-map.ts')
+  assert.equal(BAM_ORDERING_EVIDENCE.kind, 'SCHEDULER_DISPATCH_WITH_EX_POST_BLOCK_CONSTRAINT')
+  assert.equal(BAM_PATH.ordering, BAM_ORDERING_EVIDENCE)
+
+  // The claim is a provider statement; only the thing it is checked against is chain-proven.
+  assert.equal(BAM_ORDERING_EVIDENCE.claim.evidence, 'PROVIDER_REPORTED')
+  assert.equal(BAM_ORDERING_EVIDENCE.check.checkedAgainst, 'CHAIN_PROVEN')
+  assert.deepEqual(BAM_ORDERING_EVIDENCE.claim.fields, ['sequence_id', 'bundle metadata'])
+  assert.match(BAM_ORDERING_EVIDENCE.check.direction, /ex post/i)
+})
+
+test('verifiable-by-reconciliation is never collapsed into cryptographically attested', async () => {
+  const { BAM_ORDERING_EVIDENCE, BAM_PATH } = await import('../research/execution-casefile/preconfirmation-map.ts')
+
+  // Authentication is a separate axis and stays open.
+  assert.equal(BAM_ORDERING_EVIDENCE.authentication, 'NOT_ESTABLISHED')
+  assert.notEqual(BAM_ORDERING_EVIDENCE.claim.evidence, 'VALIDATOR_ATTESTED')
+  assert.notEqual(BAM_ORDERING_EVIDENCE.claim.evidence, 'CHAIN_PROVEN')
+
+  // The refusals must name each thing Eric did not establish.
+  const refusals = BAM_ORDERING_EVIDENCE.doesNotEstablish.join(' ')
+  assert.match(refusals, /cryptographically authenticated, signed, or attributable to a key/i)
+  assert.match(refusals, /validator attestation/i)
+  assert.match(refusals, /TEE ordering attestation/i)
+  assert.match(refusals, /clock or slot semantics/i)
+  // Consistency is not authenticity: the trap this whole model exists to avoid.
+  assert.match(refusals, /consistency is not authenticity/i)
+
+  // No stage may be lifted to an attested class by the ordering clarification.
+  for (const stage of BAM_PATH.stages) {
+    if (stage.evidence === 'VALIDATOR_ATTESTED') assert.fail(`${stage.stage} must not be validator-attested`)
+    if (stage.evidence === 'CHAIN_PROVEN') assert.equal(stage.stage, 'LEDGER_RECEIPT')
+  }
+})
+
+test('the block check falsifies but does not authenticate, and only binds same-account writers', async () => {
+  const { BAM_ORDERING_EVIDENCE } = await import('../research/execution-casefile/preconfirmation-map.ts')
+  assert.match(BAM_ORDERING_EVIDENCE.check.scope, /same account/i)
+  assert.match(BAM_ORDERING_EVIDENCE.check.scope, /unfalsifiable/i, 'the unconstrained case must be stated')
+  assert.match(BAM_ORDERING_EVIDENCE.check.method, /ascending sequence_id/i)
+  // What it does establish is real and must not be understated either.
+  const establishes = BAM_ORDERING_EVIDENCE.establishes.join(' ')
+  assert.match(establishes, /falsifiable against chain data/i)
+  assert.match(establishes, /atomically bundled/i)
+})
+
+test('the scheduler stage reports the claim without asserting it is authenticated', async () => {
+  const { BAM_PATH } = await import('../research/execution-casefile/preconfirmation-map.ts')
+  const scheduler = BAM_PATH.stages.find((s) => s.stage === 'SCHEDULER')!
+  assert.equal(scheduler.evidence, 'PROVIDER_REPORTED', 'no longer UNKNOWN, and not attested either')
+  assert.match(scheduler.known, /dispatch ordering/i)
+  assert.match(scheduler.notEstablished, /authenticated, signed, or attributable to any key/i)
+  assert.match(scheduler.notEstablished, /does not establish who made it/i)
+
+  // Emission stays UNKNOWN: knowing what a field means is not knowing it is signed.
+  const emission = BAM_PATH.stages.find((s) => s.stage === 'PRECONFIRMATION_EMISSION')!
+  assert.equal(emission.evidence, 'UNKNOWN')
+  assert.match(emission.notEstablished, /what key or signature would authenticate them/i)
+})
+
+test('no surface describes BAM ordering with attestation vocabulary', async () => {
+  const map = readFileSync('research/execution-casefile/preconfirmation-map.ts', 'utf8')
+  const memo = readFileSync('docs/preconfirmation-evidence-map-v0.md', 'utf8')
+  // Phrases that would overstate Eric's clarification, in any assertive form.
+  const forbidden = [
+    /sequence_id is (?:cryptographically )?(?:signed|attested|authenticated)/i,
+    /bundle (?:id|metadata) is (?:cryptographically )?(?:signed|attested|authenticated)/i,
+    /cryptographically attested ordering/i,
+    /ordering is proven/i,
+    /TEE[- ]attested (?:sequence|ordering|bundle)/i,
+  ]
+  for (const pattern of forbidden) {
+    assert.equal(pattern.test(map), false, `map must not contain ${pattern}`)
+    assert.equal(pattern.test(memo), false, `memo must not contain ${pattern}`)
+  }
 })

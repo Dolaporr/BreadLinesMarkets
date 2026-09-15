@@ -74,15 +74,54 @@ properties are not established, and are recorded as `UNKNOWN` rather than guesse
 | Stage | Evidence | Not established |
 | --- | --- | --- |
 | Submission | Client-observed | That any packet left the machine |
-| Scheduling | **Unknown** | Whether scheduler sequence is authenticated or is stream metadata; whether bundle position is authenticated; whether a third party can verify either |
+| Scheduling | Provider-observed | Whether `sequence_id` or bundle metadata are authenticated, signed, or attributable to any key — see below |
 | Leader commitment | **Unknown** | Whether the commitment is cryptographically attributable to an identified key, and what it binds the committer to |
 | Preconfirmation emitted | **Unknown** | What the object commits to; whether it is authenticated; where a TEE ordering attestation sits relative to it; what slot or clock domain accompanies it; whether it is validator-attested |
 | Execution | **Unknown** | Whether execution occurred, and what it returned — a commit-to-execute preconfirmation precedes execution and reports no result |
 | Block inclusion | **Unknown** | Which slot it appears in, or that it appears |
 | Ledger receipt | Chain-proven | Submission time, ingress, scheduler position, ordering, contention |
 
-Nothing in that table describes what BAM does. It describes what Breadlines has verified, which at
-every point above is: not this.
+Nothing in that table describes what BAM does, except where a clarification is cited. Elsewhere it
+describes what Breadlines has verified, which at every remaining point is: not this.
+
+### Ordering: what Eric established, and what he did not
+
+Eric (@gzalz_sol) clarified directly (2026-09):
+
+- `sequence_id` describes the BAM node's dispatch ordering.
+- Transactions are forwarded from scheduler to leader in ascending dispatch order.
+- For a set of transactions writing to the same account, their order in the produced block must
+  follow ascending `sequence_id`.
+- Transactions sharing a sequence id have been atomically bundled, with intended intra-bundle
+  ordering carried in the bundle metadata.
+
+That is a real and useful property, and the model records it as
+**scheduler dispatch ordering with ex-post block-verifiable constraints** — not as attested
+ordering. The distinction is the whole point, and it separates two different questions:
+
+| Question | Answer |
+| --- | --- |
+| Is the claim **consistent** with what the chain recorded? | Checkable, ex post, against the produced block |
+| Did the claimed party **actually make** the claim? | Not established by any check available here |
+
+Three limits follow, and each is enforced in code rather than left to prose:
+
+**Consistency is not authenticity.** A reconciliation against the block can *falsify* an ordering
+claim. It cannot *authenticate* one — a fabricated `sequence_id` that happens to be consistent with
+the block passes exactly the same check.
+
+**The constraint only binds same-account writers.** Where two transactions share no writable
+account, the block imposes no ordering constraint between them, and the claim is unfalsifiable for
+that pair.
+
+**The check is ex post.** It runs only once the block exists, so it cannot validate a
+preconfirmation at the moment it is issued — which is precisely when a preconfirmation is supposed
+to be worth something.
+
+Still `UNKNOWN`, and explicitly not implied by the above: whether the sequence or bundle fields are
+authenticated inside the preconfirmation object; what key or signature would authenticate them;
+whether the preconfirmation constitutes a validator attestation; where a TEE ordering attestation
+sits; and the exact clock and slot semantics.
 
 ## Provenance rules
 
@@ -115,8 +154,10 @@ These are questions. None is answered here, and none should be answered without 
 
 1. What exactly does a BAM preconfirmation commit to?
 2. Is the preconfirmation object itself cryptographically authenticated?
-3. Are scheduler sequence and bundle position authenticated, or informational stream metadata?
-4. Can a third party independently verify the sequencing claim?
+3. Are the sequence and bundle fields authenticated inside the preconfirmation object, and by what
+   key or signature?
+4. Beyond the ex-post block constraint, can a third party verify that a sequencing claim originated
+   from the party it names?
 5. Where does the TEE ordering attestation sit relative to the preconfirmation?
 6. What slot or clock domain accompanies the commitment?
 7. What constitutes expiry, and what would constitute a genuinely broken commitment?
@@ -136,7 +177,7 @@ These are questions. None is answered here, and none should be answered without 
 | A per-message source field ships | `sourceBasis` becomes `EXPLICIT`, carrying the field that stated it |
 | A positive BAM identification rule exists | A derivation for BAM, alongside the Helius one; absence still identifies nothing |
 | The BAM preconfirmation object is authenticated against a published key | Its emission stage can move from `UNKNOWN` toward `VALIDATOR_ATTESTED`, once verification actually runs |
-| Scheduler sequence is authenticated and third-party verifiable | The scheduling stage stops being `UNKNOWN`, and ordering becomes reconstructable from an attested payload rather than from timestamps |
+| The sequence and bundle fields are authenticated against a published key | Ordering moves from an ex-post block constraint to attested ordering, and becomes reconstructable from the payload itself rather than only checkable after the block |
 | Expiry semantics are defined | `PENDING` and `UNRESOLVED` separate on evidence rather than on the presence of a deadline field |
 
 ## Boundaries preserved

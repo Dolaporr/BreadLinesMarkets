@@ -278,6 +278,11 @@ export function reconcile(input: ReconciliationInput) {
       basisToday: path.basisToday,
       stages: path.stages.map((entry) => ({ ...entry, evidenceLabel: evidenceLabel[entry.evidence] })),
       unknownStageCount: unknownStageCount(path),
+      ordering: path.ordering && {
+        ...path.ordering,
+        headline: 'Scheduler dispatch ordering with ex-post block-verifiable constraints',
+        boundary: 'Checkable against the produced block is not the same as attested. The check can falsify an ordering claim; it cannot establish who made it.',
+      },
       openQuestions: path.openQuestions,
     },
     discrepancies,

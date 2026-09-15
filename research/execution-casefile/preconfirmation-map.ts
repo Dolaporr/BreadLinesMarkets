@@ -47,6 +47,69 @@ export type StageEntry = {
   notEstablished: string
 }
 
+/**
+ * Ordering evidence that is checkable against the produced block without being authenticated.
+ *
+ * This is a genuinely distinct thing and the model keeps it distinct, because the obvious mistake
+ * is to read "verifiable" as "attested". Two different questions:
+ *
+ *   Is the claim CONSISTENT with what the chain recorded?  — checkable, ex post, against the block.
+ *   Did the claimed party actually make the claim?          — not established by any check here.
+ *
+ * A reconciliation against the block can FALSIFY an ordering claim. It cannot AUTHENTICATE one: a
+ * fabricated sequence_id that happens to be consistent with the block passes the same check. So
+ * this class of evidence constrains, and the constraint is real, but it says nothing about origin.
+ */
+export type OrderingEvidence = {
+  kind: 'SCHEDULER_DISPATCH_WITH_EX_POST_BLOCK_CONSTRAINT'
+  /** The field carrying the claim, and what the issuer says it describes. */
+  claim: { fields: string[]; describes: string; evidence: StageEvidence }
+  /** How the claim can be checked, and the evidence class of the thing it is checked against. */
+  check: { method: string; checkedAgainst: StageEvidence; scope: string; direction: string }
+  establishes: string[]
+  doesNotEstablish: string[]
+  /** Authentication is a separate axis and is not established by the constraint. */
+  authentication: 'NOT_ESTABLISHED'
+  source: string
+}
+
+/**
+ * From Eric (@gzalz_sol), 2026-09. Recorded as what he established, and nothing beyond it.
+ *
+ * He established what the fields DESCRIBE and a structural constraint the produced block must
+ * satisfy. He did not establish that any of it is signed, attested, or attributable to a key, and
+ * that gap is held open deliberately below.
+ */
+export const BAM_ORDERING_EVIDENCE: OrderingEvidence = {
+  kind: 'SCHEDULER_DISPATCH_WITH_EX_POST_BLOCK_CONSTRAINT',
+  claim: {
+    fields: ['sequence_id', 'bundle metadata'],
+    describes: 'The BAM node\'s dispatch ordering. Transactions are forwarded from scheduler to leader in ascending dispatch order, and transactions sharing a sequence id have been atomically bundled, with intended intra-bundle ordering carried in the bundle metadata.',
+    evidence: 'PROVIDER_REPORTED',
+  },
+  check: {
+    method: 'Reconcile the claimed ordering against the produced block: for a set of transactions writing to the same account, their order in the block must follow ascending sequence_id.',
+    checkedAgainst: 'CHAIN_PROVEN',
+    scope: 'Binds only across transactions that write to the same account. Where two transactions share no writable account, the block imposes no ordering constraint on them and the claim is unfalsifiable for that pair.',
+    direction: 'Ex post. The check runs only after the block exists, so it cannot validate a preconfirmation at the moment it is issued.',
+  },
+  establishes: [
+    'What sequence_id and bundle metadata describe, in the issuer\'s own terms.',
+    'A structural constraint the produced block must satisfy for same-account writers, which makes an ordering claim falsifiable against chain data.',
+    'That transactions sharing a sequence id were atomically bundled, as the issuer describes it.',
+  ],
+  doesNotEstablish: [
+    'That sequence_id or bundle metadata are cryptographically authenticated, signed, or attributable to a key.',
+    'That the preconfirmation object constitutes a validator attestation.',
+    'Where a TEE ordering attestation sits relative to the preconfirmation, or whether one covers these fields.',
+    'The clock or slot semantics accompanying the ordering claim.',
+    'That a claim consistent with the block is therefore genuine — consistency is not authenticity, and a fabricated value that happens to fit passes the same check.',
+    'Any ordering relationship between transactions that share no writable account.',
+  ],
+  authentication: 'NOT_ESTABLISHED',
+  source: 'Direct clarification from Eric (@gzalz_sol), 2026-09. Not published documentation.',
+}
+
 export type PathMap = {
   source: PreconfirmationSource
   name: string
@@ -56,6 +119,8 @@ export type PathMap = {
   emission: 'POST_EXECUTION' | 'COMMIT_TO_EXECUTE' | 'UNKNOWN'
   basisToday: string
   stages: StageEntry[]
+  /** Ordering evidence that is checkable without being authenticated, where any exists. */
+  ordering?: OrderingEvidence
   openQuestions: string[]
 }
 
@@ -127,7 +192,7 @@ export const HELIUS_PATH: PathMap = {
 export const BAM_PATH: PathMap = {
   source: 'BAM',
   name: 'BAM commit-to-execute preconfirmation',
-  character: 'Described in public material as a commitment made before execution. What it commits to, and whether that commitment is independently checkable, is not established.',
+  character: 'Described in public material as a commitment made before execution. Its dispatch ordering is now described and is checkable against the produced block after the fact; whether any of it is authenticated is not established.',
   emission: 'COMMIT_TO_EXECUTE',
   basisToday: 'Source basis is UNKNOWN. No rule has been established for identifying a BAM message in the merged stream, and the absence of the Helius status does not identify one.',
   stages: [
@@ -137,9 +202,9 @@ export const BAM_PATH: PathMap = {
       notEstablished: 'That any packet left the machine, or reached a provider or leader.',
     },
     {
-      stage: 'SCHEDULER', label: 'Scheduling', evidence: 'UNKNOWN',
-      known: 'Nothing is established about what scheduler evidence exists or what it covers.',
-      notEstablished: 'Whether a scheduler sequence is authenticated or is stream metadata; whether bundle position is authenticated; whether a third party can verify either.',
+      stage: 'SCHEDULER', label: 'Scheduling', evidence: 'PROVIDER_REPORTED',
+      known: 'sequence_id describes the BAM node\'s dispatch ordering, and transactions are forwarded to the leader in ascending dispatch order. Transactions sharing a sequence id were atomically bundled, with intended intra-bundle ordering in the bundle metadata. For same-account writers the produced block must follow ascending sequence_id, so an ordering claim can be checked against the block after the fact.',
+      notEstablished: 'Whether sequence_id or bundle metadata are authenticated, signed, or attributable to any key. The block check constrains the claim; it does not establish who made it, and a value consistent with the block is not thereby genuine.',
     },
     {
       stage: 'LEADER_COMMITMENT', label: 'Leader commitment', evidence: 'UNKNOWN',
@@ -149,7 +214,7 @@ export const BAM_PATH: PathMap = {
     {
       stage: 'PRECONFIRMATION_EMISSION', label: 'Preconfirmation emitted', evidence: 'UNKNOWN',
       known: 'Nothing is established about what the preconfirmation object cryptographically commits to.',
-      notEstablished: 'Whether the object is authenticated; where a TEE ordering attestation sits relative to it; what slot or clock domain accompanies it; whether it is validator-attested.',
+      notEstablished: 'Whether the object is authenticated; whether the sequence and bundle fields inside it are authenticated; what key or signature would authenticate them; where a TEE ordering attestation sits relative to it; what slot or clock domain accompanies it; whether it is validator-attested.',
     },
     {
       stage: 'EXECUTION', label: 'Execution', evidence: 'UNKNOWN',
@@ -167,11 +232,12 @@ export const BAM_PATH: PathMap = {
       notEstablished: 'Submission time, leader ingress, scheduler position, ordering, or contention.',
     },
   ],
+  ordering: BAM_ORDERING_EVIDENCE,
   openQuestions: [
     'What exactly does a BAM preconfirmation commit to?',
     'Is the preconfirmation object itself cryptographically authenticated?',
-    'Are scheduler sequence and bundle position authenticated, or informational stream metadata?',
-    'Can a third party independently verify the sequencing claim?',
+    'Are the sequence and bundle fields authenticated inside the preconfirmation object, and by what key or signature?',
+    'Beyond the ex-post block constraint, can a third party verify that a sequencing claim originated from the party it names?',
     'Where does the TEE ordering attestation sit relative to the preconfirmation?',
     'What slot or clock domain accompanies the commitment?',
     'What constitutes expiry, and what would constitute a genuinely broken commitment?',

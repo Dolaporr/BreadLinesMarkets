@@ -1,5 +1,34 @@
 # X-Ray v1 validation — 2026-09-09
 
+## BAM ordering clarification — 2026-09-15
+
+- 117/117 tests pass, up from 111. Six added: five ordering-collapse regressions and one UI
+  contract assertion. One existing test was updated, not deleted, and the change is explained below.
+- Typecheck unchanged (the same two pre-existing `structuredEvidence` errors), build green, claim
+  linter 0 findings across 19 documents.
+- Eric (@gzalz_sol) clarified BAM dispatch ordering. The newly established property is modelled as
+  `SCHEDULER_DISPATCH_WITH_EX_POST_BLOCK_CONSTRAINT` — scheduler dispatch ordering with ex-post
+  block-verifiable constraints — and explicitly not as attested ordering. The claim carries
+  `PROVIDER_REPORTED`; only the produced block it is checked against is `CHAIN_PROVEN`;
+  `authentication` is `NOT_ESTABLISHED`.
+- Three limits are recorded with the property rather than left implicit: consistency is not
+  authenticity (a fabricated value consistent with the block passes the same check); the constraint
+  binds only transactions writing the same account; and the check is ex post, so it cannot validate
+  a preconfirmation when it is issued.
+- The BAM SCHEDULER stage moved from UNKNOWN to PROVIDER_REPORTED, because what the field describes
+  is now established. Its authentication is not, and `notEstablished` says so. Leader commitment
+  and preconfirmation emission remain UNKNOWN; the BAM path is now UNKNOWN at 4 of 7 stages rather
+  than 5.
+- **Updated test:** `BAM scheduler, leader commitment and attestation semantics stay UNKNOWN`
+  asserted the scheduler stage was UNKNOWN. That assertion was correct before the clarification and
+  is now false, so the test was renamed and narrowed to the two stages that remain UNKNOWN, with an
+  explicit assertion that the scheduler is PROVIDER_REPORTED rather than attested. Its original
+  purpose — keeping attestation semantics open — is preserved and strengthened by the five new
+  tests. No test was removed.
+- Nothing about authentication, signing keys, validator attestation, TEE attestation placement, or
+  clock/slot semantics was inferred from this clarification. Those remain open questions.
+
+
 ## Preconfirmation Evidence Map v0 — 2026-09-14
 
 - 111/111 tests pass, up from 97. The 14 added: 11 source-provenance regressions
