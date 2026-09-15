@@ -1,5 +1,39 @@
 # X-Ray v1 validation — 2026-09-09
 
+## BAM enforcement clarification — 2026-09-15 (second)
+
+- Eric (@gzalz_sol) clarified further: for a POSITIVELY IDENTIFIED BAM preconfirmation, the payload
+  originates from the BAM node, `sequence_id` and `bundle_id` match scheduler-assigned IDs, the
+  produced block's ordering must satisfy the described constraints, and a violating leader is
+  disconnected from BAM.
+- The property was renamed `SCHEDULER_DISPATCH_WITH_EX_POST_BLOCK_CONSTRAINT` →
+  `PROTOCOL_ENFORCED_SCHEDULER_ORDERING`, because the ordering is now established as a protocol
+  requirement rather than a description of behaviour.
+- **Enforcement is modelled as a separate axis from verification.** Disconnection is a consequence
+  that deters violation; it is not a check a third party can run against a particular claim. Four
+  limits are recorded with it: it verifies no particular claim; it is only as strong as BAM's own
+  detection and willingness to act; it is after the fact and does not undo an ordering already in a
+  block; and it does not make any field signed, attested, or attributable to a key.
+- **Nothing was lifted.** `authentication` stays `NOT_ESTABLISHED`, no stage on any path is
+  `VALIDATOR_ATTESTED`, and nothing is described as independently cryptographically verified. A
+  test asserts all three, since no verification mechanism has been evidenced — only a penalty.
+- A `precondition` field was added to the ordering evidence, stating that every property is
+  conditional on positive BAM identification and is never reached by elimination.
+- **Attribution gating is now tested at three levels:** the map (`pathFor('HELIUS')` and
+  `pathFor('UNKNOWN')` carry no ordering block and no BAM vocabulary), the reconciler output the UI
+  renders from (an unattributed and a Helius `evidenceMap` contain none of the second
+  clarification's vocabulary either), and the component (the ordering block is conditional on
+  `evidenceMap.ordering`, and hardcodes no ordering wording).
+- The UI now renders enforcement, its limits and the precondition as their own lines, so "enforced"
+  cannot be read as "verified" from the headline alone.
+- One existing assertion was updated, not deleted: the BAM scheduler stage's `notEstablished` was
+  rewritten for the new clarification and lost the phrase `does not establish who made it`. Rather
+  than weaken the test, the clause was restored to the stage prose — the property it pinned
+  (consistency constrains a claim but does not establish its origin) is still true and still worth
+  stating on the stage.
+- Not merged, not deployed to production.
+
+
 ## BAM ordering clarification — 2026-09-15
 
 - 117/117 tests pass, up from 111. Six added: five ordering-collapse regressions and one UI

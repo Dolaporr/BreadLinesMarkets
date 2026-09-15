@@ -181,16 +181,108 @@ test('the evidence classes are not presented as a confidence ranking', async () 
 // He established what sequence_id describes and a block constraint it implies. He did NOT
 // establish that any of it is authenticated. These tests exist to keep those apart.
 
-test('BAM ordering is modelled as dispatch ordering with an ex-post block constraint', async () => {
+test('BAM ordering is modelled as protocol-enforced scheduler ordering', async () => {
   const { BAM_ORDERING_EVIDENCE, BAM_PATH } = await import('../research/execution-casefile/preconfirmation-map.ts')
-  assert.equal(BAM_ORDERING_EVIDENCE.kind, 'SCHEDULER_DISPATCH_WITH_EX_POST_BLOCK_CONSTRAINT')
+  assert.equal(BAM_ORDERING_EVIDENCE.kind, 'PROTOCOL_ENFORCED_SCHEDULER_ORDERING')
   assert.equal(BAM_PATH.ordering, BAM_ORDERING_EVIDENCE)
 
   // The claim is a provider statement; only the thing it is checked against is chain-proven.
   assert.equal(BAM_ORDERING_EVIDENCE.claim.evidence, 'PROVIDER_REPORTED')
   assert.equal(BAM_ORDERING_EVIDENCE.check.checkedAgainst, 'CHAIN_PROVEN')
-  assert.deepEqual(BAM_ORDERING_EVIDENCE.claim.fields, ['sequence_id', 'bundle metadata'])
+  assert.deepEqual(BAM_ORDERING_EVIDENCE.claim.fields, ['sequence_id', 'bundle_id', 'bundle metadata'])
   assert.match(BAM_ORDERING_EVIDENCE.check.direction, /ex post/i)
+
+  // Eric's second clarification: the ordering is a protocol requirement, not a description.
+  assert.match(BAM_ORDERING_EVIDENCE.claim.describes, /originates from the BAM node/i)
+  assert.match(BAM_ORDERING_EVIDENCE.claim.describes, /match scheduler-assigned IDs/i)
+  assert.match(BAM_ORDERING_EVIDENCE.enforcement.mechanism, /disconnected from BAM/i)
+})
+
+// --- enforcement is not verification -----------------------------------------------------------
+// The second clarification added a real property (a protocol requirement with a penalty) that is
+// easy to over-read as an attestation. These tests hold the two axes apart.
+
+test('enforcement by disconnection is recorded as enforcement, never as verification', async () => {
+  const { BAM_ORDERING_EVIDENCE } = await import('../research/execution-casefile/preconfirmation-map.ts')
+  const { enforcement } = BAM_ORDERING_EVIDENCE
+
+  // Who enforces, and by what means. Not a check a third party can run.
+  assert.match(enforcement.enforcedBy, /BAM itself/i)
+  assert.match(enforcement.enforcedBy, /Not by a cryptographic check a third party can run/i)
+
+  // Each limit the model is required to carry.
+  const limits = enforcement.limits.join(' ')
+  assert.match(limits, /deters violation; it does not verify any particular claim/i)
+  assert.match(limits, /only as strong as BAM's own detection/i)
+  assert.match(limits, /after the fact/i, 'disconnection does not undo an ordering already in a block')
+  assert.match(limits, /does not undo an ordering that already reached a block/i)
+  assert.match(limits, /signed, attested, or attributable to a key/i)
+
+  // And the refusal list must say so in its own right.
+  const refusals = BAM_ORDERING_EVIDENCE.doesNotEstablish.join(' ')
+  assert.match(refusals, /enforcement is verification/i)
+})
+
+test('the enforcement clarification does not lift authentication or any stage class', async () => {
+  const { BAM_ORDERING_EVIDENCE, BAM_PATH, PATHS } = await import('../research/execution-casefile/preconfirmation-map.ts')
+  // The user's explicit constraint: no VALIDATOR_ATTESTED, no "independently verified", until the
+  // verification mechanism itself is evidenced.
+  assert.equal(BAM_ORDERING_EVIDENCE.authentication, 'NOT_ESTABLISHED')
+  for (const path of PATHS) {
+    for (const stage of path.stages) {
+      assert.notEqual(stage.evidence, 'VALIDATOR_ATTESTED', `${path.source}/${stage.stage} must not be validator-attested`)
+    }
+  }
+  // The open question asking for such a mechanism must still be open.
+  const open = BAM_PATH.openQuestions.join(' ')
+  assert.match(open, /verification a third party can run against a single preconfirmation/i)
+  assert.match(open, /as opposed to the operational enforcement of disconnection/i)
+})
+
+// --- BAM semantics render only after positive BAM attribution ----------------------------------
+
+test('BAM semantics are reachable only through a positive BAM attribution', async () => {
+  const map = await import('../research/execution-casefile/preconfirmation-map.ts')
+  const { pathFor, BAM_PATH, BAM_ORDERING_EVIDENCE } = map
+
+  // The precondition is stated on the evidence itself, not left implicit.
+  assert.match(BAM_ORDERING_EVIDENCE.precondition, /POSITIVELY IDENTIFIED BAM preconfirmation/)
+  assert.match(BAM_ORDERING_EVIDENCE.precondition, /never reached by elimination/i)
+
+  // Positive attribution is the only input that yields them.
+  assert.equal(pathFor('BAM'), BAM_PATH)
+  assert.ok(BAM_PATH.ordering)
+
+  // Every other source value yields a path carrying none of it.
+  for (const source of ['HELIUS', 'UNKNOWN'] as const) {
+    const path = pathFor(source)
+    assert.notEqual(path, BAM_PATH)
+    assert.equal(path.ordering, undefined, `${source} must carry no ordering evidence`)
+    const rendered = JSON.stringify(path)
+    for (const pattern of [
+      /\bBAM\b/, /sequence_id/i, /bundle_id/i, /bundle metadata/i, /dispatch order/i,
+      /scheduler-assigned/i, /disconnect/i, /commit[- ]to[- ]execute/i,
+    ]) {
+      assert.equal(pattern.test(rendered), false, `${source} path must not contain ${pattern}`)
+    }
+  }
+})
+
+test('enforcement vocabulary never reaches an unattributed record', async () => {
+  const { UNATTRIBUTED_PATH, pathFor } = await import('../research/execution-casefile/preconfirmation-map.ts')
+  const rendered = JSON.stringify(pathFor('UNKNOWN'))
+  assert.equal(JSON.stringify(UNATTRIBUTED_PATH), rendered)
+  // Specific to the second clarification: none of its vocabulary may leak by resemblance.
+  for (const pattern of [
+    /disconnected/i, /protocol[- ]enforced/i, /scheduler-assigned/i, /violating leaders/i,
+    /produced[- ]block/i, /ascending/i, /atomically bundled/i,
+  ]) {
+    assert.equal(pattern.test(rendered), false, `unattributed path must not contain ${pattern}`)
+  }
+  // The unattributed path says only that no scheduling semantics are established.
+  const scheduler = UNATTRIBUTED_PATH.stages.find((s) => s.stage === 'SCHEDULER')!
+  assert.equal(scheduler.evidence, 'UNKNOWN')
+  assert.match(scheduler.known, /No scheduling semantics are established/i)
 })
 
 test('verifiable-by-reconciliation is never collapsed into cryptographically attested', async () => {
@@ -351,4 +443,46 @@ test('the Helius path is unchanged by the unattributed fix', async () => {
   assert.equal(byStage.SCHEDULER.evidence, 'UNKNOWN')
   assert.equal(byStage.LEDGER_RECEIPT.evidence, 'CHAIN_PROVEN')
   assert.equal(HELIUS_PATH.ordering, undefined)
+})
+
+// --- rendering gate: what a viewer would actually see ------------------------------------------
+// The tests above check the map. These check the reconciler output the UI renders from, because
+// that is the surface a reader sees and the place a leak would actually reach them.
+
+test('the rendered evidence map carries BAM semantics only for a positively attributed record', () => {
+  // A record that positively names BAM, with the explicit field that basis requires.
+  const attributed = reconcile({
+    preconfirmation: preconfirmation({
+      attribution: {
+        source: 'BAM', basis: 'EXPLICIT', explicitField: { key: 'source', value: 'bam' },
+        rationale: 'The payload named its own source.',
+        provenance: { attestation: 'PROVIDER_REPORTED', source: 'payload', method: 'PROVIDER_API_RESPONSE' },
+      },
+    }),
+    receipt: receipt(),
+  })
+  assert.equal(attributed.evidenceMap!.source, 'BAM')
+  assert.ok(attributed.evidenceMap!.ordering, 'the ordering block renders for an attributed record')
+  assert.match(attributed.evidenceMap!.ordering!.headline, /Protocol-enforced scheduler ordering/i)
+  assert.match(attributed.evidenceMap!.ordering!.boundary, /Enforced is not verified/i)
+  assert.ok(attributed.evidenceMap!.ordering!.enforcement.limits.length >= 4)
+  assert.equal(attributed.evidenceMap!.ordering!.authentication, 'NOT_ESTABLISHED')
+
+  // The same shape of record with no established issuer renders none of it.
+  const unattributed = reconcile({ preconfirmation: preconfirmation({ statusCode: 7 }), receipt: receipt() })
+  assert.equal(unattributed.evidenceMap!.source, 'UNKNOWN')
+  assert.equal(unattributed.evidenceMap!.ordering, undefined)
+  const rendered = JSON.stringify(unattributed.evidenceMap)
+  for (const pattern of [
+    /\bBAM\b/, /sequence_id/i, /bundle_id/i, /protocol[- ]enforced/i, /disconnect/i,
+    /scheduler-assigned/i, /commit[- ]to[- ]execute/i, /atomically bundled/i,
+  ]) {
+    assert.equal(pattern.test(rendered), false, `an unattributed render must not contain ${pattern}`)
+  }
+
+  // And a Helius record renders its own semantics, not BAM's.
+  const helius = reconcile({ preconfirmation: preconfirmation({ statusCode: 0 }), receipt: receipt() })
+  assert.equal(helius.evidenceMap!.source, 'HELIUS')
+  assert.equal(helius.evidenceMap!.ordering, undefined)
+  assert.equal(/\bBAM\b/.test(JSON.stringify(helius.evidenceMap)), false)
 })

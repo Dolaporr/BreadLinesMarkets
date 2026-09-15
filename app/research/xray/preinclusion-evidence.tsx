@@ -204,6 +204,9 @@ export default function PreInclusionEvidence({ current, trace }: { current: Case
           <p className={styles.caption}>Claim ({result.evidenceMap.ordering.claim.fields.join(', ')}): {result.evidenceMap.ordering.claim.describes}</p>
           <p className={styles.caption}>Check: {result.evidenceMap.ordering.check.method} {result.evidenceMap.ordering.check.direction}</p>
           <p className={styles.caption}>Scope: {result.evidenceMap.ordering.check.scope}</p>
+          <p className={styles.caption}>Enforcement: {result.evidenceMap.ordering.enforcement.mechanism} Enforced by: {result.evidenceMap.ordering.enforcement.enforcedBy}</p>
+          <ul className={styles.unknowableList}>{result.evidenceMap.ordering.enforcement.limits.map((line) => <li key={line}>{line}</li>)}</ul>
+          <p className={styles.caption}>Applies only when: {result.evidenceMap.ordering.precondition}</p>
           <em>{result.evidenceMap.ordering.boundary}</em>
           <ul className={styles.unknowableList}>{result.evidenceMap.ordering.doesNotEstablish.map((line) => <li key={line}>{line}</li>)}</ul>
           <p className={styles.caption}>Source: {result.evidenceMap.ordering.source}</p>

@@ -165,3 +165,21 @@ test('the synthetic banner stays above everything else in the attached view', ()
   assert.ok(banner > -1 && summary > -1)
   assert.ok(banner < summary, 'the synthetic warning must precede the summary card')
 })
+
+test('the ordering block is gated on the model supplying one, and shows enforcement separately', () => {
+  // The whole block is conditional on `evidenceMap.ordering`, which the reconciler only emits for
+  // a positively attributed path. Nothing here reconstructs ordering prose from local state.
+  assert.match(preinclusion, /\{result\.evidenceMap\.ordering && <div className=\{styles\.discrepancy\}>/)
+  // Enforcement, its limits and its precondition each render as their own line, so a reader cannot
+  // take "enforced" for "verified" by reading only the headline.
+  assert.match(preinclusion, /Enforcement: \{result\.evidenceMap\.ordering\.enforcement\.mechanism\}/)
+  assert.match(preinclusion, /Enforced by: \{result\.evidenceMap\.ordering\.enforcement\.enforcedBy\}/)
+  assert.match(preinclusion, /result\.evidenceMap\.ordering\.enforcement\.limits\.map/)
+  assert.match(preinclusion, /Applies only when: \{result\.evidenceMap\.ordering\.precondition\}/)
+  // The authentication axis stays visible in the block header.
+  assert.match(preinclusion, /ORDERING EVIDENCE · \{result\.evidenceMap\.ordering\.authentication/)
+  // And no ordering wording is hardcoded in the component.
+  for (const pattern of [/sequence_id/i, /bundle_id/i, /disconnect/i, /scheduler-assigned/i]) {
+    assert.equal(pattern.test(preinclusion), false, `the component must not hardcode ${pattern}`)
+  }
+})

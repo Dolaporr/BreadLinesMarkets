@@ -74,7 +74,7 @@ properties are not established, and are recorded as `UNKNOWN` rather than guesse
 | Stage | Evidence | Not established |
 | --- | --- | --- |
 | Submission | Client-observed | That any packet left the machine |
-| Scheduling | Provider-observed | Whether `sequence_id` or bundle metadata are authenticated, signed, or attributable to any key — see below |
+| Scheduling | Provider-observed | Whether `sequence_id` or `bundle_id` are authenticated, signed, or attributable to any key; enforcement by disconnection deters violation but verifies no particular claim — see below |
 | Leader commitment | **Unknown** | Whether the commitment is cryptographically attributable to an identified key, and what it binds the committer to |
 | Preconfirmation emitted | **Unknown** | What the object commits to; whether it is authenticated; where a TEE ordering attestation sits relative to it; what slot or clock domain accompanies it; whether it is validator-attested |
 | Execution | **Unknown** | Whether execution occurred, and what it returned — a commit-to-execute preconfirmation precedes execution and reports no result |
@@ -86,7 +86,9 @@ describes what Breadlines has verified, which at every remaining point is: not t
 
 ### Ordering: what Eric established, and what he did not
 
-Eric (@gzalz_sol) clarified directly (2026-09):
+Eric (@gzalz_sol) clarified directly across two exchanges (2026-09).
+
+**First clarification.**
 
 - `sequence_id` describes the BAM node's dispatch ordering.
 - Transactions are forwarded from scheduler to leader in ascending dispatch order.
@@ -95,16 +97,25 @@ Eric (@gzalz_sol) clarified directly (2026-09):
 - Transactions sharing a sequence id have been atomically bundled, with intended intra-bundle
   ordering carried in the bundle metadata.
 
-That is a real and useful property, and the model records it as
-**scheduler dispatch ordering with ex-post block-verifiable constraints** — not as attested
-ordering. The distinction is the whole point, and it separates two different questions:
+**Second clarification.** For a *positively identified* BAM preconfirmation:
+
+- The payload originates from the BAM node.
+- `sequence_id` and `bundle_id` match scheduler-assigned IDs.
+- The produced block's ordering must satisfy the constraints above — a protocol requirement, not a
+  description of typical behaviour.
+- A leader that violates it is **disconnected from BAM**.
+
+That second clarification strengthens the property: the ordering is enforced rather than merely
+described. The model records the result as **protocol-enforced scheduler ordering**
+(`PROTOCOL_ENFORCED_SCHEDULER_ORDERING`) — not as attested ordering. The distinction is the whole
+point, and it separates two different questions:
 
 | Question | Answer |
 | --- | --- |
 | Is the claim **consistent** with what the chain recorded? | Checkable, ex post, against the produced block |
 | Did the claimed party **actually make** the claim? | Not established by any check available here |
 
-Three limits follow, and each is enforced in code rather than left to prose:
+Four limits follow, and each is enforced in code rather than left to prose:
 
 **Consistency is not authenticity.** A reconciliation against the block can *falsify* an ordering
 claim. It cannot *authenticate* one — a fabricated `sequence_id` that happens to be consistent with
@@ -118,10 +129,31 @@ that pair.
 preconfirmation at the moment it is issued — which is precisely when a preconfirmation is supposed
 to be worth something.
 
+**Enforcement is not verification.** This is the limit the second clarification makes necessary.
+Disconnecting a violating leader is a real consequence and it deters violation. It is not a
+mechanism by which a third party can check whether a *particular* `sequence_id` is genuine. It is
+enforced by BAM itself, operationally, by withdrawing a connection — not by a cryptographic check
+anyone else can run. Three further things follow from that: the guarantee is only as strong as
+BAM's own detection of violations and its willingness to act, neither of which is observable from
+here; disconnection is after the fact and does not undo an ordering that already reached a block;
+and none of it makes the fields signed, attested, or attributable to a key.
+
+So the model keeps **enforcement** and **verification** on separate axes, and `authentication`
+stays `NOT_ESTABLISHED`. Nothing on the BAM path is labelled `VALIDATOR_ATTESTED`, and nothing is
+described as independently cryptographically verified, because no verification mechanism has been
+evidenced — only a penalty for violating the requirement.
+
+**Everything above is conditional on identification.** These semantics apply *only* to a positively
+identified BAM preconfirmation. No rule for identifying one in the merged stream has been
+established, so they are unreachable for a message whose issuer is unknown — and they are never
+reached by elimination. An unattributed record renders none of this vocabulary, which is a test,
+not a convention.
+
 Still `UNKNOWN`, and explicitly not implied by the above: whether the sequence or bundle fields are
 authenticated inside the preconfirmation object; what key or signature would authenticate them;
 whether the preconfirmation constitutes a validator attestation; where a TEE ordering attestation
-sits; and the exact clock and slot semantics.
+sits; the exact clock and slot semantics; and whether any verification — as opposed to enforcement
+— exists that a third party could run against a single preconfirmation.
 
 ## Provenance rules
 

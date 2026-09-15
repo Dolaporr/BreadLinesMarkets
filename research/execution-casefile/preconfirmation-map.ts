@@ -61,32 +61,57 @@ export type StageEntry = {
  * this class of evidence constrains, and the constraint is real, but it says nothing about origin.
  */
 export type OrderingEvidence = {
-  kind: 'SCHEDULER_DISPATCH_WITH_EX_POST_BLOCK_CONSTRAINT'
+  kind: 'PROTOCOL_ENFORCED_SCHEDULER_ORDERING'
   /** The field carrying the claim, and what the issuer says it describes. */
   claim: { fields: string[]; describes: string; evidence: StageEvidence }
   /** How the claim can be checked, and the evidence class of the thing it is checked against. */
   check: { method: string; checkedAgainst: StageEvidence; scope: string; direction: string }
+  /**
+   * What happens when the constraint is violated. Enforcement and verification are different
+   * axes and the model keeps them apart: a penalty deters violation, it does not let a third
+   * party check a given claim.
+   */
+  enforcement: { mechanism: string; enforcedBy: string; limits: string[] }
+  /** What must already be true for any of this to apply. */
+  precondition: string
   establishes: string[]
   doesNotEstablish: string[]
-  /** Authentication is a separate axis and is not established by the constraint. */
+  /** Authentication is a separate axis and is not established by enforcement. */
   authentication: 'NOT_ESTABLISHED'
   source: string
 }
 
 /**
- * From Eric (@gzalz_sol), 2026-09. Recorded as what he established, and nothing beyond it.
+ * From Eric (@gzalz_sol), 2026-09, across two clarifications.
  *
- * He established what the fields DESCRIBE and a structural constraint the produced block must
- * satisfy. He did not establish that any of it is signed, attested, or attributable to a key, and
- * that gap is held open deliberately below.
+ * The second added that, for a positively identified BAM preconfirmation, the payload originates
+ * from the BAM node, sequence_id and bundle_id match scheduler-assigned IDs, produced-block
+ * ordering must satisfy the described constraints, and violating leaders are disconnected from BAM.
+ *
+ * That last point is the substantive addition, and it is ENFORCEMENT, not verification. A leader
+ * that violates the ordering loses its BAM connection — a real consequence that deters violation.
+ * It is not a mechanism by which a third party can check whether a particular claim is genuine,
+ * and it does not make the fields signed or attested. Those remain open, and the model keeps
+ * enforcement and verification on separate axes so the two cannot be read as one.
  */
 export const BAM_ORDERING_EVIDENCE: OrderingEvidence = {
-  kind: 'SCHEDULER_DISPATCH_WITH_EX_POST_BLOCK_CONSTRAINT',
+  kind: 'PROTOCOL_ENFORCED_SCHEDULER_ORDERING',
   claim: {
-    fields: ['sequence_id', 'bundle metadata'],
-    describes: 'The BAM node\'s dispatch ordering. Transactions are forwarded from scheduler to leader in ascending dispatch order, and transactions sharing a sequence id have been atomically bundled, with intended intra-bundle ordering carried in the bundle metadata.',
+    fields: ['sequence_id', 'bundle_id', 'bundle metadata'],
+    describes: 'The BAM node\'s dispatch ordering. The payload originates from the BAM node, and sequence_id and bundle_id match scheduler-assigned IDs. Transactions are forwarded from scheduler to leader in ascending dispatch order, and transactions sharing a sequence id have been atomically bundled, with intended intra-bundle ordering carried in the bundle metadata.',
     evidence: 'PROVIDER_REPORTED',
   },
+  enforcement: {
+    mechanism: 'Produced-block ordering must satisfy the described constraints, and a leader that violates them is disconnected from BAM.',
+    enforcedBy: 'BAM itself, operationally, by withdrawing the connection. Not by a cryptographic check a third party can run.',
+    limits: [
+      'Enforcement deters violation; it does not verify any particular claim. A penalty for misbehaving is not a mechanism for checking whether a given sequence_id is genuine.',
+      'The guarantee is only as strong as BAM\'s own detection of violations and its willingness to act on them, neither of which is independently observable from here.',
+      'Disconnection is after the fact. It does not undo an ordering that already reached a block.',
+      'Nothing about this makes the fields signed, attested, or attributable to a key.',
+    ],
+  },
+  precondition: 'All of this applies only to a POSITIVELY IDENTIFIED BAM preconfirmation. No rule for identifying one in the merged stream has been established, so these semantics are unreachable for a message whose issuer is unknown — and are never reached by elimination.',
   check: {
     method: 'Reconcile the claimed ordering against the produced block: for a set of transactions writing to the same account, their order in the block must follow ascending sequence_id.',
     checkedAgainst: 'CHAIN_PROVEN',
@@ -94,8 +119,9 @@ export const BAM_ORDERING_EVIDENCE: OrderingEvidence = {
     direction: 'Ex post. The check runs only after the block exists, so it cannot validate a preconfirmation at the moment it is issued.',
   },
   establishes: [
-    'What sequence_id and bundle metadata describe, in the issuer\'s own terms.',
+    'What sequence_id, bundle_id and bundle metadata describe, in the issuer\'s own terms, including that they match scheduler-assigned IDs and that the payload originates from the BAM node.',
     'A structural constraint the produced block must satisfy for same-account writers, which makes an ordering claim falsifiable against chain data.',
+    'That the constraint is a protocol requirement rather than a description, carrying an operational penalty — disconnection — for a leader that violates it.',
     'That transactions sharing a sequence id were atomically bundled, as the issuer describes it.',
   ],
   doesNotEstablish: [
@@ -104,10 +130,12 @@ export const BAM_ORDERING_EVIDENCE: OrderingEvidence = {
     'Where a TEE ordering attestation sits relative to the preconfirmation, or whether one covers these fields.',
     'The clock or slot semantics accompanying the ordering claim.',
     'That a claim consistent with the block is therefore genuine — consistency is not authenticity, and a fabricated value that happens to fit passes the same check.',
+    'That enforcement is verification. A leader losing its connection for misordering is a consequence, not a check a third party can run against a particular preconfirmation.',
+    'That a message is a BAM preconfirmation. Identification remains unestablished, and every property here is conditional on it.',
     'Any ordering relationship between transactions that share no writable account.',
   ],
   authentication: 'NOT_ESTABLISHED',
-  source: 'Direct clarification from Eric (@gzalz_sol), 2026-09. Not published documentation.',
+  source: 'Two direct clarifications from Eric (@gzalz_sol), 2026-09. Not published documentation, and not independently verified.',
 }
 
 export type PathMap = {
@@ -192,7 +220,7 @@ export const HELIUS_PATH: PathMap = {
 export const BAM_PATH: PathMap = {
   source: 'BAM',
   name: 'BAM commit-to-execute preconfirmation',
-  character: 'Described in public material as a commitment made before execution. Its dispatch ordering is now described and is checkable against the produced block after the fact; whether any of it is authenticated is not established.',
+  character: 'Described in public material as a commitment made before execution. Its dispatch ordering is protocol-enforced — the produced block must satisfy it and violating leaders are disconnected — and checkable against the block after the fact. Whether any of it is cryptographically authenticated is not established.',
   emission: 'COMMIT_TO_EXECUTE',
   basisToday: 'Source basis is UNKNOWN. No rule has been established for identifying a BAM message in the merged stream, and the absence of the Helius status does not identify one.',
   stages: [
@@ -203,8 +231,8 @@ export const BAM_PATH: PathMap = {
     },
     {
       stage: 'SCHEDULER', label: 'Scheduling', evidence: 'PROVIDER_REPORTED',
-      known: 'sequence_id describes the BAM node\'s dispatch ordering, and transactions are forwarded to the leader in ascending dispatch order. Transactions sharing a sequence id were atomically bundled, with intended intra-bundle ordering in the bundle metadata. For same-account writers the produced block must follow ascending sequence_id, so an ordering claim can be checked against the block after the fact.',
-      notEstablished: 'Whether sequence_id or bundle metadata are authenticated, signed, or attributable to any key. The block check constrains the claim; it does not establish who made it, and a value consistent with the block is not thereby genuine.',
+      known: 'sequence_id and bundle_id match scheduler-assigned IDs and describe the BAM node\'s dispatch ordering. Transactions are forwarded to the leader in ascending dispatch order, and those sharing a sequence id were atomically bundled. For same-account writers the produced block must follow ascending sequence_id — a protocol requirement, with leaders that violate it disconnected from BAM.',
+      notEstablished: 'Whether sequence_id or bundle_id are authenticated, signed, or attributable to any key. Enforcement by disconnection deters violation but verifies no particular claim, and a value consistent with the block is not thereby genuine — the constraint binds the claim but does not establish who made it.',
     },
     {
       stage: 'LEADER_COMMITMENT', label: 'Leader commitment', evidence: 'UNKNOWN',
@@ -213,7 +241,7 @@ export const BAM_PATH: PathMap = {
     },
     {
       stage: 'PRECONFIRMATION_EMISSION', label: 'Preconfirmation emitted', evidence: 'UNKNOWN',
-      known: 'Nothing is established about what the preconfirmation object cryptographically commits to.',
+      known: 'For a positively identified BAM preconfirmation the payload originates from the BAM node. What the object cryptographically commits to is not established.',
       notEstablished: 'Whether the object is authenticated; whether the sequence and bundle fields inside it are authenticated; what key or signature would authenticate them; where a TEE ordering attestation sits relative to it; what slot or clock domain accompanies it; whether it is validator-attested.',
     },
     {
@@ -235,7 +263,8 @@ export const BAM_PATH: PathMap = {
   ordering: BAM_ORDERING_EVIDENCE,
   openQuestions: [
     'What exactly does a BAM preconfirmation commit to?',
-    'Is the preconfirmation object itself cryptographically authenticated?',
+    'Is the preconfirmation object itself cryptographically authenticated, and by what mechanism?',
+    'Is there any verification a third party can run against a single preconfirmation, as opposed to the operational enforcement of disconnection?',
     'Are the sequence and bundle fields authenticated inside the preconfirmation object, and by what key or signature?',
     'Beyond the ex-post block constraint, can a third party verify that a sequencing claim originated from the party it names?',
     'Where does the TEE ordering attestation sit relative to the preconfirmation?',

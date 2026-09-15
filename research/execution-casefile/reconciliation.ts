@@ -280,8 +280,8 @@ export function reconcile(input: ReconciliationInput) {
       unknownStageCount: unknownStageCount(path),
       ordering: path.ordering && {
         ...path.ordering,
-        headline: 'Scheduler dispatch ordering with ex-post block-verifiable constraints',
-        boundary: 'Checkable against the produced block is not the same as attested. The check can falsify an ordering claim; it cannot establish who made it.',
+        headline: 'Protocol-enforced scheduler ordering, checkable ex post against the produced block',
+        boundary: 'Enforced is not verified, and checkable against the produced block is not attested. The check can falsify an ordering claim; it cannot establish who made it. Disconnecting a violating leader is a consequence, not a check a third party can run.',
       },
       openQuestions: path.openQuestions,
     },
