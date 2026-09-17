@@ -95,6 +95,11 @@ const PROGRAM_LABELS: Record<string, string> = {
   PhoeNiXZ8ByJGLkxNfZRnkUfjvmuYqLR89jjFHGqdXY: 'Phoenix',
 }
 
+/** The RPC's own refusal when a transaction is newer than the version this route asks for. */
+const UNSUPPORTED_VERSION_PATTERN = /Transaction version \((\d+)\) is not supported/i
+const UNSUPPORTED_VERSION_MESSAGE =
+  'This transaction is a version this preview does not decode. Breadlines reads legacy and v0 receipts. A v1 transaction declares its resource limits and priority fee in transactionConfig rather than in Compute Budget instructions, and may commit more than one state root atomically; neither has a representation here, so no reading is offered rather than a legacy one that would be wrong.'
+
 async function heliusRpc<T>(method: string, params: unknown[]): Promise<T> {
   const res = await fetch(HELIUS_URL, {
     method: 'POST',
@@ -647,6 +652,15 @@ export async function POST(request: Request) {
       inclusionSymptoms,
     })
   } catch (error) {
+    // A v1 signature makes the RPC refuse the request, because this route asks for
+    // maxSupportedTransactionVersion: 0. Fail closed in Breadlines' own words: the node's advice
+    // is to retry with maxSupportedTransactionVersion: 1, which would hand this route a v1 body it
+    // has no semantics for — transactionConfig carries the resource limits and the priority fee,
+    // and there are no Compute Budget instructions to read. Widening the request would turn a
+    // clean refusal into a confident wrong answer, so the version stays pinned and this is a 415.
+    if (error instanceof Error && UNSUPPORTED_VERSION_PATTERN.test(error.message)) {
+      return NextResponse.json({ error: UNSUPPORTED_VERSION_MESSAGE }, { status: 415 })
+    }
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unable to build receipt.' },
       { status: 500 },

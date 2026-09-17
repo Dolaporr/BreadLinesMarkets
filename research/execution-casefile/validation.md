@@ -1,5 +1,46 @@
 # X-Ray v1 validation — 2026-09-09
 
+## Transaction v1 compatibility — 2026-09-17
+
+Compatibility/correctness QA, not a v1 feature. Added to the integration gate: the integrated
+X-Ray demo is not demo-ready until this section holds.
+
+- **A real mainnet v1 transaction exists and was used.** `api.mainnet-beta.solana.com`
+  (`solana-core 4.3.0-rc.0`), slot 447,741,300. That single block carried 1,029 transactions:
+  738 legacy, 238 v0, **53 version 1**. v1 is live mainnet traffic, not a testnet curiosity.
+- **Fixture:** `research/execution-casefile/fixtures/mainnet-v1-receipt.json`, the verbatim
+  `getTransaction` result for
+  `h5wK3vNzjYYPTLu6ipTf6BCofe9UYgMX8q4xqyWpyKEwHnUmkrej2MEsQkajcnrv5ZMeqEQSdYzpx1S9PLjwgzz`.
+- **The shape that makes this dangerous.** The receipt declares
+  `transactionConfig: { computeUnitLimit: 2100, heapSize: null, loadedAccountsDataSizeLimit:
+  393216, priorityFee: 1050 }` and carries **zero Compute Budget instructions**. A legacy reader
+  finds nothing to parse and reports "no limit set, no priority fee" as fact.
+- **Verified refusals.** `normalizeReceipt`, `buildCaseFile` and `reconcile` all refuse the real
+  receipt on the version guard. With `version` deleted, the independent `transactionConfig` guard
+  refuses it on its own, so neither guard is load-bearing alone. A legacy receipt still parses, so
+  the gate is not refusing everything.
+- **What a legacy reading would have displayed**, had it been reached: `computeUnitLimit: null`,
+  `computeUnitPriceStatus: 'omitted'`, priority fee `null`. The chain says otherwise, and the
+  receipt's own arithmetic confirms it: `meta.fee` 6,050 = 5,000 base for one signature + 1,050
+  configured priority fee, to the lamport. Corroborated on two further mainnet v1 receipts
+  (`fee − base` = 2 and 1, against `priorityFee` 2 and 1).
+- **v1 `priorityFee` is a flat lamport amount, not micro-lamports per CU.** The legacy formula
+  `ceil(2100 × 1050 / 1e6)` yields **3 lamports** against an actual 1,050 — not a missing value but
+  a different one. This is pinned in the regression test.
+- **One real gap found and closed.** `/api/receipt` pins `maxSupportedTransactionVersion: 0`, so
+  the RPC refuses a v1 signature and the route returned **500** carrying the node's verbatim advice
+  to *"try the request again with maxSupportedTransactionVersion: 1"*. Following that advice would
+  hand a legacy reader a v1 body. The route now returns **415** with Breadlines' own
+  unsupported-version statement, and does not relay the retry advice. The request stays pinned at
+  v0 deliberately.
+- **Chain-proven fields are unaffected** because no v1 receipt reaches them. Nothing in the model
+  reads `meta.costUnits` or `transactionIndex`, both present on v1 receipts.
+- **Regression test:** `test/transaction-v1-compatibility.test.ts`, 8 tests, including an assertion
+  that the fixture still has the dangerous shape so it cannot be quietly swapped for a benign one.
+- Suite 144/144. Typecheck unchanged (the same two pre-existing `structuredEvidence` errors).
+- Not merged, not deployed to production.
+
+
 ## BAM enforcement clarification — 2026-09-15 (second)
 
 - Eric (@gzalz_sol) clarified further: for a POSITIVELY IDENTIFIED BAM preconfirmation, the payload
