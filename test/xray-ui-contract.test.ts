@@ -56,3 +56,130 @@ test('the pre-inclusion section states that absence proves nothing and never inf
   assert.match(preinclusion, /comparable \? `\$\{result\.timing\.senderToProviderDuration\.ms\} ms on one clock`/)
   assert.match(preinclusion, /PRECONFIRMATION_PROHIBITED_READINGS/)
 })
+
+test('the pre-inclusion section renders issuer, basis and the lifecycle map', () => {
+  assert.match(preinclusion, /result\.preconfirmationState\?\.sourceDescription/)
+  assert.match(preinclusion, /result\.preconfirmationState\?\.sourceBasis/)
+  assert.match(preinclusion, /result\.preconfirmationState\?\.sourceRationale/)
+  assert.match(preinclusion, /result\.reconciliation\.state/)
+  assert.match(preinclusion, /result\.evidenceMap/)
+  // Each stage must render its own evidence class and its own not-established line.
+  assert.match(preinclusion, /stage\.evidenceLabel/)
+  assert.match(preinclusion, /Not established: \{stage\.notEstablished\}/)
+  assert.match(preinclusion, /MAP_BOUNDARY/)
+})
+
+test('UNKNOWN stages are visually marked rather than hidden', () => {
+  assert.match(preinclusion, /stage\.evidence === 'UNKNOWN' \? styles\.stageUnknown/)
+  assert.match(preinclusion, /unknownStageCount\} of \{result\.evidenceMap\.stages\.length\} stages not established/)
+  const css = readFileSync(new URL('../app/research/xray/workspace.module.css', import.meta.url), 'utf8')
+  assert.match(css, /\.stageUnknown\{/)
+  for (const tone of ['evUnknown', 'evClient', 'evProvider', 'evValidator', 'evChain']) {
+    assert.match(css, new RegExp(`\\.${tone}\\{color:`), `${tone} needs its own colour`)
+  }
+})
+
+test('each reconciliation state has a distinct chip colour', () => {
+  const css = readFileSync(new URL('../app/research/xray/workspace.module.css', import.meta.url), 'utf8')
+  for (const state of ['PENDING', 'MATCHED', 'UNRESOLVED', 'MISMATCH']) {
+    assert.match(css, new RegExp(`\\.state${state}\\{color:`), `${state} needs its own colour`)
+  }
+})
+
+test('the viewer renders ordering evidence without attestation vocabulary', () => {
+  assert.match(preinclusion, /result\.evidenceMap\.ordering/)
+  assert.match(preinclusion, /ordering\.authentication/)
+  assert.match(preinclusion, /ordering\.doesNotEstablish/)
+  assert.match(preinclusion, /ordering\.check\.scope/)
+  // The claim and the check are rendered as separate things, never merged.
+  assert.match(preinclusion, /ordering\.claim\.describes/)
+  assert.match(preinclusion, /ordering\.check\.method/)
+  for (const pattern of [/cryptographically attested ordering/i, /ordering is proven/i, /signed sequence/i]) {
+    assert.equal(pattern.test(preinclusion), false, `UI must not contain ${pattern}`)
+  }
+})
+
+// --- mobile: summary first, detail on demand ---------------------------------------------------
+
+test('the summary card leads with source, basis, emission, evidence class and unknown count', () => {
+  assert.match(preinclusion, /styles\.summaryCard/)
+  assert.match(preinclusion, /SOURCE NOT ESTABLISHED/)
+  assert.match(preinclusion, /Source basis<\/dt>/)
+  assert.match(preinclusion, /Emission<\/dt>/)
+  assert.match(preinclusion, /Evidence class<\/dt>/)
+  assert.match(preinclusion, /Reconciliation<\/dt>/)
+  assert.match(preinclusion, /unknownStageCount\} \/ \{result\.evidenceMap\.stages\.length\} stages unknown/)
+  // Status appears only when the payload carried one.
+  assert.match(preinclusion, /statusCode != null && <div className=\{styles\.summaryItem\}><dt>Status<\/dt>/)
+})
+
+test('an unattributed record reads as not established and never implies BAM', () => {
+  // The headline is the explicit phrase, not a bare UNKNOWN that could read as a named issuer.
+  assert.match(preinclusion, /source === 'UNKNOWN' \? 'SOURCE NOT ESTABLISHED'/)
+  assert.match(preinclusion, /styles\.sourceUnknown/)
+  // No BAM literal may appear in the component at all: the path name comes from the model.
+  assert.equal(/\bBAM\b/.test(preinclusion), false, 'the component must not hardcode a BAM label')
+})
+
+test('an unknown stage is labelled NOT ESTABLISHED rather than left blank', () => {
+  assert.match(preinclusion, /stage\.evidence === 'UNKNOWN' \? 'NOT ESTABLISHED' : stage\.evidenceLabel/)
+  assert.match(preinclusion, /stage\.evidence === 'UNKNOWN' \? styles\.stageCardUnknown/)
+})
+
+test('long rationales and raw provenance sit behind expandable controls', () => {
+  assert.match(preinclusion, /<summary>Evidence details<\/summary>/)
+  assert.match(preinclusion, /<summary>Raw provenance<\/summary>/)
+  // Per-stage detail is collapsed too.
+  assert.match(preinclusion, /styles\.stageDetails/)
+})
+
+test('uninterpreted fields are labelled and stated to be unauthenticated', () => {
+  assert.match(preinclusion, /<h4>Uninterpreted fields<\/h4>/)
+  assert.match(preinclusion, /does not interpret them/i)
+  assert.match(preinclusion, /not established as authenticated ordering evidence/i)
+  assert.match(preinclusion, /record\.unmodelledFields\.map/)
+})
+
+test('multiple clock domains warn concisely and no duration is calculated', () => {
+  assert.match(preinclusion, /MULTIPLE CLOCKS/)
+  assert.match(preinclusion, /no duration between them is calculated/i)
+  assert.match(preinclusion, /Not calculated — readings are on different clocks/)
+  // A duration string may only be produced on the comparable branch.
+  assert.match(preinclusion, /comparable \? `\$\{result\.timing\.senderToProviderDuration\.ms\} ms on one clock`/)
+})
+
+test('the mobile breakpoint swaps the wide lifecycle for stacked cards', () => {
+  const css = readFileSync(new URL('../app/research/xray/workspace.module.css', import.meta.url), 'utf8')
+  assert.match(css, /@media\(max-width:768px\)\{[^}]*\.lifecycle\{display:none\}/)
+  assert.match(css, /\.stageCards\{display:none\}/, 'stacked cards are mobile-only by default')
+  assert.match(css, /\.stageCards\{display:block/, 'and are shown at the breakpoint')
+  for (const cls of ['summaryCard', 'summaryGrid', 'stageCard', 'opaqueFields', 'clockWarn']) {
+    assert.match(css, new RegExp(`\\.${cls}\\{`), `${cls} needs styling`)
+  }
+})
+
+test('the synthetic banner stays above everything else in the attached view', () => {
+  const attached = preinclusion.slice(preinclusion.indexOf('</div> : <>'))
+  const banner = attached.indexOf('syntheticBanner')
+  const summary = attached.indexOf('summaryCard')
+  assert.ok(banner > -1 && summary > -1)
+  assert.ok(banner < summary, 'the synthetic warning must precede the summary card')
+})
+
+test('the ordering block is gated on the model supplying one, and shows enforcement separately', () => {
+  // The whole block is conditional on `evidenceMap.ordering`, which the reconciler only emits for
+  // a positively attributed path. Nothing here reconstructs ordering prose from local state.
+  assert.match(preinclusion, /\{result\.evidenceMap\.ordering && <div className=\{styles\.discrepancy\}>/)
+  // Enforcement, its limits and its precondition each render as their own line, so a reader cannot
+  // take "enforced" for "verified" by reading only the headline.
+  assert.match(preinclusion, /Enforcement: \{result\.evidenceMap\.ordering\.enforcement\.mechanism\}/)
+  assert.match(preinclusion, /Enforced by: \{result\.evidenceMap\.ordering\.enforcement\.enforcedBy\}/)
+  assert.match(preinclusion, /result\.evidenceMap\.ordering\.enforcement\.limits\.map/)
+  assert.match(preinclusion, /Applies only when: \{result\.evidenceMap\.ordering\.precondition\}/)
+  // The authentication axis stays visible in the block header.
+  assert.match(preinclusion, /ORDERING EVIDENCE · \{result\.evidenceMap\.ordering\.authentication/)
+  // And no ordering wording is hardcoded in the component.
+  for (const pattern of [/sequence_id/i, /bundle_id/i, /disconnect/i, /scheduler-assigned/i]) {
+    assert.equal(pattern.test(preinclusion), false, `the component must not hardcode ${pattern}`)
+  }
+})

@@ -1,5 +1,135 @@
 # X-Ray v1 validation — 2026-09-09
 
+## Transaction v1 compatibility — 2026-09-17
+
+Compatibility/correctness QA, not a v1 feature. Added to the integration gate: the integrated
+X-Ray demo is not demo-ready until this section holds.
+
+- **A real mainnet v1 transaction exists and was used.** `api.mainnet-beta.solana.com`
+  (`solana-core 4.3.0-rc.0`), slot 447,741,300. That single block carried 1,029 transactions:
+  738 legacy, 238 v0, **53 version 1**. v1 is live mainnet traffic, not a testnet curiosity.
+- **Fixture:** `research/execution-casefile/fixtures/mainnet-v1-receipt.json`, the verbatim
+  `getTransaction` result for
+  `h5wK3vNzjYYPTLu6ipTf6BCofe9UYgMX8q4xqyWpyKEwHnUmkrej2MEsQkajcnrv5ZMeqEQSdYzpx1S9PLjwgzz`.
+- **The shape that makes this dangerous.** The receipt declares
+  `transactionConfig: { computeUnitLimit: 2100, heapSize: null, loadedAccountsDataSizeLimit:
+  393216, priorityFee: 1050 }` and carries **zero Compute Budget instructions**. A legacy reader
+  finds nothing to parse and reports "no limit set, no priority fee" as fact.
+- **Verified refusals.** `normalizeReceipt`, `buildCaseFile` and `reconcile` all refuse the real
+  receipt on the version guard. With `version` deleted, the independent `transactionConfig` guard
+  refuses it on its own, so neither guard is load-bearing alone. A legacy receipt still parses, so
+  the gate is not refusing everything.
+- **What a legacy reading would have displayed**, had it been reached: `computeUnitLimit: null`,
+  `computeUnitPriceStatus: 'omitted'`, priority fee `null`. The chain says otherwise, and the
+  receipt's own arithmetic confirms it: `meta.fee` 6,050 = 5,000 base for one signature + 1,050
+  configured priority fee, to the lamport. Corroborated on two further mainnet v1 receipts
+  (`fee − base` = 2 and 1, against `priorityFee` 2 and 1).
+- **v1 `priorityFee` is a flat lamport amount, not micro-lamports per CU.** The legacy formula
+  `ceil(2100 × 1050 / 1e6)` yields **3 lamports** against an actual 1,050 — not a missing value but
+  a different one. This is pinned in the regression test.
+- **One real gap found and closed.** `/api/receipt` pins `maxSupportedTransactionVersion: 0`, so
+  the RPC refuses a v1 signature and the route returned **500** carrying the node's verbatim advice
+  to *"try the request again with maxSupportedTransactionVersion: 1"*. Following that advice would
+  hand a legacy reader a v1 body. The route now returns **415** with Breadlines' own
+  unsupported-version statement, and does not relay the retry advice. The request stays pinned at
+  v0 deliberately.
+- **Chain-proven fields are unaffected** because no v1 receipt reaches them. Nothing in the model
+  reads `meta.costUnits` or `transactionIndex`, both present on v1 receipts.
+- **Regression test:** `test/transaction-v1-compatibility.test.ts`, 8 tests, including an assertion
+  that the fixture still has the dangerous shape so it cannot be quietly swapped for a benign one.
+- Suite 144/144. Typecheck unchanged (the same two pre-existing `structuredEvidence` errors).
+- Not merged, not deployed to production.
+
+
+## BAM enforcement clarification — 2026-09-15 (second)
+
+- Eric (@gzalz_sol) clarified further: for a POSITIVELY IDENTIFIED BAM preconfirmation, the payload
+  originates from the BAM node, `sequence_id` and `bundle_id` match scheduler-assigned IDs, the
+  produced block's ordering must satisfy the described constraints, and a violating leader is
+  disconnected from BAM.
+- The property was renamed `SCHEDULER_DISPATCH_WITH_EX_POST_BLOCK_CONSTRAINT` →
+  `PROTOCOL_ENFORCED_SCHEDULER_ORDERING`, because the ordering is now established as a protocol
+  requirement rather than a description of behaviour.
+- **Enforcement is modelled as a separate axis from verification.** Disconnection is a consequence
+  that deters violation; it is not a check a third party can run against a particular claim. Four
+  limits are recorded with it: it verifies no particular claim; it is only as strong as BAM's own
+  detection and willingness to act; it is after the fact and does not undo an ordering already in a
+  block; and it does not make any field signed, attested, or attributable to a key.
+- **Nothing was lifted.** `authentication` stays `NOT_ESTABLISHED`, no stage on any path is
+  `VALIDATOR_ATTESTED`, and nothing is described as independently cryptographically verified. A
+  test asserts all three, since no verification mechanism has been evidenced — only a penalty.
+- A `precondition` field was added to the ordering evidence, stating that every property is
+  conditional on positive BAM identification and is never reached by elimination.
+- **Attribution gating is now tested at three levels:** the map (`pathFor('HELIUS')` and
+  `pathFor('UNKNOWN')` carry no ordering block and no BAM vocabulary), the reconciler output the UI
+  renders from (an unattributed and a Helius `evidenceMap` contain none of the second
+  clarification's vocabulary either), and the component (the ordering block is conditional on
+  `evidenceMap.ordering`, and hardcodes no ordering wording).
+- The UI now renders enforcement, its limits and the precondition as their own lines, so "enforced"
+  cannot be read as "verified" from the headline alone.
+- One existing assertion was updated, not deleted: the BAM scheduler stage's `notEstablished` was
+  rewritten for the new clarification and lost the phrase `does not establish who made it`. Rather
+  than weaken the test, the clause was restored to the stage prose — the property it pinned
+  (consistency constrains a claim but does not establish its origin) is still true and still worth
+  stating on the stage.
+- Not merged, not deployed to production.
+
+
+## BAM ordering clarification — 2026-09-15
+
+- 117/117 tests pass, up from 111. Six added: five ordering-collapse regressions and one UI
+  contract assertion. One existing test was updated, not deleted, and the change is explained below.
+- Typecheck unchanged (the same two pre-existing `structuredEvidence` errors), build green, claim
+  linter 0 findings across 19 documents.
+- Eric (@gzalz_sol) clarified BAM dispatch ordering. The newly established property is modelled as
+  `SCHEDULER_DISPATCH_WITH_EX_POST_BLOCK_CONSTRAINT` — scheduler dispatch ordering with ex-post
+  block-verifiable constraints — and explicitly not as attested ordering. The claim carries
+  `PROVIDER_REPORTED`; only the produced block it is checked against is `CHAIN_PROVEN`;
+  `authentication` is `NOT_ESTABLISHED`.
+- Three limits are recorded with the property rather than left implicit: consistency is not
+  authenticity (a fabricated value consistent with the block passes the same check); the constraint
+  binds only transactions writing the same account; and the check is ex post, so it cannot validate
+  a preconfirmation when it is issued.
+- The BAM SCHEDULER stage moved from UNKNOWN to PROVIDER_REPORTED, because what the field describes
+  is now established. Its authentication is not, and `notEstablished` says so. Leader commitment
+  and preconfirmation emission remain UNKNOWN; the BAM path is now UNKNOWN at 4 of 7 stages rather
+  than 5.
+- **Updated test:** `BAM scheduler, leader commitment and attestation semantics stay UNKNOWN`
+  asserted the scheduler stage was UNKNOWN. That assertion was correct before the clarification and
+  is now false, so the test was renamed and narrowed to the two stages that remain UNKNOWN, with an
+  explicit assertion that the scheduler is PROVIDER_REPORTED rather than attested. Its original
+  purpose — keeping attestation semantics open — is preserved and strengthened by the five new
+  tests. No test was removed.
+- Nothing about authentication, signing keys, validator attestation, TEE attestation placement, or
+  clock/slot semantics was inferred from this clarification. Those remain open questions.
+
+
+## Preconfirmation Evidence Map v0 — 2026-09-14
+
+- 111/111 tests pass, up from 97. The 14 added: 11 source-provenance regressions
+  (`preconfirmation-source.test.ts`) and 3 UI-contract assertions for the lifecycle section. No
+  existing test was modified or removed.
+- Typecheck unchanged: the same two pre-existing `structuredEvidence` errors in the JTX and 0x
+  study scripts, untouched. Production build passes. Claim linter: 0 findings across 19 documents.
+- Source provenance is now a required field. `PreconfirmationSource` is HELIUS/BAM/UNKNOWN and
+  `SourceBasis` is EXPLICIT/DERIVED/UNKNOWN. A record cannot exist without them, so a stream
+  merging post-execution and commit-to-execute issuers can no longer be flattened to one state.
+- Helius clarified (Ichigo, 2026-09) that its preconfirmations are post-execution, carry a status,
+  and that status 0/1 identifies the Helius path — with no per-message source field today.
+  Attribution is therefore DERIVED and is rendered as derived, never as stated by the payload. The
+  rule is one-directional: absence of that status identifies nothing, and never resolves to BAM by
+  elimination.
+- BAM's evidence properties are recorded as UNKNOWN at five of seven stages. Nothing was inferred
+  about what its preconfirmation commits to, whether it is authenticated, where a TEE ordering
+  attestation sits, or whether sequencing is third-party verifiable.
+- Reconciliation gained PENDING / MATCHED / UNRESOLVED / MISMATCH. MISMATCH requires a VERIFIED
+  commitment contradicted by chain evidence; an unverified slot assertion that differs from the
+  landed slot stays a discrepancy, and a lapsed deadline with no receipt stays UNRESOLVED.
+- Outstanding, unchanged: browser click-through, accessibility and mobile QA. No preconfirmation
+  data has been collected, no signature is verified anywhere, and the BAM path has not been
+  observed — it is a record of what is not established, not a description of the system.
+
+
 ## BAM / preconfirmation evidence study — 2026-09-13
 
 - 97/97 tests pass. New suites: 15 BAM adversarial cases, 5 synthetic-separation guards, 4

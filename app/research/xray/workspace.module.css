@@ -29,3 +29,67 @@
 .unknowableList li{font-size:13px;color:#a8bac6;padding:9px 0 9px 18px;border-bottom:1px solid #1e2b38;position:relative}
 .unknowableList li::before{content:"—";position:absolute;left:0;color:#5d7684}
 .syntheticBanner{color:#ecc796;border:1px solid #78603d;background:#1e1a12;border-radius:8px;padding:13px 16px;margin:16px 0;font-size:14px}
+
+.lifecycle{display:flex;flex-direction:column;gap:0;margin:16px 0 4px;border:1px solid #293846;border-radius:9px;overflow:hidden}
+.stage{display:grid;grid-template-columns:minmax(0,150px) minmax(0,110px) minmax(0,1fr);gap:6px 18px;padding:14px 16px;border-bottom:1px solid #1e2b38;background:#111a25}
+.stage:last-child{border-bottom:0}
+.stage>strong{font-size:13px;font-weight:400}
+.stage small{font-size:12px;color:#9fb3c0;display:block}
+.stage em{font-style:normal;font-size:12px;color:#8ba0ad;display:block;margin-top:5px}
+.stageUnknown{background:#161a20}
+.stageUnknown>strong{color:#93a3ae}
+.evUnknown{color:#93a3ae}.evClient{color:#aab6c0}.evProvider{color:#ecc796}
+.evValidator{color:#88d9dc}.evChain{color:#b9de9b}
+.pathHead{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:baseline;margin-top:6px}
+.pathHead h4{margin:0;font-size:16px;font-weight:400}
+.basisNote{font-size:13px;color:#a8bac6;border-left:2px solid #4a6472;padding-left:13px;margin:12px 0}
+.stateChip{font:11px monospace;letter-spacing:.08em;padding:4px 9px;border-radius:4px;border:1px solid currentColor}
+.statePENDING{color:#ecc796}.stateMATCHED{color:#b9de9b}
+.stateUNRESOLVED{color:#93a3ae}.stateMISMATCH{color:#f5a394}
+.openQ{list-style:none;padding:0;margin:12px 0 0}
+.openQ li{font-size:13px;color:#a8bac6;padding:9px 0 9px 20px;border-bottom:1px solid #1e2b38;position:relative}
+.openQ li:last-child{border-bottom:0}
+.openQ li::before{content:"?";position:absolute;left:0;color:#ecc796;font-family:monospace}
+
+.summaryCard{border:1px solid #33475a;border-radius:10px;background:#111a25;padding:16px 18px;margin:16px 0}
+.summaryTop{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.summaryHeadline{font:13px monospace;letter-spacing:.09em;font-weight:400}
+.summaryGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:12px 16px;margin-top:15px;padding-top:14px;border-top:1px solid #243444}
+.summaryItem{min-width:0}
+.summaryItem dt{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#8ba0ad;margin-bottom:5px}
+.summaryItem dd{margin:0;font:12px monospace;letter-spacing:.05em;overflow-wrap:anywhere}
+.sourceUnknown{color:#93a3ae}
+.unknownCount{font:12px monospace;letter-spacing:.05em;color:#ecc796}
+
+.stageCards{display:none}
+.stageCard{border:1px solid #293846;border-left-width:3px;border-radius:8px;background:#111a25;padding:13px 15px;margin-bottom:10px}
+.stageCardUnknown{background:#161a20;border-left-color:#93a3ae}
+.stageCardHead{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline;justify-content:space-between}
+.stageCardHead strong{font-size:14px;font-weight:400}
+.stageCardHead small{font:11px monospace;letter-spacing:.07em}
+.stageCardBody{font-size:13px;color:#a8bac6;margin:9px 0 0;line-height:1.55}
+.stageDetails{margin-top:10px}
+.stageDetails summary{font-size:12px;color:#88d9dc;cursor:pointer}
+.stageDetails p{font-size:12.5px;color:#9fb3c0;margin:8px 0 0;line-height:1.55}
+
+.opaqueFields{border:1px solid #3a4756;border-left:3px solid #93a3ae;border-radius:8px;background:#131d28;padding:14px 16px;margin:14px 0}
+.opaqueFields h4{margin:0 0 8px;font-size:14px;font-weight:400}
+.opaqueFields>p{font-size:12.5px;color:#a8bac6;margin:0 0 12px;line-height:1.55}
+.opaqueRow{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr);gap:4px 14px;padding:9px 0;border-top:1px solid #1e2b38;font-size:12.5px}
+.opaqueRow code{font:11.5px monospace;color:#9fb3c0;overflow-wrap:anywhere}
+.opaqueRow span{color:#bac3b7;overflow-wrap:anywhere}
+
+.clockWarn{display:flex;gap:10px;align-items:flex-start;border:1px solid #78603d;border-left-width:3px;border-radius:8px;background:#1e1a12;padding:12px 15px;margin:12px 0;font-size:13px;color:#e2d3bb;line-height:1.55}
+.clockWarn strong{font:11px monospace;letter-spacing:.09em;color:#ecc796;white-space:nowrap;padding-top:2px}
+
+@media(max-width:768px){
+  .lifecycle{display:none}
+  .stageCards{display:block;margin:14px 0 4px}
+  .summaryGrid{grid-template-columns:1fr 1fr}
+  .summaryCard{padding:14px}
+  .rung{grid-template-columns:1fr;gap:6px}
+  .ladder{margin-top:14px}
+  .opaqueRow{grid-template-columns:1fr;gap:3px}
+  .pathHead{gap:6px 10px}
+  .pathHead h4{font-size:15px}
+}
