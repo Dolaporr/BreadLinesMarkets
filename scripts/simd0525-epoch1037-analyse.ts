@@ -32,8 +32,13 @@ function row(label: string, get: (w: any) => number, fmt: (x: number) => string,
   })
   return `| ${label} | ${cells.join(' | ')} |`
 }
+/** An underpowered side is marked in EVERY metric header, so a flagged Δ cannot be read as a result. */
+const mark = (k: string) => P[k].underpowered ? ' ⚠' : ''
 const header = (withRel = true) => {
-  const cols = GROUPS.flatMap((g) => withRel ? [`${g.key} pre`, `${g.key} post`, `${g.key} Δ`] : [`${g.key} pre`, `${g.key} post`])
+  const cols = GROUPS.flatMap((g) => {
+    const base = [`${g.key} pre${mark(g.pre)}`, `${g.key} post${mark(g.post)}`]
+    return withRel ? [...base, `${g.key} Δ${P[g.pre].underpowered || P[g.post].underpowered ? ' ⚠' : ''}`] : base
+  })
   return `| Metric | ${cols.join(' | ')} |\n|${' --- |'.repeat(cols.length + 1)}`
 }
 
@@ -64,10 +69,13 @@ for (const g of GROUPS) for (const side of ['pre', 'post'] as const) {
 w('')
 const under = GROUPS.flatMap((g) => [g.pre, g.post]).filter((k) => P[k].underpowered)
 w(under.length
-  ? `**${under.length} population side(s) fell below the 80% realised-sample threshold and are reported UNDERPOWERED: ${under.join(', ')}. Their comparisons are not interpreted.**`
-  : '**No population fell below the 80% realised-sample threshold.**')
+  ? `**${under.length} population side(s) fell below the 80% realised-sample threshold and are reported UNDERPOWERED: ${under.join(', ')}. Their comparisons are not interpreted, and every metric column for them is marked ⚠ below.**`
+  : '**No population fell below the 80% realised-sample threshold. No column is marked ⚠.**')
 w('')
-w(`RPC: ${n(r.rpcStats.calls)} calls, ${n(r.rpcStats.retries)} retries, ${n(r.rpcStats.refused)} refusals, ${n(r.rpcStats.cacheHits ?? 0)} deduplicated fetches.`)
+const selectedRefused = GROUPS.flatMap((g) => [g.pre, g.post]).reduce((a, k) => a + P[k].absence.REFUSED, 0)
+w(`RPC: ${n(r.rpcStats.calls)} calls, ${n(r.rpcStats.retries)} retries, ${n(r.rpcStats.cacheHits ?? 0)} deduplicated fetches.`)
+w('')
+w(`Two different refusal counts, kept apart: **${n(selectedRefused)} selected slot(s)** ended in \`REFUSED\` (the column above — these are holes in the corpus, never substituted), against ${n(r.rpcStats.refused)} call-level refusal(s) across all RPC methods including window enumeration, which a later retry may have recovered.`)
 w('')
 
 // ---- 2. the preregistered metrics, in §8 order ----

@@ -48,23 +48,33 @@ function box(id: string, title: string, sub: string, pick: (row: any) => number 
     const q = (p: number) => vs.length ? vs[Math.min(vs.length - 1, Math.round(p * (vs.length - 1)))] : 0
     return { ...s, min: vs[0] ?? 0, max: vs.at(-1) ?? 0, p25: q(0.25), p50: q(0.5), p75: q(0.75), n: vs.length }
   })
-  const max = Math.max(...data.map((d) => d.max)) || 1, H = 200, PAD = 58, SP = 74
-  const y = (v: number) => 20 + H - (v / max) * H
+  // Boxes encode position and spread, not magnitude-by-length, so the scale is data-driven with
+  // an explicit labelled axis rather than forced to zero. Every box also carries its median value,
+  // so a number is recoverable without reading against the axis.
+  const lo = Math.min(...data.map((d) => d.min)), hi = Math.max(...data.map((d) => d.max))
+  const padv = (hi - lo) * 0.12 || 1
+  const y0 = Math.max(0, lo - padv), y1 = hi + padv
+  const H = 200, PAD = 78, SP = 74
+  const y = (v: number) => 20 + H - ((v - y0) / (y1 - y0 || 1)) * H
+  const ticks = [y0, (y0 + y1) / 2, y1].map((t) =>
+    `<g><line class="grid" x1="${PAD - 26}" y1="${y(t)}" x2="${PAD + data.length * SP - 40}" y2="${y(t)}"/>` +
+    `<text class="tick" x="${PAD - 32}" y="${y(t) + 3}">${fmt(t, (y1 - y0) < 10 ? 1 : 0)}</text></g>`).join('')
   const marks = data.map((d, i) => {
     const x = PAD + i * SP, cls = i % 2 ? 's2' : 's1'
     return `<g>
       <line class="wh ${cls}" x1="${x}" y1="${y(d.min)}" x2="${x}" y2="${y(d.max)}"/>
-      <rect class="mk ${cls}" x="${x - 15}" y="${y(d.p75)}" width="30" height="${Math.max(2, y(d.p25) - y(d.p75))}" rx="4"/>
+      <rect class="mk ${cls}" x="${x - 15}" y="${y(d.p75)}" width="30" height="${Math.max(3, y(d.p25) - y(d.p75))}" rx="4"/>
       <line class="med" x1="${x - 15}" y1="${y(d.p50)}" x2="${x + 15}" y2="${y(d.p50)}"/>
+      <text class="vl" x="${x}" y="${y(d.max) - 7}">${fmt(d.p50, (y1 - y0) < 10 ? 1 : 0)}</text>
       <text class="ax" x="${x}" y="${H + 40}">${esc(d.lab.split('\n')[1])}</text>
       <text class="axs" x="${x}" y="${H + 54}">n=${d.n}</text>
     </g>`
   }).join('')
   const grp = G.map((g, i) => `<text class="axg" x="${PAD + (i * 2) * SP + SP / 2}" y="${H + 72}">${g.k.replace('_', ' ')}</text>`).join('')
   return `<figure class="card"><figcaption><h3>${esc(title)}</h3><p>${esc(sub)}</p></figcaption>
-  <div class="legend"><span><i class="s1"></i>PRE</span><span><i class="s2"></i>POST</span><span class="u">${esc(unit)} · box p25–p75, rule median, whisker min–max</span></div>
+  <div class="legend"><span><i class="s1"></i>PRE</span><span><i class="s2"></i>POST</span><span class="u">${esc(unit)} · box p25–p75, rule median, whisker min–max · number = median</span></div>
   <div class="scroll"><svg viewBox="0 0 ${PAD + series.length * SP} ${H + 84}" role="img" aria-label="${esc(title)}">
-    <line class="grid" x1="${PAD - 30}" y1="${H + 20}" x2="${PAD + series.length * SP - 40}" y2="${H + 20}"/>${marks}${grp}
+    ${ticks}${marks}${grp}
   </svg></div></figure>`
 }
 
@@ -96,6 +106,7 @@ figcaption h3{font-size:15px;margin:0 0 2px}figcaption p{margin:0 0 10px;color:v
 .grid{stroke:var(--grid);stroke-width:1}
 text{font:11px ui-sans-serif,system-ui,sans-serif}
 .vl{fill:var(--text-secondary);text-anchor:middle;font-size:10px}
+.tick{fill:var(--text-muted);text-anchor:end;font-size:9px}
 .ax{fill:var(--text-secondary);text-anchor:middle;font-size:10px}
 .axs{fill:var(--text-muted);text-anchor:middle;font-size:9px}
 .axg{fill:var(--text-primary);text-anchor:middle;font-size:11px;font-weight:600}
