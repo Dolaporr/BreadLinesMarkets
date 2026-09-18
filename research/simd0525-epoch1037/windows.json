@@ -1,0 +1,140 @@
+{
+ "finalizedTipAtPlanning": 448156915,
+ "boundary1037": {
+  "slot": 447984000,
+  "blockTime": 1789708003,
+  "utc": "2026-09-18T05:06:43+00:00"
+ },
+ "boundary1036": {
+  "slot": 447552000,
+  "blockTime": 1789571004,
+  "utc": "2026-09-16T15:03:24+00:00"
+ },
+ "priorDayAnchor": {
+  "slot": 447711426,
+  "blockTime": 1789621603,
+  "utc": "2026-09-17T05:06:43+00:00"
+ },
+ "windows": {
+  "PRIMARY_1037_PRE": {
+   "anchorSlot": 447984000,
+   "side": "PRE",
+   "windowSeconds": 3600,
+   "startSlot": 447972718,
+   "endSlotInclusive": 447983999,
+   "slotSpan": 11282,
+   "startBlockTime": 1789704403,
+   "endBlockTime": 1789708003,
+   "startUTC": "2026-09-18T04:06:43+00:00",
+   "endUTC": "2026-09-18T05:06:43+00:00",
+   "wallClockSpanSeconds": 3600,
+   "epochStart": 1036,
+   "epochEnd": 1036
+  },
+  "PRIMARY_1037_POST": {
+   "anchorSlot": 447984000,
+   "side": "POST",
+   "windowSeconds": 3600,
+   "startSlot": 447984000,
+   "endSlotInclusive": 447997508,
+   "slotSpan": 13509,
+   "startBlockTime": 1789708003,
+   "endBlockTime": 1789711602,
+   "startUTC": "2026-09-18T05:06:43+00:00",
+   "endUTC": "2026-09-18T06:06:42+00:00",
+   "wallClockSpanSeconds": 3599,
+   "epochStart": 1037,
+   "epochEnd": 1037
+  },
+  "ROBUST_1037_PRE": {
+   "anchorSlot": 447984000,
+   "side": "PRE",
+   "windowSeconds": 10800,
+   "startSlot": 447949989,
+   "endSlotInclusive": 447983999,
+   "slotSpan": 34011,
+   "startBlockTime": 1789697203,
+   "endBlockTime": 1789708003,
+   "startUTC": "2026-09-18T02:06:43+00:00",
+   "endUTC": "2026-09-18T05:06:43+00:00",
+   "wallClockSpanSeconds": 10800,
+   "epochStart": 1036,
+   "epochEnd": 1036
+  },
+  "ROBUST_1037_POST": {
+   "anchorSlot": 447984000,
+   "side": "POST",
+   "windowSeconds": 10800,
+   "startSlot": 447984000,
+   "endSlotInclusive": 448024603,
+   "slotSpan": 40604,
+   "startBlockTime": 1789708003,
+   "endBlockTime": 1789718802,
+   "startUTC": "2026-09-18T05:06:43+00:00",
+   "endUTC": "2026-09-18T08:06:42+00:00",
+   "wallClockSpanSeconds": 10799,
+   "epochStart": 1037,
+   "epochEnd": 1037
+  },
+  "PLACEBO_1036_PRE": {
+   "anchorSlot": 447552000,
+   "side": "PRE",
+   "windowSeconds": 3600,
+   "startSlot": 447540641,
+   "endSlotInclusive": 447551999,
+   "slotSpan": 11359,
+   "startBlockTime": 1789567404,
+   "endBlockTime": 1789571004,
+   "startUTC": "2026-09-16T14:03:24+00:00",
+   "endUTC": "2026-09-16T15:03:24+00:00",
+   "wallClockSpanSeconds": 3600,
+   "epochStart": 1035,
+   "epochEnd": 1035
+  },
+  "PLACEBO_1036_POST": {
+   "anchorSlot": 447552000,
+   "side": "POST",
+   "windowSeconds": 3600,
+   "startSlot": 447552000,
+   "endSlotInclusive": 447563376,
+   "slotSpan": 11377,
+   "startBlockTime": 1789571004,
+   "endBlockTime": 1789574603,
+   "startUTC": "2026-09-16T15:03:24+00:00",
+   "endUTC": "2026-09-16T16:03:23+00:00",
+   "wallClockSpanSeconds": 3599,
+   "epochStart": 1036,
+   "epochEnd": 1036
+  },
+  "PRIORDAY_PRE": {
+   "anchorSlot": 447711426,
+   "side": "PRE",
+   "windowSeconds": 3600,
+   "startSlot": 447700066,
+   "endSlotInclusive": 447711425,
+   "slotSpan": 11360,
+   "startBlockTime": 1789618003,
+   "endBlockTime": 1789621602,
+   "startUTC": "2026-09-17T04:06:43+00:00",
+   "endUTC": "2026-09-17T05:06:42+00:00",
+   "wallClockSpanSeconds": 3599,
+   "epochStart": 1036,
+   "epochEnd": 1036
+  },
+  "PRIORDAY_POST": {
+   "anchorSlot": 447711426,
+   "side": "POST",
+   "windowSeconds": 3600,
+   "startSlot": 447711426,
+   "endSlotInclusive": 447722842,
+   "slotSpan": 11417,
+   "startBlockTime": 1789621603,
+   "endBlockTime": 1789625202,
+   "startUTC": "2026-09-17T05:06:43+00:00",
+   "endUTC": "2026-09-17T06:06:42+00:00",
+   "wallClockSpanSeconds": 3599,
+   "epochStart": 1036,
+   "epochEnd": 1036
+  }
+ }
+}
