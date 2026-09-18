@@ -153,5 +153,67 @@ w('**No capacity inference is drawn from these.** Summed `costUnits` is a differ
 w('the protocol block compute-unit limit; an earlier provisional reading of it as a capacity ceiling')
 w('was withdrawn in the preregistration and is not revived here.')
 w('')
-writeFileSync(`${DIR}/report.partial.md`, lines.join('\n'))
-process.stdout.write(`wrote ${DIR}/report.partial.md (${lines.length} lines)\n`)
+
+// ---- 3. controls, read against the primary ----
+w('## 3. What the controls do to each result')
+w('')
+w('A difference that also appears in PRIORDAY at similar magnitude is a time-of-day pattern, not a')
+w('boundary effect. A difference that also appears in PLACEBO_1036 is an epoch-rollover pattern.')
+w('')
+const dd = (f: (w: any) => number) => GROUPS.map((g) => {
+  const a = f(P[g.pre]), b = f(P[g.post])
+  return a ? ((b - a) / a) * 100 : 0
+})
+const verdict = (v: number[]) => {
+  const [prim, , plac, prior] = v
+  if (Math.abs(prim) < 2) return 'FLAT — no movement to explain'
+  if (Math.abs(prior) > Math.abs(prim) * 0.5 && Math.sign(prior) === Math.sign(prim)) return '**REPRODUCED BY PRIOR-DAY CONTROL** — not attributable to the boundary'
+  if (Math.abs(plac) > Math.abs(prim) * 0.5 && Math.sign(plac) === Math.sign(prim)) return '**REPRODUCED BY PLACEBO** — an epoch-rollover pattern'
+  return 'Not reproduced by either control at comparable magnitude'
+}
+w('| Metric | PRIMARY Δ | ROBUST Δ | PLACEBO Δ | PRIORDAY Δ | Reading |')
+w('| --- | ---: | ---: | ---: | ---: | --- |')
+for (const [label, f] of [
+  ['Observed mean slot duration', (x: any) => x.observedMeanSlotDurationMs],
+  ['Median non-vote tx / block', (x: any) => x.nonVotePerBlock.median],
+  ['Failure rate', (x: any) => x.outcomes.failureRate],
+  ['Median CU / transaction', (x: any) => x.computeUnits.median],
+  ['Estimated CU / second', (x: any) => x.cuPerWallClockSecond_ESTIMATE.value],
+  ['Median execution depth', (x: any) => x.executionDepth.median],
+  ['Writable top-5 share', (x: any) => x.writableConcentration.top5Share],
+] as Array<[string, (x: any) => number]>) {
+  const v = dd(f)
+  w(`| ${label} | ${v[0].toFixed(1)}% | ${v[1].toFixed(1)}% | ${v[2].toFixed(1)}% | ${v[3].toFixed(1)}% | ${verdict(v)} |`)
+}
+w('')
+w('## 4. Observed slot duration is not the protocol target')
+w('')
+w('**Observed, from the ledger.** Windowed mean slot duration stepped from')
+w(`${n(P.PRIMARY_1037_PRE.observedMeanSlotDurationMs, 1)} ms to ${n(P.PRIMARY_1037_POST.observedMeanSlotDurationMs, 1)} ms across the epoch-1037 boundary`)
+w(`(${rel(P.PRIMARY_1037_PRE.observedMeanSlotDurationMs, P.PRIMARY_1037_POST.observedMeanSlotDurationMs)}), reproduced in the 3-hour robustness window`)
+w(`(${n(P.ROBUST_1037_PRE.observedMeanSlotDurationMs, 1)} → ${n(P.ROBUST_1037_POST.observedMeanSlotDurationMs, 1)} ms). Neither control shows a comparable step:`)
+w(`PLACEBO_1036 moved ${rel(P.PLACEBO_1036_PRE.observedMeanSlotDurationMs, P.PLACEBO_1036_POST.observedMeanSlotDurationMs)} across an ordinary epoch rollover and PRIORDAY`)
+w(`${rel(P.PRIORDAY_PRE.observedMeanSlotDurationMs, P.PRIORDAY_POST.observedMeanSlotDurationMs)} across the same clock hour a day earlier.`)
+w('')
+w('**Protocol, from documentation.** The target slot duration changed 300 ms → 250 ms at epoch 1037,')
+w('the fourth of five SIMD-0525 stages. That value is documentation, not measurement, and is not')
+w('derived from any block in this corpus.')
+w('')
+w('**The ledger does not identify SIMD-0525.** This corpus cannot distinguish SIMD-0525 from any')
+w('other change activating at the same boundary. Observed duration runs above the documented target')
+w('on both sides, which is consistent with per-slot overhead but establishes nothing about its cause.')
+w('')
+w('## 5. Limits')
+w('')
+w('- `blockTime` is a 1-second-quantised, stake-weighted validator estimate. Every duration here is a')
+w('  whole-window mean. **No per-slot or adjacent-pair latency is derivable**, and none is claimed.')
+w('- Workloads are uncontrolled. PRE/POST is a position either side of a boundary, not a treatment.')
+w('- Writable-account concentration is a workload descriptor. **It is not scheduler contention** — no')
+w('  lock conflict, serialisation or queueing claim follows from it.')
+w('- The placebo controls epoch rollover, not time of day. The prior-day control bounds time of day')
+w('  imperfectly: it holds the hour fixed, not the day, the market, or anything else that moved.')
+w('- All counts are sampled-ledger counts. Transactions that never landed are invisible here.')
+w('- One boundary, one day. Nothing here establishes that any pattern recurs.')
+w('')
+writeFileSync(`${DIR}/report.md`, lines.join('\n'))
+process.stdout.write(`wrote ${DIR}/report.md (${lines.length} lines)\n`)
