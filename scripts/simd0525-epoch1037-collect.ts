@@ -20,6 +20,29 @@ const UNAVAILABLE_CODES = new Set([-32004])
 /** §6: a population realising under this share of its planned size is reported UNDERPOWERED. */
 const MIN_REALISED_SHARE = 0.8
 
+/**
+ * Operational only: avoid fetching the same slot twice when preregistered populations overlap
+ * (ROBUST contains PRIMARY). The cache is keyed by slot and stores the ANALYSED row, never a
+ * substitution. It cannot change which slots are selected — selection runs before any fetch — and
+ * a cache miss falls through to a normal fetch. Analysed rows are cached rather than raw blocks
+ * because the raw corpus is ~5GB and would exhaust the session disk allowance; the dedup effect is
+ * identical.
+ */
+const CACHE_PATH = `${DIR}/.block-cache.json`
+const cache = new Map<number, Row>()
+let cacheHits = 0
+function loadCache() {
+  try {
+    const raw = JSON.parse(readFileSync(CACHE_PATH, 'utf8')) as Record<string, Row>
+    for (const [k, v] of Object.entries(raw)) cache.set(Number(k), v)
+  } catch { /* absent or unreadable cache is simply an empty cache */ }
+}
+function saveCache() {
+  const obj: Record<string, Row> = {}
+  for (const [k, v] of cache.entries()) if (v.state === 'OK') obj[k] = v
+  writeFileSync(CACHE_PATH, JSON.stringify(obj))
+}
+
 const PLAN: Record<string, number> = {
   PRIMARY_1037_PRE: 60, PRIMARY_1037_POST: 60,
   ROBUST_1037_PRE: 180, ROBUST_1037_POST: 180,
@@ -163,16 +186,23 @@ async function collectWindow(name: string, w: any) {
 
   const rows: Row[] = []
   for (const [i, slot] of selected.entries()) {
+    const cached = cache.get(slot)
+    if (cached && cached.state === 'OK') { rows.push(cached); cacheHits++; continue }
     try {
       const b = await rpc('getBlock', [slot, { encoding: 'json', transactionDetails: 'full', rewards: false, maxSupportedTransactionVersion: 1 }])
-      rows.push(isAbsent(b) ? { slot, state: b.absent } : analyseBlock(slot, b))
+      const row = isAbsent(b) ? { slot, state: b.absent } as Row : analyseBlock(slot, b)
+      if (row.state === 'OK') cache.set(slot, row)
+      rows.push(row)
     } catch (error) {
+      // A refusal is recorded as a refusal. It is never cached, never retried as absence, and the
+      // selected slot is never swapped for another.
       if (error instanceof Refused) rows.push({ slot, state: 'REFUSED' })
       else throw error
     }
-    if ((i + 1) % 20 === 0) process.stdout.write(`  ${i + 1}/${selected.length}\n`)
+    if ((i + 1) % 20 === 0) { process.stdout.write(`  ${i + 1}/${selected.length} (cache ${cacheHits})\n`); saveCache() }
     await sleep(SPACING_MS)
   }
+  saveCache()
   const ok = rows.filter((r) => r.state === 'OK')
   const allCu = ok.flatMap((r) => r.cuValues!)
   const allDepth = ok.flatMap((r) => r.depths!)
@@ -222,6 +252,7 @@ async function collectWindow(name: string, w: any) {
 }
 
 async function main() {
+  loadCache()
   const bounds = JSON.parse(readFileSync(`${DIR}/windows.json`, 'utf8'))
   const only = process.argv.includes('--population') ? process.argv[process.argv.indexOf('--population') + 1] : null
   const results: Record<string, unknown> = {}
@@ -234,7 +265,7 @@ async function main() {
     preregistrationCommit: process.env.BREADLINES_PREREG_COMMIT ?? 'UNRECORDED',
     collectedAt: new Date().toISOString(), endpoint: ENDPOINT.replace(/\?.*$/, ''),
     boundaries: { b1037: bounds.boundary1037, b1036: bounds.boundary1036, priorDay: bounds.priorDayAnchor },
-    rpcStats: stats, populations: results,
+    rpcStats: { ...stats, cacheHits, cachedBlocks: cache.size }, populations: results,
   }
   writeFileSync(`${DIR}/results${only ? `.${only}` : ''}.json`, JSON.stringify(out, null, 1))
   process.stdout.write(`\nwrote ${DIR}/results${only ? `.${only}` : ''}.json · rpc ${JSON.stringify(stats)}\n`)
