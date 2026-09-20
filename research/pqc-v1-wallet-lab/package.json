@@ -1,0 +1,16 @@
+{
+  "name": "breadlines-pqc-v1-wallet-lab",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "benchmark": "node scripts/benchmark.mjs",
+    "environment": "node scripts/environment.mjs",
+    "environment:rpc": "node scripts/environment.mjs --public-rpc"
+  },
+  "dependencies": {
+    "@solana/kit": "8.3.0",
+    "@solana/web3.js": "1.99.0"
+  }
+}

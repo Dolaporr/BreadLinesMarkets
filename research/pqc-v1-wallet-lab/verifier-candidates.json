@@ -1,0 +1,44 @@
+{
+  "research_date": "2026-09-15",
+  "execution_adapter": {
+    "library": "Node crypto / OpenSSL",
+    "node_version": "24.15.0",
+    "openssl_version": "3.5.5",
+    "license": "Node MIT; OpenSSL Apache-2.0",
+    "status": "HOST_ONLY",
+    "no_std": false,
+    "sbf_compile": "NOT_ATTEMPTED_NOT_AN_SBF_LIBRARY",
+    "security_boundary": "Real signatures, not a FIPS module certification or production wallet audit"
+  },
+  "rust_candidates": [
+    {
+      "schemes": ["ML-DSA-44", "ML-DSA-65"],
+      "crate": "ml-dsa",
+      "version": "0.1.1",
+      "license": "Apache-2.0 OR MIT",
+      "source": "https://docs.rs/ml-dsa/0.1.1/ml_dsa/",
+      "no_std": "DOCUMENTED_BY_RUSTCRYPTO_NOT_LOCALLY_COMPILED",
+      "audit": "Upstream warns implementation never independently audited",
+      "status": "TOOLCHAIN_BLOCKED",
+      "sbf_compile": null,
+      "reason": "rustc, cargo, cargo-build-sbf and local validator not installed/discoverable; no compiler diagnostic about the crate exists",
+      "heap_stack_issues": null,
+      "compute_units_consumed": null
+    },
+    {
+      "schemes": ["SLH-DSA-SHA2-128s"],
+      "crate": "fips205",
+      "version": "0.4.1",
+      "license": "Apache-2.0 OR MIT",
+      "source": "https://docs.rs/fips205/0.4.1/fips205/",
+      "no_std": "DOCUMENTED_NO_STD_NO_ALLOC_NOT_LOCALLY_COMPILED",
+      "audit": "Source documentation is not an independent security audit",
+      "status": "SIZE_BLOCKED",
+      "additional_blocker": "TOOLCHAIN_BLOCKED",
+      "sbf_compile": null,
+      "reason": "7856-byte signature exceeds the full 4096-byte envelope before overhead; no SBF toolchain available",
+      "heap_stack_issues": null,
+      "compute_units_consumed": null
+    }
+  ]
+}
