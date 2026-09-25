@@ -1,0 +1,61 @@
+{
+ "probedAt": "2026-09-25T14:33:43.021Z",
+ "endpoint": "https://api.mainnet-beta.solana.com",
+ "nodeVersion": {
+  "feature-set": 3383571666,
+  "solana-core": "4.3.0"
+ },
+ "rawProbe": {
+  "outcome": "NULL_SUPPORTED",
+  "endpoint": "https://api.mainnet-beta.solana.com",
+  "observedAt": "2026-09-25T14:33:43.021Z",
+  "raw": null
+ },
+ "controlProbes": {
+  "getAGGenesisCert": {
+   "error": {
+    "code": -32601,
+    "message": "Method not found"
+   }
+  },
+  "getAlpenglowGenesisCert": {
+   "error": {
+    "code": -32601,
+    "message": "Method not found"
+   }
+  },
+  "getGenesisCert": {
+   "error": {
+    "code": -32601,
+    "message": "Method not found"
+   }
+  }
+ },
+ "classification": {
+  "protocol": {
+   "value": "TOWER_BFT",
+   "state": "OBSERVED",
+   "basis": "The node understood getAgGenesisCert and answered null, which the method defines as \"the cluster has not migrated to Alpenglow\"."
+  },
+  "migrationState": {
+   "value": "NOT_MIGRATED",
+   "state": "OBSERVED",
+   "basis": "A null answer from a node that implements the method is positive evidence of non-migration, not an absence of evidence."
+  },
+  "capability": {
+   "value": "SUPPORTED",
+   "state": "OBSERVED",
+   "basis": "The method returned a result rather than -32601."
+  },
+  "genesisCertificateStatus": {
+   "value": "ABSENT",
+   "state": "OBSERVED",
+   "basis": "No genesis certificate exists while the cluster runs TowerBFT."
+  },
+  "certificateVerification": {
+   "value": "NOT_VERIFIED",
+   "state": "NOT_APPLICABLE",
+   "basis": "Breadlines v0 retrieves certificate-shaped data. It performs no BLS or other cryptographic verification, so nothing here is a verified certificate."
+  }
+ }
+}
