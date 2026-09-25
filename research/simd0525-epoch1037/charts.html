@@ -1,0 +1,347 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Epoch-1037 boundary — preregistered charts</title><style>
+.viz-root{color-scheme:light;--surface-1:#fcfcfb;--surface-2:#f4f4f1;--text-primary:#0b0b0b;--text-secondary:#52514e;--text-muted:#77766f;--grid:#dedcd4;--s1:#2a78d6;--s2:#eb6834}
+@media(prefers-color-scheme:dark){:root:where(:not([data-theme="light"])) .viz-root{color-scheme:dark;--surface-1:#1a1a19;--surface-2:#232321;--text-primary:#fff;--text-secondary:#c3c2b7;--text-muted:#8e8d84;--grid:#3a3a37;--s1:#3987e5;--s2:#d95926}}
+:root[data-theme="dark"] .viz-root{color-scheme:dark;--surface-1:#1a1a19;--surface-2:#232321;--text-primary:#fff;--text-secondary:#c3c2b7;--text-muted:#8e8d84;--grid:#3a3a37;--s1:#3987e5;--s2:#d95926}
+*{box-sizing:border-box}body{margin:0;background:var(--surface-2,#f4f4f1)}
+.viz-root{background:var(--surface-2);color:var(--text-primary);font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;padding:24px 16px 64px}
+.wrap{max-width:1040px;margin:0 auto}
+h1{font-size:22px;margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:var(--text-secondary);margin:0 0 6px}
+.prov{color:var(--text-muted);font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;margin:0 0 24px;word-break:break-all}
+.card{background:var(--surface-1);border:1px solid var(--grid);border-radius:12px;margin:0 0 18px;padding:16px}
+figcaption h3{font-size:15px;margin:0 0 2px}figcaption p{margin:0 0 10px;color:var(--text-secondary);font-size:13px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:12px;color:var(--text-secondary);margin-bottom:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.legend i.s1{background:var(--s1)}.legend i.s2{background:var(--s2)}.legend .u{color:var(--text-muted)}
+.scroll{overflow-x:auto}svg{width:100%;height:auto;min-width:520px;display:block}
+.mk.s1{fill:var(--s1)}.mk.s2{fill:var(--s2)}
+.wh{stroke-width:2}.wh.s1{stroke:var(--s1)}.wh.s2{stroke:var(--s2)}
+.med{stroke:var(--surface-1);stroke-width:2}
+.grid{stroke:var(--grid);stroke-width:1}
+text{font:11px ui-sans-serif,system-ui,sans-serif}
+.vl{fill:var(--text-secondary);text-anchor:middle;font-size:10px}
+.tick{fill:var(--text-muted);text-anchor:end;font-size:9px}
+.ax{fill:var(--text-secondary);text-anchor:middle;font-size:10px}
+.axs{fill:var(--text-muted);text-anchor:middle;font-size:9px}
+.axg{fill:var(--text-primary);text-anchor:middle;font-size:11px;font-weight:600}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--grid)}th:first-child,td:first-child{text-align:left}
+th{color:var(--text-secondary);font-weight:600}
+.note{background:var(--surface-1);border:1px solid var(--grid);border-left:3px solid var(--s2);border-radius:8px;padding:12px 14px;margin:0 0 18px;font-size:13px;color:var(--text-secondary)}
+.note strong{color:var(--text-primary)}
+</style><div class="viz-root"><div class="wrap">
+<h1>Observed execution either side of the epoch-1037 boundary</h1>
+<p class="sub">Seven preregistered charts. Every chart shows the primary comparison beside both controls.</p>
+<p class="prov">preregistration 09e0e83f3954badaf383cc1447e76db8fe21f4c1 · collected 2026-09-18T19:43:35.876Z · https://api.mainnet-beta.solana.com</p>
+<div class="note"><strong>Reading these charts.</strong> PRE/POST is a position either side of a boundary, not a treatment assignment. Workloads are uncontrolled, so a difference that also appears in PRIORDAY or PLACEBO is not a boundary effect. Observed slot duration is measured from <code>blockTime</code>; the protocol target is documentation, not measurement. Writable-account concentration is a workload descriptor and is <strong>not</strong> scheduler contention.</div>
+<figure class="card"><figcaption><h3>1. Windowed observed mean slot duration</h3><p>Whole-window measure: Δ blockTime ÷ Δ slot. Not a per-slot latency.</p></figcaption>
+  <div class="legend"><span><i class="s1"></i>PRE</span><span><i class="s2"></i>POST</span><span class="u">milliseconds</span></div>
+  <div class="scroll"><svg viewBox="0 0 552 254" role="img" aria-label="1. Windowed observed mean slot duration">
+    <line class="grid" x1="52" y1="210" x2="522" y2="210"/>
+      <g>
+        <rect class="mk s1" x="64" y="20" width="34" height="190" rx="4"/>
+        <rect class="mk s2" x="106" y="51.3684769108018" width="34" height="158.6315230891982" rx="4"/>
+        <text class="vl" x="81" y="14">319.1</text>
+        <text class="vl" x="123" y="45.3684769108018">266.4</text>
+        <text class="ax" x="102" y="228">PRIMARY 1037</text>
+        <text class="axs" x="102" y="242">primary · 60 min/side</text>
+      </g>
+      <g>
+        <rect class="mk s1" x="186" y="20.932960893854727" width="34" height="189.06703910614527" rx="4"/>
+        <rect class="mk s2" x="228" y="51.64779415587793" width="34" height="158.35220584412207" rx="4"/>
+        <text class="vl" x="203" y="14.932960893854727">317.6</text>
+        <text class="vl" x="245" y="45.64779415587793">266.0</text>
+        <text class="ax" x="224" y="228">ROBUST 1037</text>
+        <text class="axs" x="224" y="242">robustness · 3 h/side</text>
+      </g>
+      <g>
+        <rect class="mk s1" x="308" y="21.288078887127995" width="34" height="188.711921112872" rx="4"/>
+        <rect class="mk s2" x="350" y="21.63901073409906" width="34" height="188.36098926590094" rx="4"/>
+        <text class="vl" x="325" y="15.288078887127995">317.0</text>
+        <text class="vl" x="367" y="15.63901073409906">316.4</text>
+        <text class="ax" x="346" y="228">PLACEBO 1036</text>
+        <text class="axs" x="346" y="242">control · rollover only</text>
+      </g>
+      <g>
+        <rect class="mk s1" x="430" y="21.357107677710246" width="34" height="188.64289232228975" rx="4"/>
+        <rect class="mk s2" x="472" y="22.29900018492563" width="34" height="187.70099981507437" rx="4"/>
+        <text class="vl" x="447" y="15.357107677710246">316.8</text>
+        <text class="vl" x="489" y="16.29900018492563">315.3</text>
+        <text class="ax" x="468" y="228">PRIORDAY</text>
+        <text class="axs" x="468" y="242">control · same hour, −24 h</text>
+      </g>
+  </svg></div></figure>
+<figure class="card"><figcaption><h3>2. Non-vote transactions per sampled block</h3><p>Distribution across sampled blocks in each window.</p></figcaption>
+  <div class="legend"><span><i class="s1"></i>PRE</span><span><i class="s2"></i>POST</span><span class="u">transactions / block · box p25–p75, rule median, whisker min–max · number = median</span></div>
+  <div class="scroll"><svg viewBox="0 0 670 284" role="img" aria-label="2. Non-vote transactions per sampled block">
+    <g><line class="grid" x1="52" y1="220" x2="630" y2="220"/><text class="tick" x="46" y="223">0</text></g><g><line class="grid" x1="52" y1="120" x2="630" y2="120"/><text class="tick" x="46" y="123">749</text></g><g><line class="grid" x1="52" y1="20" x2="630" y2="20"/><text class="tick" x="46" y="23">1,498</text></g><g>
+      <line class="wh s1" x1="78" y1="183.9461595983335" x2="78" y2="40.79905992949472"/>
+      <rect class="mk s1" x="63" y="114.9097318662536" width="30" height="36.45443862835168" rx="4"/>
+      <line class="med" x1="63" y1="131.0671936758893" x2="93" y2="131.0671936758893"/>
+      <text class="vl" x="78" y="33.79905992949472">666</text>
+      <text class="ax" x="78" y="240">PRE</text>
+      <text class="axs" x="78" y="254">n=60</text>
+    </g><g>
+      <line class="wh s2" x1="152" y1="192.75932058540755" x2="152" y2="87.00138874051916"/>
+      <rect class="mk s2" x="137" y="151.63123597906207" width="30" height="22.032902467685062" rx="4"/>
+      <line class="med" x1="137" y1="167.7886977886978" x2="167" y2="167.7886977886978"/>
+      <text class="vl" x="152" y="80.00138874051916">391</text>
+      <text class="ax" x="152" y="240">POST</text>
+      <text class="axs" x="152" y="254">n=60</text>
+    </g><g>
+      <line class="wh s1" x1="226" y1="184.7473560517039" x2="226" y2="56.15532528576006"/>
+      <rect class="mk s1" x="211" y="112.10554427945732" width="30" height="38.19036427732078" rx="4"/>
+      <line class="med" x1="211" y1="136.1414378805683" x2="241" y2="136.1414378805683"/>
+      <text class="vl" x="226" y="49.15532528576006">628</text>
+      <text class="ax" x="226" y="240">PRE</text>
+      <text class="axs" x="226" y="254">n=180</text>
+    </g><g>
+      <line class="wh s2" x1="300" y1="210.3856425595556" x2="300" y2="108.50016023929068"/>
+      <rect class="mk s2" x="285" y="153.50069437025957" width="30" height="22.166435209913487" rx="4"/>
+      <line class="med" x1="285" y1="166.31983762418545" x2="315" y2="166.31983762418545"/>
+      <text class="vl" x="300" y="101.50016023929068">402</text>
+      <text class="ax" x="300" y="240">POST</text>
+      <text class="axs" x="300" y="254">n=180</text>
+    </g><g>
+      <line class="wh s1" x1="374" y1="202.50721076808034" x2="374" y2="51.48167930776626"/>
+      <rect class="mk s1" x="359" y="105.562439910266" width="30" height="37.656233308407224" rx="4"/>
+      <line class="med" x1="359" y1="128.93066980023502" x2="389" y2="128.93066980023502"/>
+      <text class="vl" x="374" y="44.48167930776626">682</text>
+      <text class="ax" x="374" y="240">PRE</text>
+      <text class="axs" x="374" y="254">n=60</text>
+    </g><g>
+      <line class="wh s2" x1="448" y1="184.2132250827903" x2="448" y2="59.89424206815511"/>
+      <rect class="mk s2" x="433" y="109.56842217711782" width="30" height="30.31193248584553" rx="4"/>
+      <line class="med" x1="433" y1="123.45582736887084" x2="463" y2="123.45582736887084"/>
+      <text class="vl" x="448" y="52.89424206815511">723</text>
+      <text class="ax" x="448" y="240">POST</text>
+      <text class="axs" x="448" y="254">n=60</text>
+    </g><g>
+      <line class="wh s1" x1="522" y1="167.6551650464694" x2="522" y2="40.39846170280953"/>
+      <rect class="mk s1" x="507" y="93.94509133639569" width="30" height="48.472385428907174" rx="4"/>
+      <line class="med" x1="507" y1="125.72588398675356" x2="537" y2="125.72588398675356"/>
+      <text class="vl" x="522" y="33.39846170280953">706</text>
+      <text class="ax" x="522" y="240">PRE</text>
+      <text class="axs" x="522" y="254">n=60</text>
+    </g><g>
+      <line class="wh s2" x1="596" y1="179.80664458925327" x2="596" y2="79.79062066018588"/>
+      <rect class="mk s2" x="581" y="140.14742014742015" width="30" height="23.368229889969" rx="4"/>
+      <line class="med" x1="581" y1="152.8330306591176" x2="611" y2="152.8330306591176"/>
+      <text class="vl" x="596" y="72.79062066018588">503</text>
+      <text class="ax" x="596" y="240">POST</text>
+      <text class="axs" x="596" y="254">n=60</text>
+    </g><text class="axg" x="115" y="272">PRIMARY 1037</text><text class="axg" x="263" y="272">ROBUST 1037</text><text class="axg" x="411" y="272">PLACEBO 1036</text><text class="axg" x="559" y="272">PRIORDAY</text>
+  </svg></div></figure>
+<figure class="card"><figcaption><h3>3. CU per non-vote transaction — median</h3><p>Median consumed compute units per sampled non-vote transaction.</p></figcaption>
+  <div class="legend"><span><i class="s1"></i>PRE</span><span><i class="s2"></i>POST</span><span class="u">compute units</span></div>
+  <div class="scroll"><svg viewBox="0 0 552 254" role="img" aria-label="3. CU per non-vote transaction — median">
+    <line class="grid" x1="52" y1="210" x2="522" y2="210"/>
+      <g>
+        <rect class="mk s1" x="64" y="70.7909671317096" width="34" height="139.2090328682904" rx="4"/>
+        <rect class="mk s2" x="106" y="127.45999842358319" width="34" height="82.54000157641681" rx="4"/>
+        <text class="vl" x="81" y="64.7909671317096">18,591</text>
+        <text class="vl" x="123" y="121.45999842358319">11,023</text>
+        <text class="ax" x="102" y="228">PRIMARY 1037</text>
+        <text class="axs" x="102" y="242">primary · 60 min/side</text>
+      </g>
+      <g>
+        <rect class="mk s1" x="186" y="72.29605107590447" width="34" height="137.70394892409553" rx="4"/>
+        <rect class="mk s2" x="228" y="112.52147867896271" width="34" height="97.47852132103729" rx="4"/>
+        <text class="vl" x="203" y="66.29605107590447">18,390</text>
+        <text class="vl" x="245" y="106.52147867896271">13,018</text>
+        <text class="ax" x="224" y="228">ROBUST 1037</text>
+        <text class="axs" x="224" y="242">robustness · 3 h/side</text>
+      </g>
+      <g>
+        <rect class="mk s1" x="308" y="61.90273508315599" width="34" height="148.097264916844" rx="4"/>
+        <rect class="mk s2" x="350" y="20" width="34" height="190" rx="4"/>
+        <text class="vl" x="325" y="55.90273508315599">19,778</text>
+        <text class="vl" x="367" y="14">25,374</text>
+        <text class="ax" x="346" y="228">PLACEBO 1036</text>
+        <text class="axs" x="346" y="242">control · rollover only</text>
+      </g>
+      <g>
+        <rect class="mk s1" x="430" y="82.71557499802948" width="34" height="127.28442500197052" rx="4"/>
+        <rect class="mk s2" x="472" y="75.37735477260188" width="34" height="134.62264522739812" rx="4"/>
+        <text class="vl" x="447" y="76.71557499802948">16,999</text>
+        <text class="vl" x="489" y="69.37735477260188">17,979</text>
+        <text class="ax" x="468" y="228">PRIORDAY</text>
+        <text class="axs" x="468" y="242">control · same hour, −24 h</text>
+      </g>
+  </svg></div></figure>
+<figure class="card"><figcaption><h3>3b. CU per non-vote transaction — p90</h3><p>Ninetieth percentile of the same population.</p></figcaption>
+  <div class="legend"><span><i class="s1"></i>PRE</span><span><i class="s2"></i>POST</span><span class="u">compute units</span></div>
+  <div class="scroll"><svg viewBox="0 0 552 254" role="img" aria-label="3b. CU per non-vote transaction — p90">
+    <line class="grid" x1="52" y1="210" x2="522" y2="210"/>
+      <g>
+        <rect class="mk s1" x="64" y="20" width="34" height="190" rx="4"/>
+        <rect class="mk s2" x="106" y="36.88992889228834" width="34" height="173.11007110771166" rx="4"/>
+        <text class="vl" x="81" y="14">154,273</text>
+        <text class="vl" x="123" y="30.88992889228834">140,559</text>
+        <text class="ax" x="102" y="228">PRIMARY 1037</text>
+        <text class="axs" x="102" y="242">primary · 60 min/side</text>
+      </g>
+      <g>
+        <rect class="mk s1" x="186" y="23.17255773855439" width="34" height="186.8274422614456" rx="4"/>
+        <rect class="mk s2" x="228" y="34.08191971375419" width="34" height="175.9180802862458" rx="4"/>
+        <text class="vl" x="203" y="17.17255773855439">151,697</text>
+        <text class="vl" x="245" y="28.08191971375419">142,839</text>
+        <text class="ax" x="224" y="228">ROBUST 1037</text>
+        <text class="axs" x="224" y="242">robustness · 3 h/side</text>
+      </g>
+      <g>
+        <rect class="mk s1" x="308" y="27.959720754765897" width="34" height="182.0402792452341" rx="4"/>
+        <rect class="mk s2" x="350" y="33.03384260369603" width="34" height="176.96615739630397" rx="4"/>
+        <text class="vl" x="325" y="21.959720754765897">147,810</text>
+        <text class="vl" x="367" y="27.03384260369603">143,690</text>
+        <text class="ax" x="346" y="228">PLACEBO 1036</text>
+        <text class="axs" x="346" y="242">control · rollover only</text>
+      </g>
+      <g>
+        <rect class="mk s1" x="430" y="59.8281617651825" width="34" height="150.1718382348175" rx="4"/>
+        <rect class="mk s2" x="472" y="46.07753787117642" width="34" height="163.92246212882358" rx="4"/>
+        <text class="vl" x="447" y="53.8281617651825">121,934</text>
+        <text class="vl" x="489" y="40.07753787117642">133,099</text>
+        <text class="ax" x="468" y="228">PRIORDAY</text>
+        <text class="axs" x="468" y="242">control · same hour, −24 h</text>
+      </g>
+  </svg></div></figure>
+<figure class="card"><figcaption><h3>4. Failure rate</h3><p>Share of sampled non-vote transactions whose receipt carries an error.</p></figcaption>
+  <div class="legend"><span><i class="s1"></i>PRE</span><span><i class="s2"></i>POST</span><span class="u">percent</span></div>
+  <div class="scroll"><svg viewBox="0 0 552 254" role="img" aria-label="4. Failure rate">
+    <line class="grid" x1="52" y1="210" x2="522" y2="210"/>
+      <g>
+        <rect class="mk s1" x="64" y="39.78965350916798" width="34" height="170.21034649083202" rx="4"/>
+        <rect class="mk s2" x="106" y="64.75988763562313" width="34" height="145.24011236437687" rx="4"/>
+        <text class="vl" x="81" y="33.78965350916798">37.20</text>
+        <text class="vl" x="123" y="58.75988763562313">31.75</text>
+        <text class="ax" x="102" y="228">PRIMARY 1037</text>
+        <text class="axs" x="102" y="242">primary · 60 min/side</text>
+      </g>
+      <g>
+        <rect class="mk s1" x="186" y="42.42331241663598" width="34" height="167.57668758336402" rx="4"/>
+        <rect class="mk s2" x="228" y="78.60257113473543" width="34" height="131.39742886526457" rx="4"/>
+        <text class="vl" x="203" y="36.42331241663598">36.63</text>
+        <text class="vl" x="245" y="72.60257113473543">28.72</text>
+        <text class="ax" x="224" y="228">ROBUST 1037</text>
+        <text class="axs" x="224" y="242">robustness · 3 h/side</text>
+      </g>
+      <g>
+        <rect class="mk s1" x="308" y="49.503079749148014" width="34" height="160.49692025085199" rx="4"/>
+        <rect class="mk s2" x="350" y="56.18327444462196" width="34" height="153.81672555537804" rx="4"/>
+        <text class="vl" x="325" y="43.503079749148014">35.08</text>
+        <text class="vl" x="367" y="50.18327444462196">33.62</text>
+        <text class="ax" x="346" y="228">PLACEBO 1036</text>
+        <text class="axs" x="346" y="242">control · rollover only</text>
+      </g>
+      <g>
+        <rect class="mk s1" x="430" y="20" width="34" height="190" rx="4"/>
+        <rect class="mk s2" x="472" y="70.05834165043012" width="34" height="139.94165834956988" rx="4"/>
+        <text class="vl" x="447" y="14">41.53</text>
+        <text class="vl" x="489" y="64.05834165043012">30.59</text>
+        <text class="ax" x="468" y="228">PRIORDAY</text>
+        <text class="axs" x="468" y="242">control · same hour, −24 h</text>
+      </g>
+  </svg></div></figure>
+<figure class="card"><figcaption><h3>5. Execution depth (per-block median)</h3><p>Rendered over per-block median depth: per-transaction depth vectors were not retained, so this differs from the preregistered histogram. The window-level median and max in the report are unaffected.</p></figcaption>
+  <div class="legend"><span><i class="s1"></i>PRE</span><span><i class="s2"></i>POST</span><span class="u">invocation depth · box p25–p75, rule median, whisker min–max · number = median</span></div>
+  <div class="scroll"><svg viewBox="0 0 670 284" role="img" aria-label="5. Execution depth (per-block median)">
+    <g><line class="grid" x1="52" y1="220" x2="630" y2="220"/><text class="tick" x="46" y="223">0.8</text></g><g><line class="grid" x1="52" y1="120.00000000000003" x2="630" y2="120.00000000000003"/><text class="tick" x="46" y="123.00000000000003">2.0</text></g><g><line class="grid" x1="52" y1="20" x2="630" y2="20"/><text class="tick" x="46" y="23">3.2</text></g><g>
+      <line class="wh s1" x1="78" y1="200.6451612903226" x2="78" y2="200.6451612903226"/>
+      <rect class="mk s1" x="63" y="200.6451612903226" width="30" height="3" rx="4"/>
+      <line class="med" x1="63" y1="200.6451612903226" x2="93" y2="200.6451612903226"/>
+      <text class="vl" x="78" y="193.6451612903226">1.0</text>
+      <text class="ax" x="78" y="240">PRE</text>
+      <text class="axs" x="78" y="254">n=60</text>
+    </g><g>
+      <line class="wh s2" x1="152" y1="200.6451612903226" x2="152" y2="120.00000000000003"/>
+      <rect class="mk s2" x="137" y="200.6451612903226" width="30" height="3" rx="4"/>
+      <line class="med" x1="137" y1="200.6451612903226" x2="167" y2="200.6451612903226"/>
+      <text class="vl" x="152" y="113.00000000000003">1.0</text>
+      <text class="ax" x="152" y="240">POST</text>
+      <text class="axs" x="152" y="254">n=60</text>
+    </g><g>
+      <line class="wh s1" x1="226" y1="200.6451612903226" x2="226" y2="120.00000000000003"/>
+      <rect class="mk s1" x="211" y="200.6451612903226" width="30" height="3" rx="4"/>
+      <line class="med" x1="211" y1="200.6451612903226" x2="241" y2="200.6451612903226"/>
+      <text class="vl" x="226" y="113.00000000000003">1.0</text>
+      <text class="ax" x="226" y="240">PRE</text>
+      <text class="axs" x="226" y="254">n=180</text>
+    </g><g>
+      <line class="wh s2" x1="300" y1="200.6451612903226" x2="300" y2="120.00000000000003"/>
+      <rect class="mk s2" x="285" y="200.6451612903226" width="30" height="3" rx="4"/>
+      <line class="med" x1="285" y1="200.6451612903226" x2="315" y2="200.6451612903226"/>
+      <text class="vl" x="300" y="113.00000000000003">1.0</text>
+      <text class="ax" x="300" y="240">POST</text>
+      <text class="axs" x="300" y="254">n=180</text>
+    </g><g>
+      <line class="wh s1" x1="374" y1="200.6451612903226" x2="374" y2="120.00000000000003"/>
+      <rect class="mk s1" x="359" y="200.6451612903226" width="30" height="3" rx="4"/>
+      <line class="med" x1="359" y1="200.6451612903226" x2="389" y2="200.6451612903226"/>
+      <text class="vl" x="374" y="113.00000000000003">1.0</text>
+      <text class="ax" x="374" y="240">PRE</text>
+      <text class="axs" x="374" y="254">n=60</text>
+    </g><g>
+      <line class="wh s2" x1="448" y1="200.6451612903226" x2="448" y2="120.00000000000003"/>
+      <rect class="mk s2" x="433" y="200.6451612903226" width="30" height="3" rx="4"/>
+      <line class="med" x1="433" y1="200.6451612903226" x2="463" y2="200.6451612903226"/>
+      <text class="vl" x="448" y="113.00000000000003">1.0</text>
+      <text class="ax" x="448" y="240">POST</text>
+      <text class="axs" x="448" y="254">n=60</text>
+    </g><g>
+      <line class="wh s1" x1="522" y1="200.6451612903226" x2="522" y2="120.00000000000003"/>
+      <rect class="mk s1" x="507" y="200.6451612903226" width="30" height="3" rx="4"/>
+      <line class="med" x1="507" y1="200.6451612903226" x2="537" y2="200.6451612903226"/>
+      <text class="vl" x="522" y="113.00000000000003">1.0</text>
+      <text class="ax" x="522" y="240">PRE</text>
+      <text class="axs" x="522" y="254">n=60</text>
+    </g><g>
+      <line class="wh s2" x1="596" y1="200.6451612903226" x2="596" y2="39.35483870967744"/>
+      <rect class="mk s2" x="581" y="200.6451612903226" width="30" height="3" rx="4"/>
+      <line class="med" x1="581" y1="200.6451612903226" x2="611" y2="200.6451612903226"/>
+      <text class="vl" x="596" y="32.35483870967744">1.0</text>
+      <text class="ax" x="596" y="240">POST</text>
+      <text class="axs" x="596" y="254">n=60</text>
+    </g><text class="axg" x="115" y="272">PRIMARY 1037</text><text class="axg" x="263" y="272">ROBUST 1037</text><text class="axg" x="411" y="272">PLACEBO 1036</text><text class="axg" x="559" y="272">PRIORDAY</text>
+  </svg></div></figure>
+<figure class="card"><figcaption><h3>6. Writable-account concentration — top-1 share</h3><p>Share of sampled non-vote transactions writing the single most-written account. NOT contention.</p></figcaption>
+  <div class="legend"><span><i class="s1"></i>PRE</span><span><i class="s2"></i>POST</span><span class="u">percent</span></div>
+  <div class="scroll"><svg viewBox="0 0 552 254" role="img" aria-label="6. Writable-account concentration — top-1 share">
+    <line class="grid" x1="52" y1="210" x2="522" y2="210"/>
+      <g>
+        <rect class="mk s1" x="64" y="46.316568981929294" width="34" height="163.6834310180707" rx="4"/>
+        <rect class="mk s2" x="106" y="116.21973425087397" width="34" height="93.78026574912603" rx="4"/>
+        <text class="vl" x="81" y="40.316568981929294">12.21</text>
+        <text class="vl" x="123" y="110.21973425087397">7.00</text>
+        <text class="ax" x="102" y="228">PRIMARY 1037</text>
+        <text class="axs" x="102" y="242">primary · 60 min/side</text>
+      </g>
+      <g>
+        <rect class="mk s1" x="186" y="98.77270896829678" width="34" height="111.22729103170322" rx="4"/>
+        <rect class="mk s2" x="228" y="99.96699214500626" width="34" height="110.03300785499374" rx="4"/>
+        <text class="vl" x="203" y="92.77270896829678">8.30</text>
+        <text class="vl" x="245" y="93.96699214500626">8.21</text>
+        <text class="ax" x="224" y="228">ROBUST 1037</text>
+        <text class="axs" x="224" y="242">robustness · 3 h/side</text>
+      </g>
+      <g>
+        <rect class="mk s1" x="308" y="101.26235681342939" width="34" height="108.73764318657061" rx="4"/>
+        <rect class="mk s2" x="350" y="99.29311350141312" width="34" height="110.70688649858688" rx="4"/>
+        <text class="vl" x="325" y="95.26235681342939">8.11</text>
+        <text class="vl" x="367" y="93.29311350141312">8.26</text>
+        <text class="ax" x="346" y="228">PLACEBO 1036</text>
+        <text class="axs" x="346" y="242">control · rollover only</text>
+      </g>
+      <g>
+        <rect class="mk s1" x="430" y="20" width="34" height="190" rx="4"/>
+        <rect class="mk s2" x="472" y="82.04989366925149" width="34" height="127.95010633074851" rx="4"/>
+        <text class="vl" x="447" y="14">14.18</text>
+        <text class="vl" x="489" y="76.04989366925149">9.55</text>
+        <text class="ax" x="468" y="228">PRIORDAY</text>
+        <text class="axs" x="468" y="242">control · same hour, −24 h</text>
+      </g>
+  </svg></div></figure>
+<figure class="card"><figcaption><h3>7. Coverage and realised sample</h3><p>Printed always, before any finding is read. ⚠ marks a population below the 80% realised-sample threshold.</p></figcaption>
+<div class="scroll"><table><thead><tr><th>Population</th><th>Planned</th><th>Selected</th><th>Realised</th><th>SKIPPED</th><th>UNAVAIL</th><th>REFUSED</th><th>Produced</th><th>Reconstruction</th></tr></thead><tbody><tr><td>PRIMARY_1037_PRE</td><td>60</td><td>60</td><td>60</td><td>0</td><td>0</td><td>0</td><td>99.89%</td><td>100.00%</td></tr><tr><td>PRIMARY_1037_POST</td><td>60</td><td>60</td><td>60</td><td>0</td><td>0</td><td>0</td><td>100.00%</td><td>99.99%</td></tr><tr><td>ROBUST_1037_PRE</td><td>180</td><td>180</td><td>180</td><td>0</td><td>0</td><td>0</td><td>99.90%</td><td>99.99%</td></tr><tr><td>ROBUST_1037_POST</td><td>180</td><td>180</td><td>180</td><td>0</td><td>0</td><td>0</td><td>99.95%</td><td>99.98%</td></tr><tr><td>PLACEBO_1036_PRE</td><td>60</td><td>60</td><td>60</td><td>0</td><td>0</td><td>0</td><td>99.93%</td><td>99.91%</td></tr><tr><td>PLACEBO_1036_POST</td><td>60</td><td>60</td><td>60</td><td>0</td><td>0</td><td>0</td><td>99.96%</td><td>99.95%</td></tr><tr><td>PRIORDAY_PRE</td><td>60</td><td>60</td><td>60</td><td>0</td><td>0</td><td>0</td><td>99.96%</td><td>99.95%</td></tr><tr><td>PRIORDAY_POST</td><td>60</td><td>60</td><td>60</td><td>0</td><td>0</td><td>0</td><td>100.00%</td><td>99.98%</td></tr></tbody></table></div></figure>
+</div></div>
